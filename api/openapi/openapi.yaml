@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: Ippo
+  version: 0.0.0
+tags: []
+paths:
+  /posts/{postId}/like:
+    put:
+      operationId: Posts_like
+      description: 投稿にいいねをする
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '404':
+          description: The server cannot find the requested resource.
+  /posts/いいねを取り消す/{postId}:
+    delete:
+      operationId: Posts_unlike
+      description: いいねを取り消す
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '404':
+          description: The server cannot find the requested resource.
+  /topics:
+    get:
+      operationId: Topics_list
+      description: トピックの一覧を取得する
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+  /topics/{slug}/posts:
+    get:
+      operationId: Topics_listPosts
+      description: トピックの投稿を、いいねの多い順に取得する
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+        '404':
+          description: The server cannot find the requested resource.
+    post:
+      operationId: Topics_createPost
+      description: トピックに投稿する
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: The server cannot find the requested resource.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostRequest'
+components:
+  schemas:
+    CreatePostRequest:
+      type: object
+      required:
+        - body
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 1000
+      description: 投稿の作成リクエスト
+    Post:
+      type: object
+      required:
+        - id
+        - body
+        - authorName
+        - likeCount
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        body:
+          type: string
+          description: 本文
+        authorName:
+          type: string
+          description: 投稿者の名前
+        likeCount:
+          type: integer
+          format: int32
+          description: いいねの数
+        createdAt:
+          type: string
+          format: date-time
+          description: 投稿日時（UTC）
+      description: トピックに書き込む投稿
+    Topic:
+      type: object
+      required:
+        - slug
+        - name
+      properties:
+        slug:
+          type: string
+          description: URLに使う識別子
+        name:
+          type: string
+          description: 表示名
+      description: 投稿を分類するカテゴリ
