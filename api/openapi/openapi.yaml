@@ -19,7 +19,6 @@ paths:
           description: There is no content to send for this request, but the headers may be useful.
         '404':
           description: The server cannot find the requested resource.
-  /posts/いいねを取り消す/{postId}:
     delete:
       operationId: Posts_unlike
       description: いいねを取り消す

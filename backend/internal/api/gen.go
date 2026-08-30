@@ -50,11 +50,11 @@ type TopicsCreatePostJSONRequestBody = CreatePostRequest
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
+	// (DELETE /posts/{postId}/like)
+	PostsUnlike(w http.ResponseWriter, r *http.Request, postId string)
+
 	// (PUT /posts/{postId}/like)
 	PostsLike(w http.ResponseWriter, r *http.Request, postId string)
-
-	// (DELETE /posts/いいねを取り消す/{postId})
-	PostsUnlike(w http.ResponseWriter, r *http.Request, postId string)
 
 	// (GET /topics)
 	TopicsList(w http.ResponseWriter, r *http.Request)
@@ -75,32 +75,6 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(http.Handler) http.Handler
 
-// PostsLike operation middleware
-func (siw *ServerInterfaceWrapper) PostsLike(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-	_ = err
-
-	// ------------- Path parameter "postId" -------------
-	var postId string
-
-	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.PostsLike(w, r, postId)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
 // PostsUnlike operation middleware
 func (siw *ServerInterfaceWrapper) PostsUnlike(w http.ResponseWriter, r *http.Request) {
 
@@ -118,6 +92,32 @@ func (siw *ServerInterfaceWrapper) PostsUnlike(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostsUnlike(w, r, postId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostsLike operation middleware
+func (siw *ServerInterfaceWrapper) PostsLike(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "postId" -------------
+	var postId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostsLike(w, r, postId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -313,8 +313,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsUnlike)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsLike)
-	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/いいねを取り消す/{postId}", wrapper.PostsUnlike)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics", wrapper.TopicsList)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics/{slug}/posts", wrapper.TopicsListPosts)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/topics/{slug}/posts", wrapper.TopicsCreatePost)

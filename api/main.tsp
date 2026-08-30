@@ -66,7 +66,7 @@ namespace Posts {
   op like(@path postId: string): NoContentResponse | NotFoundResponse;
 
   @doc("いいねを取り消す")
-  @route("いいねを取り消す")
+  @route("{postId}/like")
   @delete
   op unlike(@path postId: string): NoContentResponse | NotFoundResponse;
 }
