@@ -41,10 +41,10 @@ func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, 
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 
-func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, slug string) {
+func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId string) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 
-func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, slug string) {
+func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postId string) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
