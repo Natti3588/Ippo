@@ -46,7 +46,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description トピックの投稿を、いいねの多い順に取得する */
+        /** @description トピックの投稿を、指定された並び順で取得する。 既定は人気順 */
         get: operations["Topics_listPosts"];
         put?: never;
         /** @description トピックに投稿する */
@@ -84,6 +84,11 @@ export interface components {
              */
             createdAt: string;
         };
+        /**
+         * @description ソート順
+         * @enum {string}
+         */
+        SortOrder: "popular" | "newest" | "oldest";
         /** @description 投稿を分類するカテゴリ */
         Topic: {
             /** @description URLに使う識別子 */
@@ -176,7 +181,9 @@ export interface operations {
     };
     Topics_listPosts: {
         parameters: {
-            query?: never;
+            query?: {
+                sort?: components["schemas"]["SortOrder"];
+            };
             header?: never;
             path: {
                 slug: string;

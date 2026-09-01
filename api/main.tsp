@@ -39,16 +39,26 @@ model CreatePostRequest {
   body: string;
 }
 
+@doc("ソート順")
+enum SortOrder {
+  popular,
+  newest,
+  oldest,
+}
+
 @route("/topics")
 namespace Topics {
   @doc("トピックの一覧を取得する")
   @get
   op list(): Topic[];
 
-  @doc("トピックの投稿を、いいねの多い順に取得する")
+  @doc("トピックの投稿を、指定された並び順で取得する。 既定は人気順")
   @route("{slug}/posts")
   @get
-  op listPosts(@path slug: string): Post[] | NotFoundResponse;
+  op listPosts(
+    @path slug: string,
+    @query sort?: SortOrder = SortOrder.popular,
+  ): Post[] | NotFoundResponse;
 
   @doc("トピックに投稿する")
   @route("{slug}/posts")

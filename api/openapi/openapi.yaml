@@ -50,13 +50,21 @@ paths:
   /topics/{slug}/posts:
     get:
       operationId: Topics_listPosts
-      description: トピックの投稿を、いいねの多い順に取得する
+      description: トピックの投稿を、指定された並び順で取得する。 既定は人気順
       parameters:
         - name: slug
           in: path
           required: true
           schema:
             type: string
+        - name: sort
+          in: query
+          required: false
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SortOrder'
+            default: popular
+          explode: false
       responses:
         '200':
           description: The request has succeeded.
@@ -131,6 +139,13 @@ components:
           format: date-time
           description: 投稿日時（UTC）
       description: トピックに書き込む投稿
+    SortOrder:
+      type: string
+      enum:
+        - popular
+        - newest
+        - oldest
+      description: ソート順
     Topic:
       type: object
       required:

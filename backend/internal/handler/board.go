@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/Natti3588/Ippo/backend/internal/api"
 	"github.com/Natti3588/Ippo/backend/internal/service"
 )
 
@@ -33,7 +34,7 @@ func (h *BoardHandler) TopicsList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, slug string) {
+func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, slug string, params api.TopicsListPostsParams) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
 

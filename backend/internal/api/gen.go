@@ -6,6 +6,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,6 +14,27 @@ import (
 	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for SortOrder.
+const (
+	Newest  SortOrder = "newest"
+	Oldest  SortOrder = "oldest"
+	Popular SortOrder = "popular"
+)
+
+// Valid indicates whether the value is a known member of the SortOrder enum.
+func (e SortOrder) Valid() bool {
+	switch e {
+	case Newest:
+		return true
+	case Oldest:
+		return true
+	case Popular:
+		return true
+	default:
+		return false
+	}
+}
 
 // CreatePostRequest 投稿の作成リクエスト
 type CreatePostRequest struct {
@@ -35,6 +57,9 @@ type Post struct {
 	LikeCount int32 `json:"likeCount"`
 }
 
+// SortOrder ソート順
+type SortOrder string
+
 // Topic 投稿を分類するカテゴリ
 type Topic struct {
 	// Name 表示名
@@ -42,6 +67,11 @@ type Topic struct {
 
 	// Slug URLに使う識別子
 	Slug string `json:"slug"`
+}
+
+// TopicsListPostsParams defines parameters for TopicsListPosts.
+type TopicsListPostsParams struct {
+	Sort *SortOrder `form:"sort,omitempty" json:"sort,omitempty"`
 }
 
 // TopicsCreatePostJSONRequestBody defines body for TopicsCreatePost for application/json ContentType.
@@ -60,7 +90,7 @@ type ServerInterface interface {
 	TopicsList(w http.ResponseWriter, r *http.Request)
 
 	// (GET /topics/{slug}/posts)
-	TopicsListPosts(w http.ResponseWriter, r *http.Request, slug string)
+	TopicsListPosts(w http.ResponseWriter, r *http.Request, slug string, params TopicsListPostsParams)
 
 	// (POST /topics/{slug}/posts)
 	TopicsCreatePost(w http.ResponseWriter, r *http.Request, slug string)
@@ -156,8 +186,24 @@ func (siw *ServerInterfaceWrapper) TopicsListPosts(w http.ResponseWriter, r *htt
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params TopicsListPostsParams
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.TopicsListPosts(w, r, slug)
+		siw.Handler.TopicsListPosts(w, r, slug, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
