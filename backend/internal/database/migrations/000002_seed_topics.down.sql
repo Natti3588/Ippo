@@ -1,0 +1,1 @@
+DELETE FROM topics WHERE slug IN ('study-method', 'motivation', 'free-resources');
