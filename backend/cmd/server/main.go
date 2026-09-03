@@ -29,7 +29,7 @@ func main() {
 	}
 	logger.Info("migration applied")
 
-	repo := repository.NewInMemoryBoardRepository()
+	repo := repository.NewInMemoryBoard()
 	svc := service.NewBoardService(repo)
 	h := handler.NewBoardHandler(svc, logger)
 
