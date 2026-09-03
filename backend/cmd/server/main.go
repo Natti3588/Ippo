@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/Natti3588/Ippo/backend/internal/handler"
 	"github.com/Natti3588/Ippo/backend/internal/repository"
 	"github.com/Natti3588/Ippo/backend/internal/service"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -29,7 +31,21 @@ func main() {
 	}
 	logger.Info("migration applied")
 
-	repo := repository.NewInMemoryBoard()
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, databaseURL)
+	if err != nil {
+		logger.Error("コネクションプールの作成に失敗", "error", err)
+		os.Exit(1)
+	}
+	defer pool.Close()
+
+	if err := pool.Ping(ctx); err != nil {
+		logger.Error("データベースに接続できません", "error", err)
+		os.Exit(1)
+	}
+	logger.Info("database connected")
+
+	repo := repository.NewPostgresBoard(pool)
 	svc := service.NewBoardService(repo)
 	h := handler.NewBoardHandler(svc, logger)
 
