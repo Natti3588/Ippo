@@ -15,7 +15,7 @@ type BoardHandler struct {
 }
 
 func NewBoardHandler(svc *service.BoardService, logger *slog.Logger) *BoardHandler {
-	return &BoardHandler{svc: svc}
+	return &BoardHandler{svc: svc, logger: logger}
 }
 
 func (h *BoardHandler) TopicsList(w http.ResponseWriter, r *http.Request) {
