@@ -9,6 +9,24 @@ import (
 	"context"
 )
 
+const getTopicBySlug = `-- name: GetTopicBySlug :one
+SELECT id, slug, name, display_order
+FROM topics
+WHERE slug = $1
+`
+
+func (q *Queries) GetTopicBySlug(ctx context.Context, slug string) (Topic, error) {
+	row := q.db.QueryRow(ctx, getTopicBySlug, slug)
+	var i Topic
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Name,
+		&i.DisplayOrder,
+	)
+	return i, err
+}
+
 const listTopics = `-- name: ListTopics :many
 SELECT id, slug, name, display_order
 FROM topics
