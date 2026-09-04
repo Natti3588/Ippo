@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNormalizedatabaseURL(t *testing.T) {
+func TestNormalizeDatabaseURL(t *testing.T) {
 	tests := []struct {
 		name    string
 		input   string
@@ -32,6 +32,16 @@ func TestNormalizedatabaseURL(t *testing.T) {
 			input:   "mysql://user:password@localhost:3306/mydb",
 			wantErr: ErrUnsupportedScheme,
 		},
+		{
+			name:    "スキームがない場合は拒否する",
+			input:   "localhost:5433/mydb",
+			wantErr: ErrUnsupportedScheme,
+		},
+		{
+			name:    "壊れたパーセントエスケープは解析に失敗する",
+			input:   "postgres://user:pa%ss@localhost:5433/mydb",
+			wantErr: ErrInvalidDatabaseURL,
+		},
 	}
 
 	for _, tt := range tests {
@@ -40,7 +50,7 @@ func TestNormalizedatabaseURL(t *testing.T) {
 
 			if tt.wantErr != nil {
 				if !errors.Is(err, tt.wantErr) {
-					t.Fatalf("エラーが期待と異なる:\n got: %v\nwant: %v", got, tt.wantErr)
+					t.Fatalf("エラーが期待と異なる:\n got: %v\nwant: %v", err, tt.wantErr)
 				}
 				return
 			}
