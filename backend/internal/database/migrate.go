@@ -14,25 +14,34 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-func Migrate(databaseURL string) error {
-	u, err := url.Parse(databaseURL)
+func normalizeDatabaseURL(raw string) (string, error) {
+	u, err := url.Parse(raw)
 	if err != nil {
-		// *url.ErrorはURL全体（パスワードを含む）を埋め込むため、意図的に包まない
-		return ErrInvalidDatabaseURL
+		return "", ErrInvalidDatabaseURL
 	}
 
 	switch u.Scheme {
 	case "postgres", "postgresql":
 		u.Scheme = "pgx5"
 	default:
-		return fmt.Errorf("%w: %q （postgres:// 形式で指定してください）", ErrUnsupportedScheme, u.Scheme)
+		return "", fmt.Errorf("%w: %q （postgres:// 形式で指定してください）", ErrUnsupportedScheme, u.Scheme)
 	}
+
+	return u.String(), nil
+}
+
+func Migrate(databaseURL string) error {
+	migrationURL, err := normalizeDatabaseURL(databaseURL)
+	if err != nil {
+		return err
+	}
+
 	src, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
 		return fmt.Errorf("マイグレーションの読み込みに失敗: %w", err)
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", src, u.String())
+	m, err := migrate.NewWithSourceInstance("iofs", src, migrationURL)
 	if err != nil {
 		return fmt.Errorf("マイグレートの初期化に失敗: %w", err)
 	}
