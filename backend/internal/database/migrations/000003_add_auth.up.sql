@@ -1,0 +1,12 @@
+ALTER TABLE users
+  ADD COLUMN email         VARCHAR(254) NOT NULL UNIQUE,
+  ADD COLUMN password_hash VARCHAR(255) NOT NULL;
+
+CREATE TABLE sessions (
+  id         CHAR(64) CHARACTER SET ascii NOT NULL PRIMARY KEY,
+  user_id    BINARY(16) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT chk_sessions_id CHECK (REGEXP_LIKE(id, '^[a-f0-9]{64}$', 'c'))
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;

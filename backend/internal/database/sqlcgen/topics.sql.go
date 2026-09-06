@@ -12,11 +12,11 @@ import (
 const getTopicBySlug = `-- name: GetTopicBySlug :one
 SELECT id, slug, name, display_order
 FROM topics
-WHERE slug = $1
+WHERE slug = ?
 `
 
 func (q *Queries) GetTopicBySlug(ctx context.Context, slug string) (Topic, error) {
-	row := q.db.QueryRow(ctx, getTopicBySlug, slug)
+	row := q.db.QueryRowContext(ctx, getTopicBySlug, slug)
 	var i Topic
 	err := row.Scan(
 		&i.ID,
@@ -34,7 +34,7 @@ ORDER BY display_order ASC, slug ASC
 `
 
 func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
-	rows, err := q.db.Query(ctx, listTopics)
+	rows, err := q.db.QueryContext(ctx, listTopics)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,9 @@ func (q *Queries) ListTopics(ctx context.Context) ([]Topic, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

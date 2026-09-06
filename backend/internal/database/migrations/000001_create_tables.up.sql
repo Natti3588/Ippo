@@ -1,28 +1,35 @@
 CREATE TABLE topics (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  slug TEXT UNIQUE NOT NULL CHECK(slug ~ '^[a-z0-9-]+$'),
-  name TEXT NOT NULL CHECK (char_length(name) BETWEEN 1 AND 50),
-  display_order INTEGER NOT NUll
-);
+  id            BINARY(16) NOT NULL PRIMARY KEY,
+  slug          VARCHAR(64) NOT NULL UNIQUE,
+  name          VARCHAR(50) NOT NULL,
+  display_order INT NOT NULL,
+  CONSTRAINT chk_topics_slug CHECK (REGEXP_LIKE(slug, '^[a-z0-9-]+$', 'c')),
+  CONSTRAINT chk_topics_name CHECK (CHAR_LENGTH(name) BETWEEN 1 AND 50)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  display_name TEXT NOT NULL CHECK (char_length(display_name) BETWEEN 1 AND 50),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+  id           BINARY(16) NOT NULL PRIMARY KEY,
+  display_name VARCHAR(50) NOT NULL,
+  created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT chk_users_display_name CHECK (CHAR_LENGTH(display_name) BETWEEN 1 AND 50)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 CREATE TABLE posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  topic_id UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
-  author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  body TEXT NOT NULL CHECK (char_length(body) BETWEEN 1 AND 1000),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+  id         BINARY(16) NOT NULL PRIMARY KEY,
+  topic_id   BINARY(16) NOT NULL,
+  author_id  BINARY(16) NOT NULL,
+  body       TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_posts_topic  FOREIGN KEY (topic_id)  REFERENCES topics(id) ON DELETE CASCADE,
+  CONSTRAINT fk_posts_author FOREIGN KEY (author_id) REFERENCES users(id)  ON DELETE CASCADE,
+  CONSTRAINT chk_posts_body CHECK (CHAR_LENGTH(body) BETWEEN 1 AND 1000)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 CREATE TABLE likes (
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  author_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (post_id, author_id)
-);
-
+  post_id    BINARY(16) NOT NULL,
+  author_id  BINARY(16) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (post_id, author_id),
+  CONSTRAINT fk_likes_post   FOREIGN KEY (post_id)   REFERENCES posts(id) ON DELETE CASCADE,
+  CONSTRAINT fk_likes_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;

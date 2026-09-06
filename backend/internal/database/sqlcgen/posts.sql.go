@@ -7,8 +7,7 @@ package sqlcgen
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const listPostsByTopicNewest = `-- name: ListPostsByTopicNewest :many
@@ -21,21 +20,21 @@ SELECT
 FROM posts p
 JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
-WHERE p.topic_id = $1
+WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
-ORDER BY p.created_at DESC
+ORDER BY p.created_at DESC, p.id DESC
 `
 
 type ListPostsByTopicNewestRow struct {
-	ID         pgtype.UUID
+	ID         []byte
 	Body       string
 	AuthorName string
 	LikeCount  int64
-	CreatedAt  pgtype.Timestamptz
+	CreatedAt  time.Time
 }
 
-func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID pgtype.UUID) ([]ListPostsByTopicNewestRow, error) {
-	rows, err := q.db.Query(ctx, listPostsByTopicNewest, topicID)
+func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([]ListPostsByTopicNewestRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicNewest, topicID)
 	if err != nil {
 		return nil, err
 	}
@@ -54,6 +53,9 @@ func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID pgtype.UUI
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -70,21 +72,21 @@ SELECT
 FROM posts p
 JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
-WHERE p.topic_id = $1
+WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
-ORDER BY p.created_at ASC
+ORDER BY p.created_at ASC, p.id ASC
 `
 
 type ListPostsByTopicOldestRow struct {
-	ID         pgtype.UUID
+	ID         []byte
 	Body       string
 	AuthorName string
 	LikeCount  int64
-	CreatedAt  pgtype.Timestamptz
+	CreatedAt  time.Time
 }
 
-func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID pgtype.UUID) ([]ListPostsByTopicOldestRow, error) {
-	rows, err := q.db.Query(ctx, listPostsByTopicOldest, topicID)
+func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID []byte) ([]ListPostsByTopicOldestRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicOldest, topicID)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +105,9 @@ func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID pgtype.UUI
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -119,21 +124,21 @@ SELECT
 FROM posts p
 JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
-WHERE p.topic_id = $1
+WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
-ORDER BY like_count DESC, p.created_at DESC
+ORDER BY like_count DESC, p.created_at DESC, p.id DESC
 `
 
 type ListPostsByTopicPopularRow struct {
-	ID         pgtype.UUID
+	ID         []byte
 	Body       string
 	AuthorName string
 	LikeCount  int64
-	CreatedAt  pgtype.Timestamptz
+	CreatedAt  time.Time
 }
 
-func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID pgtype.UUID) ([]ListPostsByTopicPopularRow, error) {
-	rows, err := q.db.Query(ctx, listPostsByTopicPopular, topicID)
+func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID []byte) ([]ListPostsByTopicPopularRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicPopular, topicID)
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +156,9 @@ func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID pgtype.UU
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

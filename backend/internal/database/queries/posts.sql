@@ -8,9 +8,9 @@ SELECT
 FROM posts p
 JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
-WHERE p.topic_id = $1
+WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
-ORDER BY like_count DESC, p.created_at DESC;
+ORDER BY like_count DESC, p.created_at DESC, p.id DESC;
 
 -- name: ListPostsByTopicNewest :many
 SELECT
@@ -22,9 +22,9 @@ SELECT
 FROM posts p
 JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
-WHERE p.topic_id = $1
+WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
-ORDER BY p.created_at DESC;
+ORDER BY p.created_at DESC, p.id DESC;
 
 -- name: ListPostsByTopicOldest :many
 SELECT
@@ -36,6 +36,6 @@ SELECT
 FROM posts p
 JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
-WHERE p.topic_id = $1
+WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
-ORDER BY p.created_at ASC;
+ORDER BY p.created_at ASC, p.id ASC;

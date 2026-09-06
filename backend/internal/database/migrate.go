@@ -5,33 +5,62 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
+	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-func normalizeDatabaseURL(raw string) (string, error) {
-	u, err := url.Parse(raw)
+// normalizeDSN は接続に必要な設定をコードで強制する。
+// 環境変数は README・Dockerfile・タスク定義に複製されるため、
+// どこかで書き落としても気づけない。書き忘れられない場所に置く。
+func normalizeDSN(raw string) (*mysql.Config, error) {
+	cfg, err := mysql.ParseDSN(raw)
 	if err != nil {
-		return "", ErrInvalidDatabaseURL
+		// このエラーには DSN 全体（パスワードを含む）が入りうるため、意図的に包まない
+		return nil, ErrInvalidDatabaseDSN
 	}
 
-	switch u.Scheme {
-	case "postgres", "postgresql":
-		u.Scheme = "pgx5"
-	default:
-		return "", fmt.Errorf("%w: %q （postgres:// 形式で指定してください）", ErrUnsupportedScheme, u.Scheme)
-	}
+	cfg.ParseTime = true        // TIMESTAMP を time.Time で受け取る
+	cfg.Loc = time.UTC          // Go 側の解釈を UTC に固定する
+	cfg.MultiStatements = false // アプリの接続では複数文を許可しない
 
-	return u.String(), nil
+	if cfg.Params == nil {
+		cfg.Params = map[string]string{}
+	}
+	cfg.Params["time_zone"] = "'+00:00'" // MySQL のセッションを UTC に固定する
+
+	return cfg, nil
 }
 
-func Migrate(databaseURL string) error {
-	migrationURL, err := normalizeDatabaseURL(databaseURL)
+// migrationURL は golang-migrate に渡す URL を組み立てる。
+// ドライバは受け取った DSN の user と password を QueryUnescape するため、
+// ここで先にエスケープしておく。記号を含むパスワードで認証が壊れるのを防ぐ。
+// multiStatements はドライバ側が有効化するので、ここでは設定しない。
+func migrationURL(cfg *mysql.Config) string {
+	c := *cfg
+	c.User = url.QueryEscape(cfg.User)
+	c.Passwd = url.QueryEscape(cfg.Passwd)
+	return "mysql://" + c.FormatDSN()
+}
+
+// AppDSN はアプリケーションが接続に使う DSN を返す。
+func AppDSN(raw string) (string, error) {
+	cfg, err := normalizeDSN(raw)
+	if err != nil {
+		return "", err
+	}
+	return cfg.FormatDSN(), nil
+}
+
+// Migrate は埋め込まれたマイグレーションを適用する。
+func Migrate(raw string) error {
+	cfg, err := normalizeDSN(raw)
 	if err != nil {
 		return err
 	}
@@ -41,9 +70,11 @@ func Migrate(databaseURL string) error {
 		return fmt.Errorf("マイグレーションの読み込みに失敗: %w", err)
 	}
 
-	m, err := migrate.NewWithSourceInstance("iofs", src, migrationURL)
+	m, err := migrate.NewWithSourceInstance("iofs", src, migrationURL(cfg))
 	if err != nil {
-		return fmt.Errorf("マイグレートの初期化に失敗: %w", err)
+		// golang-migrate のエラーには DSN が含まれうるため、意図的に包まない
+		_ = src.Close()
+		return ErrDatabaseMigrationInit
 	}
 	defer m.Close()
 

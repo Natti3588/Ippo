@@ -3,9 +3,9 @@ package database
 import "errors"
 
 var (
-	// ErrInvalidDatabaseURLは接続URLの形式が不正なことを表す
-	ErrInvalidDatabaseURL = errors.New("データベースURLの形式が不正です")
+	// ErrInvalidDatabaseDSNは接続DSNの形式が不正なことを表す。
+	ErrInvalidDatabaseDSN = errors.New("データベースDSNの形式が不正です")
 
-	// ErrUnsupportedSchemeは接続URLのスキームが対応していないことを表す
-	ErrUnsupportedScheme = errors.New("対応していないスキームです")
+	// ErrDatabaseMigrationInit はマイグレーション実行を初期化できなかったことを表す。
+	ErrDatabaseMigrationInit = errors.New("マイグレートの初期化に失敗しました")
 )

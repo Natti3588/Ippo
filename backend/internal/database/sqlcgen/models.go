@@ -5,32 +5,41 @@
 package sqlcgen
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 type Like struct {
-	PostID    pgtype.UUID
-	AuthorID  pgtype.UUID
-	CreatedAt pgtype.Timestamptz
+	PostID    []byte
+	AuthorID  []byte
+	CreatedAt time.Time
 }
 
 type Post struct {
-	ID        pgtype.UUID
-	TopicID   pgtype.UUID
-	AuthorID  pgtype.UUID
+	ID        []byte
+	TopicID   []byte
+	AuthorID  []byte
 	Body      string
-	CreatedAt pgtype.Timestamptz
+	CreatedAt time.Time
+}
+
+type Session struct {
+	ID        string
+	UserID    []byte
+	ExpiresAt time.Time
+	CreatedAt time.Time
 }
 
 type Topic struct {
-	ID           pgtype.UUID
+	ID           []byte
 	Slug         string
 	Name         string
 	DisplayOrder int32
 }
 
 type User struct {
-	ID          pgtype.UUID
-	DisplayName string
-	CreatedAt   pgtype.Timestamptz
+	ID           []byte
+	DisplayName  string
+	CreatedAt    time.Time
+	Email        string
+	PasswordHash string
 }
