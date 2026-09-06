@@ -4,6 +4,70 @@
  */
 
 export interface paths {
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Auth_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Auth_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Auth_signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["Me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["Me_update"];
+        trace?: never;
+    };
     "/posts/{postId}/like": {
         parameters: {
             query?: never;
@@ -65,6 +129,26 @@ export interface components {
         CreatePostRequest: {
             body: string;
         };
+        /** @description ログイン中のユーザーの情報 */
+        CurrentUser: {
+            /**
+             * Format: email
+             * @description ログインに使うメールアドレス
+             */
+            email: string;
+            /** @description 投稿に使われる名前 */
+            displayName: string;
+        };
+        /** @description ログインリクエスト */
+        LoginRequest: {
+            /**
+             * Format: email
+             * @description ログインに使うメールアドレス
+             */
+            email: string;
+            /** @description ログインに使われるパスワード */
+            password: string;
+        };
         /** @description トピックに書き込む投稿 */
         Post: {
             /** Format: uuid */
@@ -84,6 +168,18 @@ export interface components {
              */
             createdAt: string;
         };
+        /** @description サインアップリクエスト */
+        SignUpRequest: {
+            /**
+             * Format: email
+             * @description サインアップに使うメールアドレス
+             */
+            email: string;
+            /** @description サインアップに使うパスワード */
+            password: string;
+            /** @description サインアップに使う名前 */
+            displayName: string;
+        };
         /**
          * @description ソート順
          * @enum {string}
@@ -96,6 +192,11 @@ export interface components {
             /** @description 表示名 */
             name: string;
         };
+        /** @description ユーザー情報変更 */
+        UpdateProfileRequest: {
+            /** @description ユーザー情報変更に使われる名前 */
+            displayName: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -105,6 +206,144 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    Auth_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            /** @description Access is unauthorized. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    Auth_logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    Auth_signup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignUpRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            /** @description The request conflicts with the current state of the server. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    Me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            /** @description Access is unauthorized. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    Me_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            /** @description Access is unauthorized. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     Posts_like: {
         parameters: {
             query?: never;
@@ -118,6 +357,13 @@ export interface operations {
         responses: {
             /** @description There is no content to send for this request, but the headers may be useful. */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Access is unauthorized. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -145,6 +391,13 @@ export interface operations {
         responses: {
             /** @description There is no content to send for this request, but the headers may be useful. */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Access is unauthorized. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -201,6 +454,13 @@ export interface operations {
                     "application/json": components["schemas"]["Post"][];
                 };
             };
+            /** @description The server could not understand the request due to invalid syntax. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description The server cannot find the requested resource. */
             404: {
                 headers: {
@@ -233,6 +493,20 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Post"];
                 };
+            };
+            /** @description The server could not understand the request due to invalid syntax. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Access is unauthorized. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The server cannot find the requested resource. */
             404: {
