@@ -4,6 +4,82 @@ info:
   version: 0.0.0
 tags: []
 paths:
+  /auth/login:
+    post:
+      operationId: Auth_login
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: Access is unauthorized.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+  /auth/logout:
+    post:
+      operationId: Auth_logout
+      parameters: []
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+  /auth/signup:
+    post:
+      operationId: Auth_signup
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '409':
+          description: The request conflicts with the current state of the server.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+  /me:
+    get:
+      operationId: Me_get
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: Access is unauthorized.
+    patch:
+      operationId: Me_update
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '401':
+          description: Access is unauthorized.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
   /posts/{postId}/like:
     put:
       operationId: Posts_like
@@ -17,6 +93,8 @@ paths:
       responses:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
+        '401':
+          description: Access is unauthorized.
         '404':
           description: The server cannot find the requested resource.
     delete:
@@ -31,6 +109,8 @@ paths:
       responses:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
+        '401':
+          description: Access is unauthorized.
         '404':
           description: The server cannot find the requested resource.
   /topics:
@@ -74,6 +154,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Post'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
         '404':
           description: The server cannot find the requested resource.
     post:
@@ -92,6 +174,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Post'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+        '401':
+          description: Access is unauthorized.
         '404':
           description: The server cannot find the requested resource.
       requestBody:
@@ -112,6 +198,34 @@ components:
           minLength: 1
           maxLength: 1000
       description: 投稿の作成リクエスト
+    CurrentUser:
+      type: object
+      required:
+        - email
+        - displayName
+      properties:
+        email:
+          type: string
+          format: email
+          description: ログインに使うメールアドレス
+        displayName:
+          type: string
+          description: 投稿に使われる名前
+      description: ログイン中のユーザーの情報
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: ログインに使うメールアドレス
+        password:
+          type: string
+          description: ログインに使われるパスワード
+      description: ログインリクエスト
     Post:
       type: object
       required:
@@ -139,6 +253,28 @@ components:
           format: date-time
           description: 投稿日時（UTC）
       description: トピックに書き込む投稿
+    SignUpRequest:
+      type: object
+      required:
+        - email
+        - password
+        - displayName
+      properties:
+        email:
+          type: string
+          format: email
+          description: サインアップに使うメールアドレス
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+          description: サインアップに使うパスワード
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: サインアップに使う名前
+      description: サインアップリクエスト
     SortOrder:
       type: string
       enum:
@@ -159,3 +295,14 @@ components:
           type: string
           description: 表示名
       description: 投稿を分類するカテゴリ
+    UpdateProfileRequest:
+      type: object
+      required:
+        - displayName
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: ユーザー情報変更に使われる名前
+      description: ユーザー情報変更
