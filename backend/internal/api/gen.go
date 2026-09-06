@@ -41,6 +41,24 @@ type CreatePostRequest struct {
 	Body string `json:"body"`
 }
 
+// CurrentUser ログイン中のユーザーの情報
+type CurrentUser struct {
+	// DisplayName 投稿に使われる名前
+	DisplayName string `json:"displayName"`
+
+	// Email ログインに使うメールアドレス
+	Email openapi_types.Email `json:"email"`
+}
+
+// LoginRequest ログインリクエスト
+type LoginRequest struct {
+	// Email ログインに使うメールアドレス
+	Email openapi_types.Email `json:"email"`
+
+	// Password ログインに使われるパスワード
+	Password string `json:"password"`
+}
+
 // Post トピックに書き込む投稿
 type Post struct {
 	// AuthorName 投稿者の名前
@@ -57,6 +75,18 @@ type Post struct {
 	LikeCount int32 `json:"likeCount"`
 }
 
+// SignUpRequest サインアップリクエスト
+type SignUpRequest struct {
+	// DisplayName サインアップに使う名前
+	DisplayName string `json:"displayName"`
+
+	// Email サインアップに使うメールアドレス
+	Email openapi_types.Email `json:"email"`
+
+	// Password サインアップに使うパスワード
+	Password string `json:"password"`
+}
+
 // SortOrder ソート順
 type SortOrder string
 
@@ -69,16 +99,46 @@ type Topic struct {
 	Slug string `json:"slug"`
 }
 
+// UpdateProfileRequest ユーザー情報変更
+type UpdateProfileRequest struct {
+	// DisplayName ユーザー情報変更に使われる名前
+	DisplayName string `json:"displayName"`
+}
+
 // TopicsListPostsParams defines parameters for TopicsListPosts.
 type TopicsListPostsParams struct {
 	Sort *SortOrder `form:"sort,omitempty" json:"sort,omitempty"`
 }
+
+// AuthLoginJSONRequestBody defines body for AuthLogin for application/json ContentType.
+type AuthLoginJSONRequestBody = LoginRequest
+
+// AuthSignupJSONRequestBody defines body for AuthSignup for application/json ContentType.
+type AuthSignupJSONRequestBody = SignUpRequest
+
+// MeUpdateJSONRequestBody defines body for MeUpdate for application/json ContentType.
+type MeUpdateJSONRequestBody = UpdateProfileRequest
 
 // TopicsCreatePostJSONRequestBody defines body for TopicsCreatePost for application/json ContentType.
 type TopicsCreatePostJSONRequestBody = CreatePostRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (POST /auth/login)
+	AuthLogin(w http.ResponseWriter, r *http.Request)
+
+	// (POST /auth/logout)
+	AuthLogout(w http.ResponseWriter, r *http.Request)
+
+	// (POST /auth/signup)
+	AuthSignup(w http.ResponseWriter, r *http.Request)
+
+	// (GET /me)
+	MeGet(w http.ResponseWriter, r *http.Request)
+
+	// (PATCH /me)
+	MeUpdate(w http.ResponseWriter, r *http.Request)
 
 	// (DELETE /posts/{postId}/like)
 	PostsUnlike(w http.ResponseWriter, r *http.Request, postId string)
@@ -104,6 +164,76 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// AuthLogin operation middleware
+func (siw *ServerInterfaceWrapper) AuthLogin(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AuthLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AuthLogout operation middleware
+func (siw *ServerInterfaceWrapper) AuthLogout(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AuthLogout(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// AuthSignup operation middleware
+func (siw *ServerInterfaceWrapper) AuthSignup(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AuthSignup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// MeGet operation middleware
+func (siw *ServerInterfaceWrapper) MeGet(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MeGet(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// MeUpdate operation middleware
+func (siw *ServerInterfaceWrapper) MeUpdate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MeUpdate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // PostsUnlike operation middleware
 func (siw *ServerInterfaceWrapper) PostsUnlike(w http.ResponseWriter, r *http.Request) {
@@ -359,6 +489,11 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/login", wrapper.AuthLogin)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/logout", wrapper.AuthLogout)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/signup", wrapper.AuthSignup)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/me", wrapper.MeGet)
+	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/me", wrapper.MeUpdate)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsUnlike)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsLike)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics", wrapper.TopicsList)
