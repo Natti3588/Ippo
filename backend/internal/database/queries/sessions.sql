@@ -10,7 +10,7 @@ SELECT
   u.display_name AS display_name,
   u.email AS email
 FROM sessions s
-JOIN users u ON s.id = u.id
+JOIN users u ON u.id = s.user_id
 WHERE s.id = ?
 AND s.expires_at > sqlc.arg(now);
 
