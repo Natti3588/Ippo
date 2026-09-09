@@ -55,11 +55,15 @@ namespace Auth {
   @post
   op signup(@body request: SignUpRequest):
     | (CreatedResponse & Body<CurrentUser>)
+    | BadRequestResponse
     | ConflictResponse;
 
   @route("login")
   @post
-  op login(@body request: LoginRequest): CurrentUser | UnauthorizedResponse;
+  op login(@body request: LoginRequest):
+    | CurrentUser
+    | BadRequestResponse
+    | UnauthorizedResponse;
 
   @route("logout")
   @post
@@ -72,6 +76,7 @@ namespace Me {
 
   @patch op update(@body request: UpdateProfileRequest):
     | CurrentUser
+    | BadRequestResponse
     | UnauthorizedResponse;
 }
 

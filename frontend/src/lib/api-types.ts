@@ -228,6 +228,13 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
             };
+            /** @description The server could not understand the request due to invalid syntax. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Access is unauthorized. */
             401: {
                 headers: {
@@ -276,6 +283,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
+            };
+            /** @description The server could not understand the request due to invalid syntax. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The request conflicts with the current state of the server. */
             409: {
@@ -334,6 +348,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
+            };
+            /** @description The server could not understand the request due to invalid syntax. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Access is unauthorized. */
             401: {
