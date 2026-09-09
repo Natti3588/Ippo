@@ -267,7 +267,7 @@ components:
         password:
           type: string
           minLength: 8
-          maxLength: 128
+          maxLength: 72
           description: サインアップに使うパスワード
         displayName:
           type: string

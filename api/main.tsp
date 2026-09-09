@@ -13,7 +13,7 @@ model SignUpRequest {
 
   @doc("サインアップに使うパスワード")
   @minLength(8)
-  @maxLength(128)
+  @maxLength(72)
   password: string;
 
   @doc("サインアップに使う名前")
