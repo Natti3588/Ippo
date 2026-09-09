@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Natti3588/Ippo/backend/internal/domain"
 	"golang.org/x/crypto/bcrypt"
@@ -20,8 +21,17 @@ import (
 // sessions の行を削除すれば即座に失効させられるため、長めでも取り返しがつく。
 const SessionLifetime = 7 * 24 * time.Hour
 
-// maxPasswordBytes は bcrypt が実際に見る上限。これを超える入力は弾く。
-const maxPasswordBytes = 72
+// パスワードの長さはバイトで数える。bcrypt が見るのが 72 バイトだからである。
+const (
+	minPasswordBytes = 8
+	maxPasswordBytes = 72
+)
+
+// 表示名の長さは文字で数える。DB の CHECK が CHAR_LENGTH()（文字数）だからである。
+const (
+	minDisplayNameChars = 1
+	maxDisplayNameChars = 50
+)
 
 type AuthRepository interface {
 	CreateUser(ctx context.Context, u domain.User) (domain.User, error)
@@ -76,6 +86,16 @@ func newSessionID() (raw, hashed string, err error) {
 	return raw, hashSessionID(raw), nil
 }
 
+// validateDisplayName は表示名の長さを検査する。
+// 単位が文字なのは、DB の chk_users_display_name が CHAR_LENGTH() で見ているためである。
+func validateDisplayName(displayName string) error {
+	n := utf8.RuneCountInString(displayName)
+	if n < minDisplayNameChars || n > maxDisplayNameChars {
+		return fmt.Errorf("表示名の長さが不正です: %w", domain.ErrInvalidInput)
+	}
+	return nil
+}
+
 func (s *AuthService) issueSession(ctx context.Context, userID string) (Session, error) {
 	raw, hashed, err := newSessionID()
 	if err != nil {
@@ -90,8 +110,12 @@ func (s *AuthService) issueSession(ctx context.Context, userID string) (Session,
 }
 
 func (s *AuthService) SignUp(ctx context.Context, email, password, displayName string) (domain.User, Session, error) {
-	if len(password) > maxPasswordBytes {
-		return domain.User{}, Session{}, fmt.Errorf("パスワードが長すぎます: %w", domain.ErrInvalidInput)
+	if len(password) < minPasswordBytes || len(password) > maxPasswordBytes {
+		return domain.User{}, Session{}, fmt.Errorf("パスワードの長さが不正です: %w", domain.ErrInvalidInput)
+	}
+
+	if err := validateDisplayName(displayName); err != nil {
+		return domain.User{}, Session{}, err
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -155,6 +179,10 @@ func (s *AuthService) Logout(ctx context.Context, rawSessionID string) error {
 // UpdateDisplayName は表示名を変更し、変更後の利用者を返す。
 // MySQL に RETURNING が無いため、読み直さずに手元の値を書き換えて返す。
 func (s *AuthService) UpdateDisplayName(ctx context.Context, user domain.User, displayName string) (domain.User, error) {
+	if err := validateDisplayName(displayName); err != nil {
+		return domain.User{}, err
+	}
+
 	if err := s.repo.UpdateDisplayName(ctx, user.Id, displayName); err != nil {
 		return domain.User{}, err
 	}
