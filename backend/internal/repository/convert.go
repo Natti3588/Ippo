@@ -88,3 +88,30 @@ func postsFromOldest(rows []sqlcgen.ListPostsByTopicOldestRow) ([]domain.Post, e
 	}
 	return out, nil
 }
+
+func toDomainUser(u sqlcgen.User) (domain.User, error) {
+	id, err := uuid.FromBytes(u.ID)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("利用者IDの変換に失敗: %w", err)
+	}
+	return domain.User{
+		Id:           id.String(),
+		Email:        u.Email,
+		DisplayName:  u.DisplayName,
+		PasswordHash: u.PasswordHash,
+	}, nil
+}
+
+// toDomainUserFromSession はセッション取得の結果を利用者に変換する。
+// このクエリは password_hash を SELECT していないため、ハッシュは空のままになる。
+func toDomainUserFromSession(row sqlcgen.GetSessionWithUserRow) (domain.User, error) {
+	id, err := uuid.FromBytes(row.UserID)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("利用者IDの変換に失敗: %w", err)
+	}
+	return domain.User{
+		Id:          id.String(),
+		Email:       row.Email,
+		DisplayName: row.DisplayName,
+	}, nil
+}
