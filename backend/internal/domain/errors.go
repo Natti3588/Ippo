@@ -2,5 +2,10 @@ package domain
 
 import "errors"
 
-// ErrNotFoundは対象が存在しないことを表す
-var ErrNotFound = errors.New("not found")
+var (
+	// ErrNotFoundは対象が存在しないことを表す
+	ErrNotFound = errors.New("not found")
+
+	// ErrEmailTakenは既に使われているメールアドレスで登録しようとしたことを表す
+	ErrEmailTaken = errors.New("email already taken")
+)
