@@ -40,20 +40,28 @@ func toDomainSortOrder(sort *api.SortOrder) (domain.SortOrder, bool) {
 func toAPIPosts(posts []domain.Post) ([]api.Post, error) {
 	out := make([]api.Post, 0, len(posts))
 	for _, p := range posts {
-		id, err := uuid.Parse(p.Id)
+		a, err := toAPIPost(p)
 		if err != nil {
-			return nil, fmt.Errorf("投稿ID: %qの解析に失敗: %w", p.Id, err)
+			return nil, err
 		}
-
-		out = append(out, api.Post{
-			Id:         id,
-			Body:       p.Body,
-			AuthorName: p.AuthorName,
-			LikeCount:  p.LikeCount,
-			CreatedAt:  p.CreatedAt.UTC(),
-		})
+		out = append(out, a)
 	}
 	return out, nil
+}
+
+func toAPIPost(p domain.Post) (api.Post, error) {
+	id, err := uuid.Parse(p.Id)
+	if err != nil {
+		return api.Post{}, fmt.Errorf("投稿ID: %qの解析に失敗: %w", p.Id, err)
+	}
+
+	return api.Post{
+		Id:         id,
+		Body:       p.Body,
+		AuthorName: p.AuthorName,
+		LikeCount:  p.LikeCount,
+		CreatedAt:  p.CreatedAt.UTC(),
+	}, nil
 }
 
 func toAPICurrentUser(u domain.User) api.CurrentUser {
