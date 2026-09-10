@@ -59,14 +59,29 @@ func main() {
 	}
 	logger.Info("database connected")
 
-	repo := repository.NewBoardRepository(db)
-	svc := service.NewBoardService(repo)
-	boardHandler := handler.NewBoardHandler(svc, logger)
-	authHandler := handler.NewAuthHandler(logger)
+	boardRepo := repository.NewBoardRepository(db)
+	authRepo := repository.NewAuthRepository(db)
+
+	boardSvc := service.NewBoardService(boardRepo)
+	authSvc := service.NewAuthService(authRepo)
+
+	// Cookie の Secure は既定で有効にする。
+	// ローカルの http で試すときだけ COOKIE_INSECURE=true を明示する。
+	// 環境変数名を否定形にしているのは、書き忘れたときに壊れるのが
+	// 本番ではなく開発側になるようにするためである。
+	secureCookie := os.Getenv("COOKIE_INSECURE") != "true"
+
+	boardHandler := handler.NewBoardHandler(boardSvc, logger)
+	authHandler := handler.NewAuthHandler(authSvc, logger, secureCookie)
+	authMiddleware := handler.NewAuthMiddleware(authSvc, logger)
 	h := handler.NewServer(boardHandler, authHandler)
 
+	router := api.HandlerWithOptions(h, api.StdHTTPServerOptions{
+		Middlewares: []api.MiddlewareFunc{authMiddleware.Attach},
+	})
+
 	logger.Info("server started", "addr", ":8080")
-	if err := http.ListenAndServe(":8080", api.Handler(h)); err != nil {
+	if err := http.ListenAndServe(":8080", router); err != nil {
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
 	}
