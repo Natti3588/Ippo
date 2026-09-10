@@ -5,10 +5,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Natti3588/Ippo/backend/internal/database/sqlcgen"
 	"github.com/Natti3588/Ippo/backend/internal/domain"
+	"github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
+
+// mysqlErrNoReferencedRow は外部キー違反を表す MySQL のエラー番号（ER_NO_REFERENCED_ROW_2）。
+const mysqlErrNoReferencedRow = 1452
 
 type BoardRepository struct {
 	q *sqlcgen.Queries
@@ -65,4 +71,83 @@ func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, 
 	default:
 		return nil, fmt.Errorf("未知の並び順: %q", sort)
 	}
+}
+
+// CreatePost は投稿を作成し、作成した投稿を返す。
+// MySQL に RETURNING が無いため、ID と作成時刻は INSERT の前に Go 側で決める。
+// AuthorName は posts に持たないため、ここでは埋めない。呼び出し側が埋める。
+func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, body string) (domain.Post, error) {
+	tID, err := toBinaryUUID(topicID)
+	if err != nil {
+		return domain.Post{}, err
+	}
+
+	aID, err := toBinaryUUID(authorID)
+	if err != nil {
+		return domain.Post{}, err
+	}
+
+	id := uuid.New()
+	b, err := id.MarshalBinary()
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("UUIDのバイト列化に失敗: %w", err)
+	}
+
+	createdAt := time.Now().UTC().Truncate(time.Second)
+
+	if err := r.q.CreatePost(ctx, sqlcgen.CreatePostParams{
+		ID:        b,
+		TopicID:   tID,
+		AuthorID:  aID,
+		Body:      body,
+		CreatedAt: createdAt,
+	}); err != nil {
+		return domain.Post{}, err
+	}
+
+	return domain.Post{
+		Id:        id.String(),
+		Body:      body,
+		LikeCount: 0,
+		CreatedAt: createdAt,
+	}, nil
+}
+
+// CreateLike はいいねを追加する。すでに押されている場合も成功として扱う。
+// 存在しない投稿に対しては domain.ErrNotFound を返す。
+func (r *BoardRepository) CreateLike(ctx context.Context, postID, authorID string) error {
+	pID, err := toBinaryUUID(postID)
+	if err != nil {
+		return fmt.Errorf("投稿IDが不正: %w", domain.ErrNotFound)
+	}
+
+	aID, err := toBinaryUUID(authorID)
+	if err != nil {
+		return err
+	}
+
+	if err := r.q.CreateLike(ctx, sqlcgen.CreateLikeParams{PostID: pID, AuthorID: aID}); err != nil {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == mysqlErrNoReferencedRow {
+			return fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
+		}
+		return err
+	}
+	return nil
+}
+
+// DeleteLike はいいねを取り消す。
+// 押していないいいねを消しても、存在しない投稿を指していても成功とする。
+func (r *BoardRepository) DeleteLike(ctx context.Context, postID, authorID string) error {
+	pID, err := toBinaryUUID(postID)
+	if err != nil {
+		return nil
+	}
+
+	aID, err := toBinaryUUID(authorID)
+	if err != nil {
+		return err
+	}
+
+	return r.q.DeleteLike(ctx, sqlcgen.DeleteLikeParams{PostID: pID, AuthorID: aID})
 }
