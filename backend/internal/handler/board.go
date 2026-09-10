@@ -68,13 +68,78 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 }
 
 func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, slug string) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
+	user, ok := userFrom(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	var req api.TopicsCreatePostJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	post, err := h.svc.CreatePost(r.Context(), slug, user, req.Body)
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrInvalidInput):
+			w.WriteHeader(http.StatusBadRequest)
+		case errors.Is(err, domain.ErrNotFound):
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			h.logger.Error("投稿の作成に失敗", "error", err, "slug", slug)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	apiPost, err := toAPIPost(post)
+	if err != nil {
+		h.logger.Error("投稿の変換に失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(apiPost); err != nil {
+		h.logger.Error("レスポンスの書き込みに失敗", "error", err)
+	}
 }
 
 func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId string) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
+	user, ok := userFrom(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.svc.Like(r.Context(), postId, user.Id); err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		h.logger.Error("いいねの追加に失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postId string) {
-	http.Error(w, "not implemented", http.StatusNotImplemented)
+	user, ok := userFrom(r.Context())
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.svc.Unlike(r.Context(), postId, user.Id); err != nil {
+		h.logger.Error("いいねの取り消しに失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
