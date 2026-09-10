@@ -10,6 +10,30 @@ import (
 	"time"
 )
 
+const createPost = `-- name: CreatePost :exec
+INSERT INTO posts (id, topic_id, author_id, body, created_at)
+VALUES (?, ?, ?, ?, ?)
+`
+
+type CreatePostParams struct {
+	ID        []byte
+	TopicID   []byte
+	AuthorID  []byte
+	Body      string
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) error {
+	_, err := q.db.ExecContext(ctx, createPost,
+		arg.ID,
+		arg.TopicID,
+		arg.AuthorID,
+		arg.Body,
+		arg.CreatedAt,
+	)
+	return err
+}
+
 const listPostsByTopicNewest = `-- name: ListPostsByTopicNewest :many
 SELECT
   p.id,

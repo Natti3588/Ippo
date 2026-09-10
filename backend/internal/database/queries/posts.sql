@@ -39,3 +39,7 @@ LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
 ORDER BY p.created_at ASC, p.id ASC;
+
+-- name: CreatePost :exec
+INSERT INTO posts (id, topic_id, author_id, body, created_at)
+VALUES (?, ?, ?, ?, ?);
