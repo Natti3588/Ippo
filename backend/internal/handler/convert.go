@@ -6,6 +6,7 @@ import (
 	"github.com/Natti3588/Ippo/backend/internal/api"
 	"github.com/Natti3588/Ippo/backend/internal/domain"
 	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 func toAPITopics(topics []domain.Topic) []api.Topic {
@@ -53,4 +54,11 @@ func toAPIPosts(posts []domain.Post) ([]api.Post, error) {
 		})
 	}
 	return out, nil
+}
+
+func toAPICurrentUser(u domain.User) api.CurrentUser {
+	return api.CurrentUser{
+		Email:       openapi_types.Email(u.Email),
+		DisplayName: u.DisplayName,
+	}
 }
