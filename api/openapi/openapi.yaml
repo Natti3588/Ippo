@@ -117,8 +117,6 @@ paths:
           description: There is no content to send for this request, but the headers may be useful.
         '401':
           description: Access is unauthorized.
-        '404':
-          description: The server cannot find the requested resource.
   /topics:
     get:
       operationId: Topics_list

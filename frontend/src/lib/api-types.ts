@@ -424,13 +424,6 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description The server cannot find the requested resource. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
     Topics_list: {

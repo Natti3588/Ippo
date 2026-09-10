@@ -160,6 +160,5 @@ namespace Posts {
   @delete
   op unlike(@path postId: string):
     | NoContentResponse
-    | UnauthorizedResponse
-    | NotFoundResponse;
+    | UnauthorizedResponse;
 }
