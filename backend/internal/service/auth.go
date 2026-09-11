@@ -91,7 +91,9 @@ func newSessionID() (raw, hashed string, err error) {
 func validateDisplayName(displayName string) error {
 	n := utf8.RuneCountInString(displayName)
 	if n < minDisplayNameChars || n > maxDisplayNameChars {
-		return fmt.Errorf("表示名の長さが不正です: %w", domain.ErrInvalidInput)
+		return &domain.InvalidInputError{
+			Detail: "表示名は1文字以上50文字以内にしてください",
+		}
 	}
 	return nil
 }
@@ -111,7 +113,9 @@ func (s *AuthService) issueSession(ctx context.Context, userID string) (Session,
 
 func (s *AuthService) SignUp(ctx context.Context, email, password, displayName string) (domain.User, Session, error) {
 	if len(password) < minPasswordBytes || len(password) > maxPasswordBytes {
-		return domain.User{}, Session{}, fmt.Errorf("パスワードの長さが不正です: %w", domain.ErrInvalidInput)
+		return domain.User{}, Session{}, &domain.InvalidInputError{
+			Detail: "パスワードは8文字以上72バイト以内にしてください",
+		}
 	}
 
 	if err := validateDisplayName(displayName); err != nil {

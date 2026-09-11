@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"unicode/utf8"
 
 	"github.com/Natti3588/Ippo/backend/internal/domain"
@@ -48,7 +47,9 @@ func (s *BoardService) ListPosts(ctx context.Context, slug string, sort domain.S
 func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.User, body string) (domain.Post, error) {
 	n := utf8.RuneCountInString(body)
 	if n < minPostBodyChars || n > maxPostBodyChars {
-		return domain.Post{}, fmt.Errorf("本文の長さが不正です: %w", domain.ErrInvalidInput)
+		return domain.Post{}, &domain.InvalidInputError{
+			Detail: "本文は1文字以上1000文字以内にしてください",
+		}
 	}
 
 	topic, err := s.repo.GetTopic(ctx, slug)
