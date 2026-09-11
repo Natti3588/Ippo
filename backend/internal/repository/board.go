@@ -127,8 +127,7 @@ func (r *BoardRepository) CreateLike(ctx context.Context, postID, authorID strin
 	}
 
 	if err := r.q.CreateLike(ctx, sqlcgen.CreateLikeParams{PostID: pID, AuthorID: aID}); err != nil {
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == mysqlErrNoReferencedRow {
+		if mysqlErr, ok := errors.AsType[*mysql.MySQLError](err); ok && mysqlErr.Number == mysqlErrNoReferencedRow {
 			return fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
 		}
 		return err

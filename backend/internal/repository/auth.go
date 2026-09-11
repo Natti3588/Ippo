@@ -44,8 +44,7 @@ func (r *AuthRepository) CreateUser(ctx context.Context, u domain.User) (domain.
 		// users の一意制約は email と主キーだけで、主キーは UUIDv4 なので
 		// 衝突は起きないと見なし、email の重複と断定している。
 		// users に別の UNIQUE を足したら、この判定は見直すこと。
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == mysqlErrDupEntry {
+		if mysqlErr, ok := errors.AsType[*mysql.MySQLError](err); ok && mysqlErr.Number == mysqlErrDupEntry {
 			return domain.User{}, fmt.Errorf("メールアドレスの重複: %w", domain.ErrEmailTaken)
 		}
 		return domain.User{}, err
