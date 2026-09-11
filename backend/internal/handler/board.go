@@ -39,14 +39,15 @@ func (h *BoardHandler) TopicsList(w http.ResponseWriter, r *http.Request) {
 func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, slug string, params api.TopicsListPostsParams) {
 	sort, ok := toDomainSortOrder(params.Sort)
 	if !ok {
-		w.WriteHeader(http.StatusBadRequest)
+		h.logger.Info("並び順の指定が不正です", "op", "listPosts")
+		writeProblem(w, h.logger, http.StatusBadRequest, "並び順の指定が不正です")
 		return
 	}
 
 	posts, err := h.svc.ListPosts(r.Context(), slug, sort)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			writeProblem(w, h.logger, http.StatusNotFound, "トピックが見つかりません")
 			return
 		}
 		h.logger.Error("failed to list posts", "error", err, "slug", slug)
@@ -70,27 +71,30 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, slug string) {
 	user, ok := userFrom(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		writeProblem(w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
 	var req api.TopicsCreatePostJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		h.logger.Info("リクエストを解釈できません", "error", err, "op", "createPost")
+		writeProblem(w, h.logger, http.StatusBadRequest, "リクエストの形式が不正です")
 		return
 	}
 
 	post, err := h.svc.CreatePost(r.Context(), slug, user, req.Body)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrInvalidInput):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Is(err, domain.ErrNotFound):
-			w.WriteHeader(http.StatusNotFound)
-		default:
-			h.logger.Error("投稿の作成に失敗", "error", err, "slug", slug)
-			w.WriteHeader(http.StatusInternalServerError)
+		if e, ok := errors.AsType[*domain.InvalidInputError](err); ok {
+			h.logger.Info("入力が不正", "error", err, "op", "createPost")
+			writeProblem(w, h.logger, http.StatusBadRequest, e.Detail)
+			return
 		}
+		if errors.Is(err, domain.ErrNotFound) {
+			writeProblem(w, h.logger, http.StatusNotFound, "トピックが見つかりません")
+			return
+		}
+		h.logger.Error("投稿の作成に失敗", "error", err, "slug", slug)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -111,13 +115,13 @@ func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, 
 func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId string) {
 	user, ok := userFrom(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		writeProblem(w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
 	if err := h.svc.Like(r.Context(), postId, user.Id); err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
-			w.WriteHeader(http.StatusNotFound)
+			writeProblem(w, h.logger, http.StatusNotFound, "投稿が見つかりません")
 			return
 		}
 		h.logger.Error("いいねの追加に失敗", "error", err)
@@ -131,7 +135,7 @@ func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId 
 func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postId string) {
 	user, ok := userFrom(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		writeProblem(w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 

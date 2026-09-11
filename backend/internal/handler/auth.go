@@ -24,21 +24,24 @@ func NewAuthHandler(svc *service.AuthService, logger *slog.Logger, secureCookie 
 func (h *AuthHandler) AuthSignup(w http.ResponseWriter, r *http.Request) {
 	var req api.AuthSignupJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		h.logger.Info("リクエストを解釈できません", "error", err, "op", "signup")
+		writeProblem(w, h.logger, http.StatusBadRequest, "リクエストの形式が不正です")
 		return
 	}
 
 	user, sess, err := h.svc.SignUp(r.Context(), string(req.Email), req.Password, req.DisplayName)
 	if err != nil {
-		switch {
-		case errors.Is(err, domain.ErrInvalidInput):
-			w.WriteHeader(http.StatusBadRequest)
-		case errors.Is(err, domain.ErrEmailTaken):
-			w.WriteHeader(http.StatusConflict)
-		default:
-			h.logger.Error("サインアップに失敗", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
+		if e, ok := errors.AsType[*domain.InvalidInputError](err); ok {
+			h.logger.Info("入力が不正", "error", err, "op", "signup")
+			writeProblem(w, h.logger, http.StatusBadRequest, e.Detail)
+			return
 		}
+		if errors.Is(err, domain.ErrEmailTaken) {
+			writeProblem(w, h.logger, http.StatusConflict, "このメールアドレスは既に使われています")
+			return
+		}
+		h.logger.Error("サインアップに失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -53,14 +56,15 @@ func (h *AuthHandler) AuthSignup(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) AuthLogin(w http.ResponseWriter, r *http.Request) {
 	var req api.AuthLoginJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		h.logger.Info("リクエストを解釈できません", "error", err, "op", "login")
+		writeProblem(w, h.logger, http.StatusBadRequest, "リクエストの形式が不正です")
 		return
 	}
 
 	user, sess, err := h.svc.Login(r.Context(), string(req.Email), req.Password)
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidCredentials) {
-			w.WriteHeader(http.StatusUnauthorized)
+			writeProblem(w, h.logger, http.StatusUnauthorized, "メールアドレスまたはパスワードが違います")
 			return
 		}
 		h.logger.Error("ログインに失敗", "error", err)
@@ -91,7 +95,7 @@ func (h *AuthHandler) AuthLogout(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) MeGet(w http.ResponseWriter, r *http.Request) {
 	user, ok := userFrom(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		writeProblem(w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
@@ -104,20 +108,22 @@ func (h *AuthHandler) MeGet(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) MeUpdate(w http.ResponseWriter, r *http.Request) {
 	user, ok := userFrom(r.Context())
 	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
+		writeProblem(w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
 	var req api.MeUpdateJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		h.logger.Info("リクエストを解釈できません", "error", err, "op", "meUpdate")
+		writeProblem(w, h.logger, http.StatusBadRequest, "リクエストの形式が不正です")
 		return
 	}
 
 	updated, err := h.svc.UpdateDisplayName(r.Context(), user, req.DisplayName)
 	if err != nil {
-		if errors.Is(err, domain.ErrInvalidInput) {
-			w.WriteHeader(http.StatusBadRequest)
+		if e, ok := errors.AsType[*domain.InvalidInputError](err); ok {
+			h.logger.Info("入力が不正", "error", err, "op", "meUpdate")
+			writeProblem(w, h.logger, http.StatusBadRequest, e.Detail)
 			return
 		}
 		h.logger.Error("表示名の変更に失敗", "error", err)
