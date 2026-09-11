@@ -16,9 +16,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUser'
         '400':
-          description: The server could not understand the request due to invalid syntax.
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '401':
-          description: Access is unauthorized.
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -44,9 +52,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUser'
         '400':
-          description: The server could not understand the request due to invalid syntax.
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '409':
-          description: The request conflicts with the current state of the server.
+          description: 既に存在する
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -65,7 +81,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUser'
         '401':
-          description: Access is unauthorized.
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     patch:
       operationId: Me_update
       parameters: []
@@ -77,9 +97,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/CurrentUser'
         '400':
-          description: The server could not understand the request due to invalid syntax.
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '401':
-          description: Access is unauthorized.
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -100,9 +128,17 @@ paths:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
         '401':
-          description: Access is unauthorized.
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '404':
-          description: The server cannot find the requested resource.
+          description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     delete:
       operationId: Posts_unlike
       description: いいねを取り消す
@@ -116,7 +152,11 @@ paths:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
         '401':
-          description: Access is unauthorized.
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /topics:
     get:
       operationId: Topics_list
@@ -159,9 +199,17 @@ paths:
                 items:
                   $ref: '#/components/schemas/Post'
         '400':
-          description: The server could not understand the request due to invalid syntax.
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '404':
-          description: The server cannot find the requested resource.
+          description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     post:
       operationId: Topics_createPost
       description: トピックに投稿する
@@ -179,11 +227,23 @@ paths:
               schema:
                 $ref: '#/components/schemas/Post'
         '400':
-          description: The server could not understand the request due to invalid syntax.
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '401':
-          description: Access is unauthorized.
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
         '404':
-          description: The server cannot find the requested resource.
+          description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -257,6 +317,28 @@ components:
           format: date-time
           description: 投稿日時（UTC）
       description: トピックに書き込む投稿
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          description: 問題の種類を表すURI。このAPIでは常に about:blank
+        title:
+          type: string
+          description: HTTPステータスの標準の語句
+        status:
+          type: integer
+          format: int32
+          description: HTTPステータスコード
+        detail:
+          type: string
+          description: 何が起きたかの説明
+      description: RFC 9457 の Problem Details
     SignUpRequest:
       type: object
       required:

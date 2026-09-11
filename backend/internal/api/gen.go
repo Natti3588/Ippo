@@ -75,6 +75,21 @@ type Post struct {
 	LikeCount int32 `json:"likeCount"`
 }
 
+// ProblemDetails RFC 9457 の Problem Details
+type ProblemDetails struct {
+	// Detail 何が起きたかの説明
+	Detail string `json:"detail"`
+
+	// Status HTTPステータスコード
+	Status int32 `json:"status"`
+
+	// Title HTTPステータスの標準の語句
+	Title string `json:"title"`
+
+	// Type 問題の種類を表すURI。このAPIでは常に about:blank
+	Type string `json:"type"`
+}
+
 // SignUpRequest サインアップリクエスト
 type SignUpRequest struct {
 	// DisplayName サインアップに使う名前

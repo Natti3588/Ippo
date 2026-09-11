@@ -168,6 +168,20 @@ export interface components {
              */
             createdAt: string;
         };
+        /** @description RFC 9457 の Problem Details */
+        ProblemDetails: {
+            /** @description 問題の種類を表すURI。このAPIでは常に about:blank */
+            type: string;
+            /** @description HTTPステータスの標準の語句 */
+            title: string;
+            /**
+             * Format: int32
+             * @description HTTPステータスコード
+             */
+            status: number;
+            /** @description 何が起きたかの説明 */
+            detail: string;
+        };
         /** @description サインアップリクエスト */
         SignUpRequest: {
             /**
@@ -228,19 +242,23 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
             };
-            /** @description The server could not understand the request due to invalid syntax. */
+            /** @description 入力が不正 */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description Access is unauthorized. */
+            /** @description 認証が必要 */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -284,19 +302,23 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
             };
-            /** @description The server could not understand the request due to invalid syntax. */
+            /** @description 入力が不正 */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description The request conflicts with the current state of the server. */
+            /** @description 既に存在する */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -318,12 +340,14 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
             };
-            /** @description Access is unauthorized. */
+            /** @description 認証が必要 */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -349,19 +373,23 @@ export interface operations {
                     "application/json": components["schemas"]["CurrentUser"];
                 };
             };
-            /** @description The server could not understand the request due to invalid syntax. */
+            /** @description 入力が不正 */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description Access is unauthorized. */
+            /** @description 認証が必要 */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -383,19 +411,23 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Access is unauthorized. */
+            /** @description 認証が必要 */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description The server cannot find the requested resource. */
+            /** @description 対象が存在しない */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -417,12 +449,14 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Access is unauthorized. */
+            /** @description 認証が必要 */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -468,19 +502,23 @@ export interface operations {
                     "application/json": components["schemas"]["Post"][];
                 };
             };
-            /** @description The server could not understand the request due to invalid syntax. */
+            /** @description 入力が不正 */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description The server cannot find the requested resource. */
+            /** @description 対象が存在しない */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -508,26 +546,32 @@ export interface operations {
                     "application/json": components["schemas"]["Post"];
                 };
             };
-            /** @description The server could not understand the request due to invalid syntax. */
+            /** @description 入力が不正 */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description Access is unauthorized. */
+            /** @description 認証が必要 */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
-            /** @description The server cannot find the requested resource. */
+            /** @description 対象が存在しない */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };

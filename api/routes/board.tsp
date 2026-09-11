@@ -14,16 +14,16 @@ namespace Topics {
   op listPosts(
     @path slug: string,
     @query sort?: SortOrder = SortOrder.popular,
-  ): Post[] | BadRequestResponse | NotFoundResponse;
+  ): Post[] | BadRequestProblem | NotFoundProblem;
 
   @doc("トピックに投稿する")
   @route("{slug}/posts")
   @post
   op createPost(@path slug: string, @body request: CreatePostRequest):
     | (CreatedResponse & Body<Post>)
-    | BadRequestResponse
-    | UnauthorizedResponse
-    | NotFoundResponse;
+    | BadRequestProblem
+    | UnauthorizedProblem
+    | NotFoundProblem;
 }
 
 @route("/posts")
@@ -33,13 +33,13 @@ namespace Posts {
   @put
   op like(@path postId: string):
     | NoContentResponse
-    | UnauthorizedResponse
-    | NotFoundResponse;
+    | UnauthorizedProblem
+    | NotFoundProblem;
 
   @doc("いいねを取り消す")
   @route("{postId}/like")
   @delete
   op unlike(@path postId: string):
     | NoContentResponse
-    | UnauthorizedResponse;
+    | UnauthorizedProblem;
 }
