@@ -87,7 +87,15 @@ func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, bod
 		return domain.Post{}, err
 	}
 
-	id := uuid.New()
+	// v7 は先頭48ビットがミリ秒のタイムスタンプなので、主キーが時刻順に並ぶ。
+	// これにより posts の一覧で id を第2・第3ソートキーに使ったとき、
+	// この変更以降に作られた投稿どうしは、同じ秒でも実際の作成順に並ぶ。
+	// v4 で採番された既存の行は先頭バイトが乱数なので、この性質を持たない。
+	id, err := uuid.NewV7()
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("UUIDの生成に失敗: %w", err)
+	}
+
 	b, err := id.MarshalBinary()
 	if err != nil {
 		return domain.Post{}, fmt.Errorf("UUIDのバイト列化に失敗: %w", err)

@@ -27,7 +27,13 @@ func NewAuthRepository(db *sql.DB) *AuthRepository {
 // CreateUser は利用者を作成し、採番した ID を含む利用者を返す。
 // MySQL に RETURNING が無いため、ID は INSERT の前に Go 側で生成する。
 func (r *AuthRepository) CreateUser(ctx context.Context, u domain.User) (domain.User, error) {
-	id := uuid.New()
+	// v7 は先頭48ビットがミリ秒のタイムスタンプなので、主キーが時刻順に並ぶ。
+	// InnoDB は主キーがクラスタ化索引なので、挿入が末尾に寄りページ分割が減る。
+	id, err := uuid.NewV7()
+	if err != nil {
+		return domain.User{}, fmt.Errorf("UUIDの生成に失敗: %w", err)
+	}
+
 	b, err := id.MarshalBinary()
 	if err != nil {
 		return domain.User{}, fmt.Errorf("UUIDのバイト列化に失敗: %w", err)
@@ -41,8 +47,9 @@ func (r *AuthRepository) CreateUser(ctx context.Context, u domain.User) (domain.
 	})
 	if err != nil {
 		// 1062 は「どれかの一意制約に違反した」としか言わない。
-		// users の一意制約は email と主キーだけで、主キーは UUIDv4 なので
-		// 衝突は起きないと見なし、email の重複と断定している。
+		// users の一意制約は email と主キーだけ。主キーは UUIDv7 で、
+		// 同一プロセス内では同じミリ秒でも連番で単調増加するため衝突しない。
+		// したがって 1062 は email の重複と断定できる。
 		// users に別の UNIQUE を足したら、この判定は見直すこと。
 		if mysqlErr, ok := errors.AsType[*mysql.MySQLError](err); ok && mysqlErr.Number == mysqlErrDupEntry {
 			return domain.User{}, fmt.Errorf("メールアドレスの重複: %w", domain.ErrEmailTaken)
