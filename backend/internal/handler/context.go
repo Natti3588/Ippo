@@ -22,3 +22,17 @@ func userFrom(ctx context.Context) (domain.User, bool) {
 	u, ok := ctx.Value(userContextKey{}).(domain.User)
 	return u, ok
 }
+
+// requestIDContextKey はリクエストIDを context に載せるためのキー。
+// userContextKey と同じ理由で、非公開の空構造体を使う。
+type requestIDContextKey struct{}
+
+func withRequestID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, requestIDContextKey{}, id)
+}
+
+// requestIDFrom はリクエストIDを取り出す。ミドルウェアを通っていなければ空文字。
+func requestIDFrom(ctx context.Context) string {
+	id, _ := ctx.Value(requestIDContextKey{}).(string)
+	return id
+}
