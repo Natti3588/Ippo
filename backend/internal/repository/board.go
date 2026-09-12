@@ -35,6 +35,36 @@ func (r *BoardRepository) GetTopic(ctx context.Context, slug string) (domain.Top
 	return toDomainTopic(row)
 }
 
+// GetPost は投稿を1件、本文の全文つきで返す。
+// 解析できない ID は「存在しない」と同じに扱う。CreateLike と同じ方針である。
+func (r *BoardRepository) GetPost(ctx context.Context, postID string) (domain.Post, error) {
+	id, err := toBinaryUUID(postID)
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("投稿IDが不正: %w", domain.ErrNotFound)
+	}
+
+	row, err := r.q.GetPostById(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Post{}, fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
+		}
+		return domain.Post{}, err
+	}
+
+	parsed, err := uuid.FromBytes(row.ID)
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("投稿IDの変換に失敗: %w", err)
+	}
+	return domain.Post{
+		Id:         parsed.String(),
+		Title:      row.Title,
+		Body:       row.Body,
+		AuthorName: row.AuthorName,
+		LikeCount:  int32(row.LikeCount),
+		CreatedAt:  row.CreatedAt,
+	}, nil
+}
+
 func (r *BoardRepository) ListTopics(ctx context.Context) ([]domain.Topic, error) {
 	rows, err := r.q.ListTopics(ctx)
 	if err != nil {
@@ -43,7 +73,7 @@ func (r *BoardRepository) ListTopics(ctx context.Context) ([]domain.Topic, error
 	return toDomainTopics(rows)
 }
 
-func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder) ([]domain.Post, error) {
+func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder) ([]domain.PostSummary, error) {
 	id, err := toBinaryUUID(topicID)
 	if err != nil {
 		return nil, err
@@ -76,7 +106,7 @@ func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, 
 // CreatePost は投稿を作成し、作成した投稿を返す。
 // MySQL に RETURNING が無いため、ID と作成時刻は INSERT の前に Go 側で決める。
 // AuthorName は posts に持たないため、ここでは埋めない。呼び出し側が埋める。
-func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, body string) (domain.Post, error) {
+func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, title, body string) (domain.Post, error) {
 	tID, err := toBinaryUUID(topicID)
 	if err != nil {
 		return domain.Post{}, err
@@ -107,6 +137,7 @@ func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, bod
 		ID:        b,
 		TopicID:   tID,
 		AuthorID:  aID,
+		Title:     title,
 		Body:      body,
 		CreatedAt: createdAt,
 	}); err != nil {
@@ -115,6 +146,7 @@ func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, bod
 
 	return domain.Post{
 		Id:        id.String(),
+		Title:     title,
 		Body:      body,
 		LikeCount: 0,
 		CreatedAt: createdAt,

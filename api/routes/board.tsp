@@ -14,7 +14,7 @@ namespace Topics {
   op listPosts(
     @path slug: string,
     @query sort?: SortOrder = SortOrder.popular,
-  ): Post[] | BadRequestProblem | NotFoundProblem;
+  ): PostSummary[] | BadRequestProblem | NotFoundProblem;
 
   @doc("トピックに投稿する")
   @route("{slug}/posts")
@@ -28,6 +28,11 @@ namespace Topics {
 
 @route("/posts")
 namespace Posts {
+  @doc("投稿を1件取得する。本文は全文を返す")
+  @route("{postId}")
+  @get
+  op get(@path postId: string): Post | NotFoundProblem;
+
   @doc("投稿にいいねをする")
   @route("{postId}/like")
   @put

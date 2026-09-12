@@ -37,18 +37,6 @@ func toDomainSortOrder(sort *api.SortOrder) (domain.SortOrder, bool) {
 	}
 }
 
-func toAPIPosts(posts []domain.Post) ([]api.Post, error) {
-	out := make([]api.Post, 0, len(posts))
-	for _, p := range posts {
-		a, err := toAPIPost(p)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, a)
-	}
-	return out, nil
-}
-
 func toAPIPost(p domain.Post) (api.Post, error) {
 	id, err := uuid.Parse(p.Id)
 	if err != nil {
@@ -57,10 +45,40 @@ func toAPIPost(p domain.Post) (api.Post, error) {
 
 	return api.Post{
 		Id:         id,
+		Title:      p.Title,
 		Body:       p.Body,
 		AuthorName: p.AuthorName,
 		LikeCount:  p.LikeCount,
 		CreatedAt:  p.CreatedAt.UTC(),
+	}, nil
+}
+
+func toAPIPostSummaries(posts []domain.PostSummary) ([]api.PostSummary, error) {
+	out := make([]api.PostSummary, 0, len(posts))
+	for _, p := range posts {
+		a, err := toAPIPostSummary(p)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, nil
+}
+
+func toAPIPostSummary(p domain.PostSummary) (api.PostSummary, error) {
+	id, err := uuid.Parse(p.Id)
+	if err != nil {
+		return api.PostSummary{}, fmt.Errorf("投稿ID: %qの解析に失敗: %w", p.Id, err)
+	}
+
+	return api.PostSummary{
+		Id:          id,
+		Title:       p.Title,
+		BodyPreview: p.BodyPreview,
+		Truncated:   p.Truncated,
+		AuthorName:  p.AuthorName,
+		LikeCount:   p.LikeCount,
+		CreatedAt:   p.CreatedAt.UTC(),
 	}, nil
 }
 

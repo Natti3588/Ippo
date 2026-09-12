@@ -114,6 +114,29 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateProfileRequest'
+  /posts/{postId}:
+    get:
+      operationId: Posts_get
+      description: 投稿を1件取得する。本文は全文を返す
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '404':
+          description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /posts/{postId}/like:
     put:
       operationId: Posts_like
@@ -197,7 +220,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Post'
+                  $ref: '#/components/schemas/PostSummary'
         '400':
           description: 入力が不正
           content:
@@ -255,12 +278,17 @@ components:
     CreatePostRequest:
       type: object
       required:
+        - title
         - body
       properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
         body:
           type: string
           minLength: 1
-          maxLength: 1000
+          maxLength: 15000
       description: 投稿の作成リクエスト
     CurrentUser:
       type: object
@@ -294,6 +322,7 @@ components:
       type: object
       required:
         - id
+        - title
         - body
         - authorName
         - likeCount
@@ -302,6 +331,9 @@ components:
         id:
           type: string
           format: uuid
+        title:
+          type: string
+          description: タイトル
         body:
           type: string
           description: 本文
@@ -317,6 +349,41 @@ components:
           format: date-time
           description: 投稿日時（UTC）
       description: トピックに書き込む投稿
+    PostSummary:
+      type: object
+      required:
+        - id
+        - title
+        - bodyPreview
+        - truncated
+        - authorName
+        - likeCount
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          description: タイトル。100文字に制限しているため、一覧でも全文を返す
+        bodyPreview:
+          type: string
+          description: 本文の先頭200文字。truncated が true なら続きがある
+        truncated:
+          type: boolean
+          description: 本文が200文字を超えて切り詰められたかどうか
+        authorName:
+          type: string
+          description: 投稿者の名前
+        likeCount:
+          type: integer
+          format: int32
+          description: いいねの数
+        createdAt:
+          type: string
+          format: date-time
+          description: 投稿日時（UTC）
+      description: 一覧に並べる投稿。本文は先頭200文字までしか含まない
     ProblemDetails:
       type: object
       required:

@@ -1,0 +1,9 @@
+ALTER TABLE posts
+  ADD COLUMN title VARCHAR(100) NOT NULL DEFAULT '' AFTER author_id;
+
+UPDATE posts SET title = '無題' WHERE title = '';
+
+ALTER TABLE posts ALTER COLUMN title DROP DEFAULT;
+
+ALTER TABLE posts
+  ADD CONSTRAINT chk_posts_title CHECK (CHAR_LENGTH(title) BETWEEN 1 AND 100);

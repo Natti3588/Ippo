@@ -14,8 +14,35 @@ model Post {
   @format("uuid")
   id: string;
 
+  @doc("タイトル")
+  title: string;
+
   @doc("本文")
   body: string;
+
+  @doc("投稿者の名前")
+  authorName: string;
+
+  @doc("いいねの数")
+  likeCount: int32;
+
+  @doc("投稿日時（UTC）")
+  createdAt: utcDateTime;
+}
+
+@doc("一覧に並べる投稿。本文は先頭200文字までしか含まない")
+model PostSummary {
+  @format("uuid")
+  id: string;
+
+  @doc("タイトル。100文字に制限しているため、一覧でも全文を返す")
+  title: string;
+
+  @doc("本文の先頭200文字。truncated が true なら続きがある")
+  bodyPreview: string;
+
+  @doc("本文が200文字を超えて切り詰められたかどうか")
+  truncated: boolean;
 
   @doc("投稿者の名前")
   authorName: string;
@@ -30,7 +57,11 @@ model Post {
 @doc("投稿の作成リクエスト")
 model CreatePostRequest {
   @minLength(1)
-  @maxLength(1000)
+  @maxLength(100)
+  title: string;
+
+  @minLength(1)
+  @maxLength(15000)
   body: string;
 }
 

@@ -68,6 +68,23 @@ export interface paths {
         patch: operations["Me_update"];
         trace?: never;
     };
+    "/posts/{postId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 投稿を1件取得する。本文は全文を返す */
+        get: operations["Posts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/posts/{postId}/like": {
         parameters: {
             query?: never;
@@ -127,6 +144,7 @@ export interface components {
     schemas: {
         /** @description 投稿の作成リクエスト */
         CreatePostRequest: {
+            title: string;
             body: string;
         };
         /** @description ログイン中のユーザーの情報 */
@@ -153,8 +171,33 @@ export interface components {
         Post: {
             /** Format: uuid */
             id: string;
+            /** @description タイトル */
+            title: string;
             /** @description 本文 */
             body: string;
+            /** @description 投稿者の名前 */
+            authorName: string;
+            /**
+             * Format: int32
+             * @description いいねの数
+             */
+            likeCount: number;
+            /**
+             * Format: date-time
+             * @description 投稿日時（UTC）
+             */
+            createdAt: string;
+        };
+        /** @description 一覧に並べる投稿。本文は先頭200文字までしか含まない */
+        PostSummary: {
+            /** Format: uuid */
+            id: string;
+            /** @description タイトル。100文字に制限しているため、一覧でも全文を返す */
+            title: string;
+            /** @description 本文の先頭200文字。truncated が true なら続きがある */
+            bodyPreview: string;
+            /** @description 本文が200文字を超えて切り詰められたかどうか */
+            truncated: boolean;
             /** @description 投稿者の名前 */
             authorName: string;
             /**
@@ -393,6 +436,37 @@ export interface operations {
             };
         };
     };
+    Posts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Post"];
+                };
+            };
+            /** @description 対象が存在しない */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     Posts_like: {
         parameters: {
             query?: never;
@@ -499,7 +573,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Post"][];
+                    "application/json": components["schemas"]["PostSummary"][];
                 };
             };
             /** @description 入力が不正 */

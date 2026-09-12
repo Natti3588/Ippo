@@ -55,7 +55,7 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
-	apiPosts, err := toAPIPosts(posts)
+	apiPosts, err := toAPIPostSummaries(posts)
 	if err != nil {
 		h.logger.Error("failed to convert posts", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -65,6 +65,31 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(apiPosts); err != nil {
 		h.logger.Error("failed to encode response", "error", err)
+	}
+}
+
+func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId string) {
+	post, err := h.svc.GetPost(r.Context(), postId)
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			writeProblem(w, h.logger, http.StatusNotFound, "投稿が見つかりません")
+			return
+		}
+		h.logger.Error("投稿の取得に失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	apiPost, err := toAPIPost(post)
+	if err != nil {
+		h.logger.Error("投稿の変換に失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(apiPost); err != nil {
+		h.logger.Error("レスポンスの書き込みに失敗", "error", err)
 	}
 }
 
@@ -82,7 +107,7 @@ func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	post, err := h.svc.CreatePost(r.Context(), slug, user, req.Body)
+	post, err := h.svc.CreatePost(r.Context(), slug, user, req.Title, req.Body)
 	if err != nil {
 		if e, ok := errors.AsType[*domain.InvalidInputError](err); ok {
 			h.logger.Info("入力が不正", "error", err, "op", "createPost")

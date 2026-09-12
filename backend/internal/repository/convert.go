@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"time"
+	"unicode/utf8"
 
 	"github.com/Natti3588/Ippo/backend/internal/database/sqlcgen"
 	"github.com/Natti3588/Ippo/backend/internal/domain"
@@ -42,21 +43,64 @@ func toBinaryUUID(s string) ([]byte, error) {
 	return b, nil
 }
 
-func toDomainPost(id []byte, body, authorName string, likeCount int64, createdAt time.Time) (domain.Post, error) {
-	parsed, err := uuid.FromBytes(id)
+// summaryRow は一覧クエリ3種の行から、変換に必要な値だけを取り出した中間表現。
+//
+// 引数を構造体にしているのは、bodyPreview と authorName がどちらも string で、
+// 位置を入れ替えてもコンパイルが通ってしまうためである。
+// フィールド名で渡せば入れ替えようがない。
+type summaryRow struct {
+	ID          []byte
+	Title       string
+	BodyPreview string
+	BodyLength  int64
+	AuthorName  string
+	LikeCount   int64
+	CreatedAt   time.Time
+}
+
+// toDomainPostSummary は一覧の1行を要約に変換する。
+//
+// Truncated は「全文の文字数 > プレビューの文字数」で決める。
+// プレビューの長さを Go 側の定数で持たないのは、SQL の LEFT() に書いた値と
+// 定数が食い違っても、どちらもエラーにならないためである。
+// プレビュー自身の長さを数えれば、この2つはずれようがない。
+//
+// ただしこの方法で防げるのは SQL と Go のずれだけである。
+// LEFT(p.body, 200) は posts.sql に3回現れ、1本だけ長さを変えても
+// そのクエリの中では Truncated が正しく計算されてしまう。
+// 同じ投稿が並び順によって違う長さのプレビューを返すだけで、何もエラーにならない。
+// 3本の 200 は必ず揃えて変えること。
+//
+// utf8.RuneCountInString を使うのは、MySQL の CHAR_LENGTH() が
+// コードポイントを数えるため、単位を揃える必要があるからである。
+func toDomainPostSummary(r summaryRow) (domain.PostSummary, error) {
+	parsed, err := uuid.FromBytes(r.ID)
 	if err != nil {
-		return domain.Post{}, fmt.Errorf("投稿IDの変換に失敗: %w", err)
+		return domain.PostSummary{}, fmt.Errorf("投稿IDの変換に失敗: %w", err)
 	}
-	return domain.Post{
-		Id: parsed.String(), Body: body, AuthorName: authorName,
-		LikeCount: int32(likeCount), CreatedAt: createdAt,
+	return domain.PostSummary{
+		Id:          parsed.String(),
+		Title:       r.Title,
+		BodyPreview: r.BodyPreview,
+		Truncated:   r.BodyLength > int64(utf8.RuneCountInString(r.BodyPreview)),
+		AuthorName:  r.AuthorName,
+		LikeCount:   int32(r.LikeCount),
+		CreatedAt:   r.CreatedAt,
 	}, nil
 }
 
-func postsFromPopular(rows []sqlcgen.ListPostsByTopicPopularRow) ([]domain.Post, error) {
-	out := make([]domain.Post, 0, len(rows))
+func postsFromPopular(rows []sqlcgen.ListPostsByTopicPopularRow) ([]domain.PostSummary, error) {
+	out := make([]domain.PostSummary, 0, len(rows))
 	for _, r := range rows {
-		d, err := toDomainPost(r.ID, r.Body, r.AuthorName, r.LikeCount, r.CreatedAt)
+		d, err := toDomainPostSummary(summaryRow{
+			ID:          r.ID,
+			Title:       r.Title,
+			BodyPreview: r.BodyPreview,
+			BodyLength:  int64(r.BodyLength),
+			AuthorName:  r.AuthorName,
+			LikeCount:   r.LikeCount,
+			CreatedAt:   r.CreatedAt,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -65,10 +109,18 @@ func postsFromPopular(rows []sqlcgen.ListPostsByTopicPopularRow) ([]domain.Post,
 	return out, nil
 }
 
-func postsFromNewest(rows []sqlcgen.ListPostsByTopicNewestRow) ([]domain.Post, error) {
-	out := make([]domain.Post, 0, len(rows))
+func postsFromNewest(rows []sqlcgen.ListPostsByTopicNewestRow) ([]domain.PostSummary, error) {
+	out := make([]domain.PostSummary, 0, len(rows))
 	for _, r := range rows {
-		d, err := toDomainPost(r.ID, r.Body, r.AuthorName, r.LikeCount, r.CreatedAt)
+		d, err := toDomainPostSummary(summaryRow{
+			ID:          r.ID,
+			Title:       r.Title,
+			BodyPreview: r.BodyPreview,
+			BodyLength:  int64(r.BodyLength),
+			AuthorName:  r.AuthorName,
+			LikeCount:   r.LikeCount,
+			CreatedAt:   r.CreatedAt,
+		})
 		if err != nil {
 			return nil, err
 		}
@@ -77,10 +129,18 @@ func postsFromNewest(rows []sqlcgen.ListPostsByTopicNewestRow) ([]domain.Post, e
 	return out, nil
 }
 
-func postsFromOldest(rows []sqlcgen.ListPostsByTopicOldestRow) ([]domain.Post, error) {
-	out := make([]domain.Post, 0, len(rows))
+func postsFromOldest(rows []sqlcgen.ListPostsByTopicOldestRow) ([]domain.PostSummary, error) {
+	out := make([]domain.PostSummary, 0, len(rows))
 	for _, r := range rows {
-		d, err := toDomainPost(r.ID, r.Body, r.AuthorName, r.LikeCount, r.CreatedAt)
+		d, err := toDomainPostSummary(summaryRow{
+			ID:          r.ID,
+			Title:       r.Title,
+			BodyPreview: r.BodyPreview,
+			BodyLength:  int64(r.BodyLength),
+			AuthorName:  r.AuthorName,
+			LikeCount:   r.LikeCount,
+			CreatedAt:   r.CreatedAt,
+		})
 		if err != nil {
 			return nil, err
 		}

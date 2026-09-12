@@ -20,6 +20,7 @@ type Post struct {
 	AuthorID  []byte
 	Body      string
 	CreatedAt time.Time
+	Title     string
 }
 
 type Session struct {

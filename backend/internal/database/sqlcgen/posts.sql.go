@@ -11,14 +11,15 @@ import (
 )
 
 const createPost = `-- name: CreatePost :exec
-INSERT INTO posts (id, topic_id, author_id, body, created_at)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO posts (id, topic_id, author_id, title, body, created_at)
+VALUES (?, ?, ?, ?, ?, ?)
 `
 
 type CreatePostParams struct {
 	ID        []byte
 	TopicID   []byte
 	AuthorID  []byte
+	Title     string
 	Body      string
 	CreatedAt time.Time
 }
@@ -28,16 +29,57 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) error {
 		arg.ID,
 		arg.TopicID,
 		arg.AuthorID,
+		arg.Title,
 		arg.Body,
 		arg.CreatedAt,
 	)
 	return err
 }
 
+const getPostById = `-- name: GetPostById :one
+SELECT
+  p.id,
+  p.title,
+  p.body,
+  u.display_name AS author_name,
+  COUNT(l.post_id) AS like_count,
+  p.created_at
+FROM posts p
+JOIN users u ON u.id = p.author_id
+LEFT JOIN likes l ON l.post_id = p.id
+WHERE p.id = ?
+GROUP BY p.id, u.display_name
+`
+
+type GetPostByIdRow struct {
+	ID         []byte
+	Title      string
+	Body       string
+	AuthorName string
+	LikeCount  int64
+	CreatedAt  time.Time
+}
+
+func (q *Queries) GetPostById(ctx context.Context, id []byte) (GetPostByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getPostById, id)
+	var i GetPostByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Body,
+		&i.AuthorName,
+		&i.LikeCount,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const listPostsByTopicNewest = `-- name: ListPostsByTopicNewest :many
 SELECT
   p.id,
-  p.body,
+  p.title,
+  LEFT(p.body, 200)   AS body_preview,
+  CHAR_LENGTH(p.body) AS body_length,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   p.created_at
@@ -50,11 +92,13 @@ ORDER BY p.created_at DESC, p.id DESC
 `
 
 type ListPostsByTopicNewestRow struct {
-	ID         []byte
-	Body       string
-	AuthorName string
-	LikeCount  int64
-	CreatedAt  time.Time
+	ID          []byte
+	Title       string
+	BodyPreview string
+	BodyLength  int32
+	AuthorName  string
+	LikeCount   int64
+	CreatedAt   time.Time
 }
 
 func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([]ListPostsByTopicNewestRow, error) {
@@ -68,7 +112,9 @@ func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([
 		var i ListPostsByTopicNewestRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Body,
+			&i.Title,
+			&i.BodyPreview,
+			&i.BodyLength,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.CreatedAt,
@@ -89,7 +135,9 @@ func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([
 const listPostsByTopicOldest = `-- name: ListPostsByTopicOldest :many
 SELECT
   p.id,
-  p.body,
+  p.title,
+  LEFT(p.body, 200)   AS body_preview,
+  CHAR_LENGTH(p.body) AS body_length,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   p.created_at
@@ -102,11 +150,13 @@ ORDER BY p.created_at ASC, p.id ASC
 `
 
 type ListPostsByTopicOldestRow struct {
-	ID         []byte
-	Body       string
-	AuthorName string
-	LikeCount  int64
-	CreatedAt  time.Time
+	ID          []byte
+	Title       string
+	BodyPreview string
+	BodyLength  int32
+	AuthorName  string
+	LikeCount   int64
+	CreatedAt   time.Time
 }
 
 func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID []byte) ([]ListPostsByTopicOldestRow, error) {
@@ -120,7 +170,9 @@ func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID []byte) ([
 		var i ListPostsByTopicOldestRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Body,
+			&i.Title,
+			&i.BodyPreview,
+			&i.BodyLength,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.CreatedAt,
@@ -139,9 +191,12 @@ func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID []byte) ([
 }
 
 const listPostsByTopicPopular = `-- name: ListPostsByTopicPopular :many
+
 SELECT
   p.id,
-  p.body,
+  p.title,
+  LEFT(p.body, 200)   AS body_preview,
+  CHAR_LENGTH(p.body) AS body_length,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   p.created_at
@@ -154,13 +209,19 @@ ORDER BY like_count DESC, p.created_at DESC, p.id DESC
 `
 
 type ListPostsByTopicPopularRow struct {
-	ID         []byte
-	Body       string
-	AuthorName string
-	LikeCount  int64
-	CreatedAt  time.Time
+	ID          []byte
+	Title       string
+	BodyPreview string
+	BodyLength  int32
+	AuthorName  string
+	LikeCount   int64
+	CreatedAt   time.Time
 }
 
+// LEFT(p.body, 200) はこのファイルに3回現れる。長さを変えるときは3本すべて揃えること。
+// 1本だけ変えても SQL も Go もエラーにならず、同じ投稿が並び順によって
+// 違う長さのプレビューを返すだけになる。詳細は repository/convert.go の
+// toDomainPostSummary のコメントを参照。
 func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID []byte) ([]ListPostsByTopicPopularRow, error) {
 	rows, err := q.db.QueryContext(ctx, listPostsByTopicPopular, topicID)
 	if err != nil {
@@ -172,7 +233,9 @@ func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID []byte) (
 		var i ListPostsByTopicPopularRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.Body,
+			&i.Title,
+			&i.BodyPreview,
+			&i.BodyLength,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.CreatedAt,

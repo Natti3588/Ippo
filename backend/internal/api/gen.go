@@ -38,7 +38,8 @@ func (e SortOrder) Valid() bool {
 
 // CreatePostRequest 投稿の作成リクエスト
 type CreatePostRequest struct {
-	Body string `json:"body"`
+	Body  string `json:"body"`
+	Title string `json:"title"`
 }
 
 // CurrentUser ログイン中のユーザーの情報
@@ -73,6 +74,31 @@ type Post struct {
 
 	// LikeCount いいねの数
 	LikeCount int32 `json:"likeCount"`
+
+	// Title タイトル
+	Title string `json:"title"`
+}
+
+// PostSummary 一覧に並べる投稿。本文は先頭200文字までしか含まない
+type PostSummary struct {
+	// AuthorName 投稿者の名前
+	AuthorName string `json:"authorName"`
+
+	// BodyPreview 本文の先頭200文字。truncated が true なら続きがある
+	BodyPreview string `json:"bodyPreview"`
+
+	// CreatedAt 投稿日時（UTC）
+	CreatedAt time.Time          `json:"createdAt"`
+	Id        openapi_types.UUID `json:"id"`
+
+	// LikeCount いいねの数
+	LikeCount int32 `json:"likeCount"`
+
+	// Title タイトル。100文字に制限しているため、一覧でも全文を返す
+	Title string `json:"title"`
+
+	// Truncated 本文が200文字を超えて切り詰められたかどうか
+	Truncated bool `json:"truncated"`
 }
 
 // ProblemDetails RFC 9457 の Problem Details
@@ -154,6 +180,9 @@ type ServerInterface interface {
 
 	// (PATCH /me)
 	MeUpdate(w http.ResponseWriter, r *http.Request)
+
+	// (GET /posts/{postId})
+	PostsGet(w http.ResponseWriter, r *http.Request, postId string)
 
 	// (DELETE /posts/{postId}/like)
 	PostsUnlike(w http.ResponseWriter, r *http.Request, postId string)
@@ -241,6 +270,32 @@ func (siw *ServerInterfaceWrapper) MeUpdate(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.MeUpdate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostsGet operation middleware
+func (siw *ServerInterfaceWrapper) PostsGet(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "postId" -------------
+	var postId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostsGet(w, r, postId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -509,6 +564,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/signup", wrapper.AuthSignup)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/me", wrapper.MeGet)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/me", wrapper.MeUpdate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsGet)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsUnlike)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsLike)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics", wrapper.TopicsList)
