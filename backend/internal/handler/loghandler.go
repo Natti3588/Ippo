@@ -23,7 +23,7 @@ func NewLogHandler(inner slog.Handler) slog.Handler {
 
 func (h logHandler) Handle(ctx context.Context, r slog.Record) error {
 	if id := requestIDFrom(ctx); id != "" {
-		r.Clone()
+		r = r.Clone()
 		r.AddAttrs(slog.String("request_id", id))
 	}
 	return h.Handler.Handle(ctx, r)
