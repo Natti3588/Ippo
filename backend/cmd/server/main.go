@@ -80,8 +80,14 @@ func main() {
 		Middlewares: []api.MiddlewareFunc{authMiddleware.Attach},
 	})
 
+	// アクセスログは ServeMux の外側に巻く。
+	// 生成された Middlewares に入れるとルートが見つかったときしか動かず、
+	// 404 と 405 が記録されない。
+	root := handler.AccessLog(logger)(router)
+	root = handler.RequestID(root)
+
 	logger.Info("server started", "addr", ":8080")
-	if err := http.ListenAndServe(":8080", router); err != nil {
+	if err := http.ListenAndServe(":8080", root); err != nil {
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
 	}
