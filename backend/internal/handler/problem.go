@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 // err.Error() をそのまま渡してはならない。内部の文言やラップされた情報が外に出る。
 //
 // 500 はこの関数を使わない。契約に 500 を宣言していないため、本文を持たせない。
-func writeProblem(w http.ResponseWriter, logger *slog.Logger, status int, detail string) {
+func writeProblem(ctx context.Context, w http.ResponseWriter, logger *slog.Logger, status int, detail string) {
 	w.Header().Set("Content-Type", "application/problem+json")
 	w.WriteHeader(status)
 
@@ -25,6 +26,6 @@ func writeProblem(w http.ResponseWriter, logger *slog.Logger, status int, detail
 		Detail: detail,
 	}
 	if err := json.NewEncoder(w).Encode(body); err != nil {
-		logger.Error("エラーレスポンスの書き込みに失敗", "error", err)
+		logger.ErrorContext(ctx, "エラーレスポンスの書き込みに失敗", "error", err)
 	}
 }

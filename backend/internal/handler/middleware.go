@@ -35,7 +35,7 @@ func (m *AuthMiddleware) Attach(next http.Handler) http.Handler {
 		case errors.Is(err, domain.ErrNotFound):
 			next.ServeHTTP(w, r)
 		case err != nil:
-			m.logger.Error("セッションの照会に失敗", "error", err)
+			m.logger.ErrorContext(r.Context(), "セッションの照会に失敗", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 		default:
 			next.ServeHTTP(w, r.WithContext(withUser(r.Context(), user)))
