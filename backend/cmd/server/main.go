@@ -17,9 +17,9 @@ import (
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	logger := slog.New(handler.NewLogHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
-	}))
+	})))
 
 	// DATABASE_URL は互換性のため名前を維持する。値はMySQLのDSN。
 	rawDSN := os.Getenv("DATABASE_URL")
