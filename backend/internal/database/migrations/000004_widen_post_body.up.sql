@@ -1,0 +1,4 @@
+ALTER TABLE posts DROP CHECK chk_posts_body;
+
+ALTER TABLE posts
+  ADD CONSTRAINT chk_posts_body CHECK (CHAR_LENGTH(body) BETWEEN 1 AND 15000);
