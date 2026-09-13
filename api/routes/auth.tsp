@@ -26,6 +26,14 @@ model NotFoundProblem {
   @header contentType: "application/problem+json";
 }
 
+@doc("権限が無い")
+model ForbiddenProblem {
+  ...ForbiddenResponse;
+  ...Body<ProblemDetails>;
+
+  @header contentType: "application/problem+json";
+}
+
 @doc("既に存在する")
 model ConflictProblem {
   ...ConflictResponse;

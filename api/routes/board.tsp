@@ -33,6 +33,15 @@ namespace Posts {
   @get
   op get(@path postId: string): Post | NotFoundProblem;
 
+  @doc("自分の投稿を削除する。いいねも一緒に消える")
+  @route("{postId}")
+  @delete
+  op remove(@path postId: string):
+    | NoContentResponse
+    | UnauthorizedProblem
+    | ForbiddenProblem
+    | NotFoundProblem;
+
   @doc("投稿にいいねをする")
   @route("{postId}/like")
   @put
