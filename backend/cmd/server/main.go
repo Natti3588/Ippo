@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/Natti3588/Ippo/backend/internal/api"
@@ -15,6 +17,14 @@ import (
 	"github.com/Natti3588/Ippo/backend/internal/service"
 	_ "github.com/go-sql-driver/mysql"
 )
+
+// shutdownTimeout は SIGTERM を受けてから、処理中のリクエストを待つ上限。
+//
+// 下限は WriteTimeout の15秒。正当なリクエストの最長がそれなので、
+// 短くすると自分で正しい処理を切ることになる。
+// 上限は ECS の stopTimeout の既定30秒。超えると SIGKILL で強制終了され、
+// 「シャットダウン完了」のログが残らない。
+const shutdownTimeout = 20 * time.Second
 
 func main() {
 	logger := slog.New(handler.NewLogHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
@@ -115,9 +125,53 @@ func main() {
 		IdleTimeout: 60 * time.Second,
 	}
 
+	// SIGTERM（ECS がタスクを止めるときに送る）と Ctrl+C を受け取る。
+	// signal.NotifyContext は、シグナルが来たら ctx をキャンセルする。
+	shutdownSignal, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	// ListenAndServe は待ち受けている間ブロックするので、別の goroutine で動かす。
+	//
+	// バッファを1にしているのは、シャットダウン経路に入ったあとでも
+	// この goroutine が送信して終了できるようにするためである。
+	// Shutdown を呼ぶと ListenAndServe は http.ErrServerClosed を返して戻ってくる。
+	// バッファが無いと、受け取り手が居ないまま送信でブロックして goroutine が残る。
+	serveErr := make(chan error, 1)
+	go func() {
+		serveErr <- srv.ListenAndServe()
+	}()
+
 	logger.Info("server started", "addr", srv.Addr)
-	if err := srv.ListenAndServe(); err != nil {
+
+	select {
+	case err := <-serveErr:
+		// 待ち受けそのものに失敗した（ポートが使用中など）。
+		// ここに来る時点でシャットダウンする対象が無い。
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
+
+	case <-shutdownSignal.Done():
+		// stop() でシグナルの捕捉を解除する。
+		// これにより、2回目の SIGTERM や Ctrl+C は既定の動作（即終了）に戻る。
+		// シャットダウンが長引いたときに、利用者が強制終了できる余地を残す。
+		stop()
+		logger.Info("shutdown started", "timeout", shutdownTimeout.String())
 	}
+
+	// Shutdown は、アイドルな接続を即座に閉じ、処理中のリクエストを待つ。
+	// 新しい接続は受け付けなくなる。
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancelShutdown()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		// 待ち時間内に終わらなかった。処理中のリクエストは切られている。
+		//
+		// ここで os.Exit(1) すると defer db.Close() が走らないが、
+		// プロセスが終わるので MySQL 側が接続を回収する。
+		// 異常終了であることを終了コードで伝えるほうを優先する。
+		logger.Error("shutdown timed out", "error", err)
+		os.Exit(1)
+	}
+
+	logger.Info("shutdown completed")
 }
