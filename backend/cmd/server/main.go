@@ -86,8 +86,37 @@ func main() {
 	root := handler.AccessLog(logger)(router)
 	root = handler.RequestID(root)
 
-	logger.Info("server started", "addr", ":8080")
-	if err := http.ListenAndServe(":8080", root); err != nil {
+	// ボディの上限はアクセスログより内側でよい。
+	// 超過したリクエストも 400 として1行記録されるほうが追いやすい。
+	root = handler.LimitBody(root)
+
+	// タイムアウトはすべて明示する。http.Server のゼロ値は「無制限」であり、
+	// http.ListenAndServe はゼロ値の Server を作る。
+	// 書かないことが「無制限を選ぶ」ことになるため、4つとも値を置く。
+	//
+	// 値を環境変数にしないのは、設定を忘れた環境が無制限に戻るのを防ぐため。
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: root,
+
+		// ヘッダは常に一瞬で届くべきなので、ボディとは別に短く締める。
+		// 1バイトずつヘッダを送り続ける接続（Slowloris）をここで落とす。
+		ReadHeaderTimeout: 5 * time.Second,
+
+		// ボディ込みの読み取り時間。画像アップロードを作らない前提で短くできる。
+		// 大きいファイルを受ける要件が出たら、ここだけ伸ばす。
+		ReadTimeout: 15 * time.Second,
+
+		// レスポンスを極端に遅く受け取るクライアントで接続を掴まれないようにする。
+		WriteTimeout: 15 * time.Second,
+
+		// keep-alive で居座る接続を切る。
+		// ゼロにすると ReadTimeout にフォールバックするため、明示しておく。
+		IdleTimeout: 60 * time.Second,
+	}
+
+	logger.Info("server started", "addr", srv.Addr)
+	if err := srv.ListenAndServe(); err != nil {
 		logger.Error("server stopped", "error", err)
 		os.Exit(1)
 	}
