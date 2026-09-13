@@ -37,7 +37,12 @@ func toDomainSortOrder(sort *api.SortOrder) (domain.SortOrder, bool) {
 	}
 }
 
-func toAPIPost(p domain.Post) (api.Post, error) {
+// toAPIPost は投稿を API の形に変換する。
+//
+// isMine は viewerID との比較で決める。ドメインに持たせないのは、
+// 「自分のものか」が投稿の属性ではなく、誰が見ているかによって変わるためである。
+// authorId そのものは API に出さない。クライアントが他人の識別子を知る必要がない。
+func toAPIPost(p domain.Post, viewerID string) (api.Post, error) {
 	id, err := uuid.Parse(p.Id)
 	if err != nil {
 		return api.Post{}, fmt.Errorf("投稿ID: %qの解析に失敗: %w", p.Id, err)
@@ -49,14 +54,17 @@ func toAPIPost(p domain.Post) (api.Post, error) {
 		Body:       p.Body,
 		AuthorName: p.AuthorName,
 		LikeCount:  p.LikeCount,
+		LikedByMe:  p.LikedByMe,
+		IsMine:     viewerID != "" && p.AuthorID == viewerID,
 		CreatedAt:  p.CreatedAt.UTC(),
+		Topic:      api.Topic{Slug: p.Topic.Slug, Name: p.Topic.Name},
 	}, nil
 }
 
-func toAPIPostSummaries(posts []domain.PostSummary) ([]api.PostSummary, error) {
+func toAPIPostSummaries(posts []domain.PostSummary, viewerID string) ([]api.PostSummary, error) {
 	out := make([]api.PostSummary, 0, len(posts))
 	for _, p := range posts {
-		a, err := toAPIPostSummary(p)
+		a, err := toAPIPostSummary(p, viewerID)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +73,7 @@ func toAPIPostSummaries(posts []domain.PostSummary) ([]api.PostSummary, error) {
 	return out, nil
 }
 
-func toAPIPostSummary(p domain.PostSummary) (api.PostSummary, error) {
+func toAPIPostSummary(p domain.PostSummary, viewerID string) (api.PostSummary, error) {
 	id, err := uuid.Parse(p.Id)
 	if err != nil {
 		return api.PostSummary{}, fmt.Errorf("投稿ID: %qの解析に失敗: %w", p.Id, err)
@@ -78,6 +86,8 @@ func toAPIPostSummary(p domain.PostSummary) (api.PostSummary, error) {
 		Truncated:   p.Truncated,
 		AuthorName:  p.AuthorName,
 		LikeCount:   p.LikeCount,
+		LikedByMe:   p.LikedByMe,
+		IsMine:      viewerID != "" && p.AuthorID == viewerID,
 		CreatedAt:   p.CreatedAt.UTC(),
 	}, nil
 }

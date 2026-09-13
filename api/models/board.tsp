@@ -26,8 +26,17 @@ model Post {
   @doc("いいねの数")
   likeCount: int32;
 
+  @doc("自分がいいねを押したかどうか。未ログインなら false")
+  likedByMe: boolean;
+
+  @doc("自分の投稿かどうか。true のときだけ削除できる。未ログインなら false")
+  isMine: boolean;
+
   @doc("投稿日時（UTC）")
   createdAt: utcDateTime;
+
+  @doc("この投稿が属するトピック。詳細ページから一覧へ戻るために使う")
+  topic: Topic;
 }
 
 @doc("一覧に並べる投稿。本文は先頭200文字までしか含まない")
@@ -49,6 +58,12 @@ model PostSummary {
 
   @doc("いいねの数")
   likeCount: int32;
+
+  @doc("自分がいいねを押したかどうか。未ログインなら false")
+  likedByMe: boolean;
+
+  @doc("自分の投稿かどうか。true のときだけ削除できる。未ログインなら false")
+  isMine: boolean;
 
   @doc("投稿日時（UTC）")
   createdAt: utcDateTime;

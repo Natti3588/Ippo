@@ -36,40 +36,92 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) error {
 	return err
 }
 
+const deletePost = `-- name: DeletePost :execrows
+DELETE FROM posts WHERE id = ? AND author_id = ?
+`
+
+type DeletePostParams struct {
+	ID       []byte
+	AuthorID []byte
+}
+
+func (q *Queries) DeletePost(ctx context.Context, arg DeletePostParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deletePost, arg.ID, arg.AuthorID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const getPostAuthor = `-- name: GetPostAuthor :one
+SELECT author_id FROM posts WHERE id = ?
+`
+
+func (q *Queries) GetPostAuthor(ctx context.Context, id []byte) ([]byte, error) {
+	row := q.db.QueryRowContext(ctx, getPostAuthor, id)
+	var author_id []byte
+	err := row.Scan(&author_id)
+	return author_id, err
+}
+
 const getPostById = `-- name: GetPostById :one
 SELECT
   p.id,
+  p.author_id,
   p.title,
   p.body,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
-  p.created_at
+  EXISTS (
+    SELECT 1 FROM likes ml
+    WHERE ml.post_id = p.id AND ml.author_id = ?
+  ) AS liked_by_me,
+  p.created_at,
+  t.id   AS topic_id,
+  t.slug AS topic_slug,
+  t.name AS topic_name
 FROM posts p
 JOIN users u ON u.id = p.author_id
+JOIN topics t ON t.id = p.topic_id
 LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.id = ?
-GROUP BY p.id, u.display_name
+GROUP BY p.id, u.display_name, t.id, t.slug, t.name
 `
+
+type GetPostByIdParams struct {
+	ViewerID []byte
+	PostID   []byte
+}
 
 type GetPostByIdRow struct {
 	ID         []byte
+	AuthorID   []byte
 	Title      string
 	Body       string
 	AuthorName string
 	LikeCount  int64
+	LikedByMe  bool
 	CreatedAt  time.Time
+	TopicID    []byte
+	TopicSlug  string
+	TopicName  string
 }
 
-func (q *Queries) GetPostById(ctx context.Context, id []byte) (GetPostByIdRow, error) {
-	row := q.db.QueryRowContext(ctx, getPostById, id)
+func (q *Queries) GetPostById(ctx context.Context, arg GetPostByIdParams) (GetPostByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getPostById, arg.ViewerID, arg.PostID)
 	var i GetPostByIdRow
 	err := row.Scan(
 		&i.ID,
+		&i.AuthorID,
 		&i.Title,
 		&i.Body,
 		&i.AuthorName,
 		&i.LikeCount,
+		&i.LikedByMe,
 		&i.CreatedAt,
+		&i.TopicID,
+		&i.TopicSlug,
+		&i.TopicName,
 	)
 	return i, err
 }
@@ -77,11 +129,16 @@ func (q *Queries) GetPostById(ctx context.Context, id []byte) (GetPostByIdRow, e
 const listPostsByTopicNewest = `-- name: ListPostsByTopicNewest :many
 SELECT
   p.id,
+  p.author_id,
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
+  EXISTS (
+    SELECT 1 FROM likes ml
+    WHERE ml.post_id = p.id AND ml.author_id = ?
+  ) AS liked_by_me,
   p.created_at
 FROM posts p
 JOIN users u ON u.id = p.author_id
@@ -91,18 +148,25 @@ GROUP BY p.id, u.display_name
 ORDER BY p.created_at DESC, p.id DESC
 `
 
+type ListPostsByTopicNewestParams struct {
+	ViewerID []byte
+	TopicID  []byte
+}
+
 type ListPostsByTopicNewestRow struct {
 	ID          []byte
+	AuthorID    []byte
 	Title       string
 	BodyPreview string
 	BodyLength  int32
 	AuthorName  string
 	LikeCount   int64
+	LikedByMe   bool
 	CreatedAt   time.Time
 }
 
-func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([]ListPostsByTopicNewestRow, error) {
-	rows, err := q.db.QueryContext(ctx, listPostsByTopicNewest, topicID)
+func (q *Queries) ListPostsByTopicNewest(ctx context.Context, arg ListPostsByTopicNewestParams) ([]ListPostsByTopicNewestRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicNewest, arg.ViewerID, arg.TopicID)
 	if err != nil {
 		return nil, err
 	}
@@ -112,11 +176,13 @@ func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([
 		var i ListPostsByTopicNewestRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.AuthorID,
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
 			&i.AuthorName,
 			&i.LikeCount,
+			&i.LikedByMe,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -135,11 +201,16 @@ func (q *Queries) ListPostsByTopicNewest(ctx context.Context, topicID []byte) ([
 const listPostsByTopicOldest = `-- name: ListPostsByTopicOldest :many
 SELECT
   p.id,
+  p.author_id,
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
+  EXISTS (
+    SELECT 1 FROM likes ml
+    WHERE ml.post_id = p.id AND ml.author_id = ?
+  ) AS liked_by_me,
   p.created_at
 FROM posts p
 JOIN users u ON u.id = p.author_id
@@ -149,18 +220,25 @@ GROUP BY p.id, u.display_name
 ORDER BY p.created_at ASC, p.id ASC
 `
 
+type ListPostsByTopicOldestParams struct {
+	ViewerID []byte
+	TopicID  []byte
+}
+
 type ListPostsByTopicOldestRow struct {
 	ID          []byte
+	AuthorID    []byte
 	Title       string
 	BodyPreview string
 	BodyLength  int32
 	AuthorName  string
 	LikeCount   int64
+	LikedByMe   bool
 	CreatedAt   time.Time
 }
 
-func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID []byte) ([]ListPostsByTopicOldestRow, error) {
-	rows, err := q.db.QueryContext(ctx, listPostsByTopicOldest, topicID)
+func (q *Queries) ListPostsByTopicOldest(ctx context.Context, arg ListPostsByTopicOldestParams) ([]ListPostsByTopicOldestRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicOldest, arg.ViewerID, arg.TopicID)
 	if err != nil {
 		return nil, err
 	}
@@ -170,11 +248,13 @@ func (q *Queries) ListPostsByTopicOldest(ctx context.Context, topicID []byte) ([
 		var i ListPostsByTopicOldestRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.AuthorID,
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
 			&i.AuthorName,
 			&i.LikeCount,
+			&i.LikedByMe,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -194,11 +274,16 @@ const listPostsByTopicPopular = `-- name: ListPostsByTopicPopular :many
 
 SELECT
   p.id,
+  p.author_id,
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
+  EXISTS (
+    SELECT 1 FROM likes ml
+    WHERE ml.post_id = p.id AND ml.author_id = ?
+  ) AS liked_by_me,
   p.created_at
 FROM posts p
 JOIN users u ON u.id = p.author_id
@@ -208,13 +293,20 @@ GROUP BY p.id, u.display_name
 ORDER BY like_count DESC, p.created_at DESC, p.id DESC
 `
 
+type ListPostsByTopicPopularParams struct {
+	ViewerID []byte
+	TopicID  []byte
+}
+
 type ListPostsByTopicPopularRow struct {
 	ID          []byte
+	AuthorID    []byte
 	Title       string
 	BodyPreview string
 	BodyLength  int32
 	AuthorName  string
 	LikeCount   int64
+	LikedByMe   bool
 	CreatedAt   time.Time
 }
 
@@ -222,8 +314,8 @@ type ListPostsByTopicPopularRow struct {
 // 1本だけ変えても SQL も Go もエラーにならず、同じ投稿が並び順によって
 // 違う長さのプレビューを返すだけになる。詳細は repository/convert.go の
 // toDomainPostSummary のコメントを参照。
-func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID []byte) ([]ListPostsByTopicPopularRow, error) {
-	rows, err := q.db.QueryContext(ctx, listPostsByTopicPopular, topicID)
+func (q *Queries) ListPostsByTopicPopular(ctx context.Context, arg ListPostsByTopicPopularParams) ([]ListPostsByTopicPopularRow, error) {
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicPopular, arg.ViewerID, arg.TopicID)
 	if err != nil {
 		return nil, err
 	}
@@ -233,11 +325,13 @@ func (q *Queries) ListPostsByTopicPopular(ctx context.Context, topicID []byte) (
 		var i ListPostsByTopicPopularRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.AuthorID,
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
 			&i.AuthorName,
 			&i.LikeCount,
+			&i.LikedByMe,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err

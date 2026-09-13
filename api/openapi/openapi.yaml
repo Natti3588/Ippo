@@ -137,6 +137,36 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      operationId: Posts_remove
+      description: 自分の投稿を削除する。いいねも一緒に消える
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: There is no content to send for this request, but the headers may be useful.
+        '401':
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: 権限が無い
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /posts/{postId}/like:
     put:
       operationId: Posts_like
@@ -326,7 +356,10 @@ components:
         - body
         - authorName
         - likeCount
+        - likedByMe
+        - isMine
         - createdAt
+        - topic
       properties:
         id:
           type: string
@@ -344,10 +377,20 @@ components:
           type: integer
           format: int32
           description: いいねの数
+        likedByMe:
+          type: boolean
+          description: 自分がいいねを押したかどうか。未ログインなら false
+        isMine:
+          type: boolean
+          description: 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
         createdAt:
           type: string
           format: date-time
           description: 投稿日時（UTC）
+        topic:
+          allOf:
+            - $ref: '#/components/schemas/Topic'
+          description: この投稿が属するトピック。詳細ページから一覧へ戻るために使う
       description: トピックに書き込む投稿
     PostSummary:
       type: object
@@ -358,6 +401,8 @@ components:
         - truncated
         - authorName
         - likeCount
+        - likedByMe
+        - isMine
         - createdAt
       properties:
         id:
@@ -379,6 +424,12 @@ components:
           type: integer
           format: int32
           description: いいねの数
+        likedByMe:
+          type: boolean
+          description: 自分がいいねを押したかどうか。未ログインなら false
+        isMine:
+          type: boolean
+          description: 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
         createdAt:
           type: string
           format: date-time

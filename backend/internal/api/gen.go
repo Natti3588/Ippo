@@ -72,11 +72,20 @@ type Post struct {
 	CreatedAt time.Time          `json:"createdAt"`
 	Id        openapi_types.UUID `json:"id"`
 
+	// IsMine 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
+	IsMine bool `json:"isMine"`
+
 	// LikeCount いいねの数
 	LikeCount int32 `json:"likeCount"`
 
+	// LikedByMe 自分がいいねを押したかどうか。未ログインなら false
+	LikedByMe bool `json:"likedByMe"`
+
 	// Title タイトル
 	Title string `json:"title"`
+
+	// Topic この投稿が属するトピック。詳細ページから一覧へ戻るために使う
+	Topic Topic `json:"topic"`
 }
 
 // PostSummary 一覧に並べる投稿。本文は先頭200文字までしか含まない
@@ -91,8 +100,14 @@ type PostSummary struct {
 	CreatedAt time.Time          `json:"createdAt"`
 	Id        openapi_types.UUID `json:"id"`
 
+	// IsMine 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
+	IsMine bool `json:"isMine"`
+
 	// LikeCount いいねの数
 	LikeCount int32 `json:"likeCount"`
+
+	// LikedByMe 自分がいいねを押したかどうか。未ログインなら false
+	LikedByMe bool `json:"likedByMe"`
 
 	// Title タイトル。100文字に制限しているため、一覧でも全文を返す
 	Title string `json:"title"`
@@ -180,6 +195,9 @@ type ServerInterface interface {
 
 	// (PATCH /me)
 	MeUpdate(w http.ResponseWriter, r *http.Request)
+
+	// (DELETE /posts/{postId})
+	PostsRemove(w http.ResponseWriter, r *http.Request, postId string)
 
 	// (GET /posts/{postId})
 	PostsGet(w http.ResponseWriter, r *http.Request, postId string)
@@ -270,6 +288,32 @@ func (siw *ServerInterfaceWrapper) MeUpdate(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.MeUpdate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostsRemove operation middleware
+func (siw *ServerInterfaceWrapper) PostsRemove(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "postId" -------------
+	var postId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostsRemove(w, r, postId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -564,6 +608,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/signup", wrapper.AuthSignup)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/me", wrapper.MeGet)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/me", wrapper.MeUpdate)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsRemove)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsGet)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsUnlike)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsLike)

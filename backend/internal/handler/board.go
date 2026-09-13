@@ -44,7 +44,13 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
-	posts, err := h.svc.ListPosts(r.Context(), slug, sort)
+	// 未ログインでも読める。その場合 likedByMe と isMine は false になる。
+	var viewerID string
+	if user, ok := userFrom(r.Context()); ok {
+		viewerID = user.Id
+	}
+
+	posts, err := h.svc.ListPosts(r.Context(), slug, sort, viewerID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "トピックが見つかりません")
@@ -55,7 +61,7 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
-	apiPosts, err := toAPIPostSummaries(posts)
+	apiPosts, err := toAPIPostSummaries(posts, viewerID)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -69,7 +75,13 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 }
 
 func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId string) {
-	post, err := h.svc.GetPost(r.Context(), postId)
+	// 未ログインでも読める。その場合 likedByMe と isMine は false になる。
+	var viewerID string
+	if user, ok := userFrom(r.Context()); ok {
+		viewerID = user.Id
+	}
+
+	post, err := h.svc.GetPost(r.Context(), postId, viewerID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "投稿が見つかりません")
@@ -80,7 +92,7 @@ func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId s
 		return
 	}
 
-	apiPost, err := toAPIPost(post)
+	apiPost, err := toAPIPost(post, viewerID)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "投稿の変換に失敗", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -123,7 +135,7 @@ func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	apiPost, err := toAPIPost(post)
+	apiPost, err := toAPIPost(post, user.Id)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "投稿の変換に失敗", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -166,6 +178,30 @@ func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postI
 
 	if err := h.svc.Unlike(r.Context(), postId, user.Id); err != nil {
 		h.logger.ErrorContext(r.Context(), "いいねの取り消しに失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *BoardHandler) PostsRemove(w http.ResponseWriter, r *http.Request, postId string) {
+	user, ok := userFrom(r.Context())
+	if !ok {
+		writeProblem(r.Context(), w, h.logger, http.StatusUnauthorized, "ログインが必要です")
+		return
+	}
+
+	if err := h.svc.DeletePost(r.Context(), postId, user.Id); err != nil {
+		if errors.Is(err, domain.ErrForbidden) {
+			writeProblem(r.Context(), w, h.logger, http.StatusForbidden, "自分の投稿だけ削除できます")
+			return
+		}
+		if errors.Is(err, domain.ErrNotFound) {
+			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "投稿が見つかりません")
+			return
+		}
+		h.logger.ErrorContext(r.Context(), "投稿の削除に失敗", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

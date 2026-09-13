@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -37,13 +38,18 @@ func (r *BoardRepository) GetTopic(ctx context.Context, slug string) (domain.Top
 
 // GetPost は投稿を1件、本文の全文つきで返す。
 // 解析できない ID は「存在しない」と同じに扱う。CreateLike と同じ方針である。
-func (r *BoardRepository) GetPost(ctx context.Context, postID string) (domain.Post, error) {
+func (r *BoardRepository) GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error) {
 	id, err := toBinaryUUID(postID)
 	if err != nil {
 		return domain.Post{}, fmt.Errorf("投稿IDが不正: %w", domain.ErrNotFound)
 	}
 
-	row, err := r.q.GetPostById(ctx, id)
+	vID, err := viewerBinaryUUID(viewerID)
+	if err != nil {
+		return domain.Post{}, err
+	}
+
+	row, err := r.q.GetPostById(ctx, sqlcgen.GetPostByIdParams{PostID: id, ViewerID: vID})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return domain.Post{}, fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
@@ -55,13 +61,24 @@ func (r *BoardRepository) GetPost(ctx context.Context, postID string) (domain.Po
 	if err != nil {
 		return domain.Post{}, fmt.Errorf("投稿IDの変換に失敗: %w", err)
 	}
+	authorID, err := uuid.FromBytes(row.AuthorID)
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("投稿者IDの変換に失敗: %w", err)
+	}
+	topicID, err := uuid.FromBytes(row.TopicID)
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("トピックIDの変換に失敗: %w", err)
+	}
 	return domain.Post{
 		Id:         parsed.String(),
+		AuthorID:   authorID.String(),
 		Title:      row.Title,
 		Body:       row.Body,
 		AuthorName: row.AuthorName,
 		LikeCount:  int32(row.LikeCount),
+		LikedByMe:  row.LikedByMe,
 		CreatedAt:  row.CreatedAt,
+		Topic:      domain.Topic{Id: topicID.String(), Slug: row.TopicSlug, Name: row.TopicName},
 	}, nil
 }
 
@@ -73,27 +90,32 @@ func (r *BoardRepository) ListTopics(ctx context.Context) ([]domain.Topic, error
 	return toDomainTopics(rows)
 }
 
-func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder) ([]domain.PostSummary, error) {
+func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string) ([]domain.PostSummary, error) {
 	id, err := toBinaryUUID(topicID)
+	if err != nil {
+		return nil, err
+	}
+
+	vID, err := viewerBinaryUUID(viewerID)
 	if err != nil {
 		return nil, err
 	}
 
 	switch sort {
 	case domain.SortPopular:
-		rows, err := r.q.ListPostsByTopicPopular(ctx, id)
+		rows, err := r.q.ListPostsByTopicPopular(ctx, sqlcgen.ListPostsByTopicPopularParams{TopicID: id, ViewerID: vID})
 		if err != nil {
 			return nil, err
 		}
 		return postsFromPopular(rows)
 	case domain.SortNewest:
-		rows, err := r.q.ListPostsByTopicNewest(ctx, id)
+		rows, err := r.q.ListPostsByTopicNewest(ctx, sqlcgen.ListPostsByTopicNewestParams{TopicID: id, ViewerID: vID})
 		if err != nil {
 			return nil, err
 		}
 		return postsFromNewest(rows)
 	case domain.SortOldest:
-		rows, err := r.q.ListPostsByTopicOldest(ctx, id)
+		rows, err := r.q.ListPostsByTopicOldest(ctx, sqlcgen.ListPostsByTopicOldestParams{TopicID: id, ViewerID: vID})
 		if err != nil {
 			return nil, err
 		}
@@ -146,9 +168,11 @@ func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, tit
 
 	return domain.Post{
 		Id:        id.String(),
+		AuthorID:  authorID,
 		Title:     title,
 		Body:      body,
 		LikeCount: 0,
+		LikedByMe: false,
 		CreatedAt: createdAt,
 	}, nil
 }
@@ -189,4 +213,43 @@ func (r *BoardRepository) DeleteLike(ctx context.Context, postID, authorID strin
 	}
 
 	return r.q.DeleteLike(ctx, sqlcgen.DeleteLikeParams{PostID: pID, AuthorID: aID})
+}
+
+// DeletePost は投稿を削除する。
+//
+// 他人の投稿には domain.ErrForbidden、存在しない投稿には domain.ErrNotFound を返す。
+// 先に投稿者を読んでから削除するのは、この2つを区別して返すためである。
+// DELETE 自体にも author_id の条件を入れてあるので、
+// ここの判定を書き間違えても他人の投稿は消えない。
+func (r *BoardRepository) DeletePost(ctx context.Context, postID, authorID string) error {
+	pID, err := toBinaryUUID(postID)
+	if err != nil {
+		return fmt.Errorf("投稿IDが不正: %w", domain.ErrNotFound)
+	}
+
+	aID, err := toBinaryUUID(authorID)
+	if err != nil {
+		return err
+	}
+
+	owner, err := r.q.GetPostAuthor(ctx, pID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
+		}
+		return err
+	}
+
+	if !bytes.Equal(owner, aID) {
+		return fmt.Errorf("他人の投稿: %w", domain.ErrForbidden)
+	}
+
+	n, err := r.q.DeletePost(ctx, sqlcgen.DeletePostParams{ID: pID, AuthorID: aID})
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
+	}
+	return nil
 }

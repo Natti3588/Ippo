@@ -50,11 +50,13 @@ func toBinaryUUID(s string) ([]byte, error) {
 // フィールド名で渡せば入れ替えようがない。
 type summaryRow struct {
 	ID          []byte
+	AuthorID    []byte
 	Title       string
 	BodyPreview string
 	BodyLength  int64
 	AuthorName  string
 	LikeCount   int64
+	LikedByMe   bool
 	CreatedAt   time.Time
 }
 
@@ -78,13 +80,19 @@ func toDomainPostSummary(r summaryRow) (domain.PostSummary, error) {
 	if err != nil {
 		return domain.PostSummary{}, fmt.Errorf("投稿IDの変換に失敗: %w", err)
 	}
+	author, err := uuid.FromBytes(r.AuthorID)
+	if err != nil {
+		return domain.PostSummary{}, fmt.Errorf("投稿者IDの変換に失敗: %w", err)
+	}
 	return domain.PostSummary{
 		Id:          parsed.String(),
+		AuthorID:    author.String(),
 		Title:       r.Title,
 		BodyPreview: r.BodyPreview,
 		Truncated:   r.BodyLength > int64(utf8.RuneCountInString(r.BodyPreview)),
 		AuthorName:  r.AuthorName,
 		LikeCount:   int32(r.LikeCount),
+		LikedByMe:   r.LikedByMe,
 		CreatedAt:   r.CreatedAt,
 	}, nil
 }
@@ -94,11 +102,13 @@ func postsFromPopular(rows []sqlcgen.ListPostsByTopicPopularRow) ([]domain.PostS
 	for _, r := range rows {
 		d, err := toDomainPostSummary(summaryRow{
 			ID:          r.ID,
+			AuthorID: r.AuthorID,
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
+			LikedByMe:   r.LikedByMe,
 			CreatedAt:   r.CreatedAt,
 		})
 		if err != nil {
@@ -114,11 +124,13 @@ func postsFromNewest(rows []sqlcgen.ListPostsByTopicNewestRow) ([]domain.PostSum
 	for _, r := range rows {
 		d, err := toDomainPostSummary(summaryRow{
 			ID:          r.ID,
+			AuthorID: r.AuthorID,
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
+			LikedByMe:   r.LikedByMe,
 			CreatedAt:   r.CreatedAt,
 		})
 		if err != nil {
@@ -134,11 +146,13 @@ func postsFromOldest(rows []sqlcgen.ListPostsByTopicOldestRow) ([]domain.PostSum
 	for _, r := range rows {
 		d, err := toDomainPostSummary(summaryRow{
 			ID:          r.ID,
+			AuthorID: r.AuthorID,
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
+			LikedByMe:   r.LikedByMe,
 			CreatedAt:   r.CreatedAt,
 		})
 		if err != nil {
@@ -147,6 +161,18 @@ func postsFromOldest(rows []sqlcgen.ListPostsByTopicOldestRow) ([]domain.PostSum
 		out = append(out, d)
 	}
 	return out, nil
+}
+
+// viewerBinaryUUID は閲覧者の ID を BINARY(16) 用のバイト列にする。
+//
+// 未ログイン（空文字）のときは nil を返す。SQL 側では
+// ml.author_id = NULL が常に偽になるため、liked_by_me は false になる。
+// 「未ログインを表す値」をこの1箇所に閉じ込めておく。
+func viewerBinaryUUID(viewerID string) ([]byte, error) {
+	if viewerID == "" {
+		return nil, nil
+	}
+	return toBinaryUUID(viewerID)
 }
 
 func toDomainUser(u sqlcgen.User) (domain.User, error) {

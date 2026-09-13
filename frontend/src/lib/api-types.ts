@@ -79,7 +79,8 @@ export interface paths {
         get: operations["Posts_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** @description 自分の投稿を削除する。いいねも一緒に消える */
+        delete: operations["Posts_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -182,11 +183,17 @@ export interface components {
              * @description いいねの数
              */
             likeCount: number;
+            /** @description 自分がいいねを押したかどうか。未ログインなら false */
+            likedByMe: boolean;
+            /** @description 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false */
+            isMine: boolean;
             /**
              * Format: date-time
              * @description 投稿日時（UTC）
              */
             createdAt: string;
+            /** @description この投稿が属するトピック。詳細ページから一覧へ戻るために使う */
+            topic: components["schemas"]["Topic"];
         };
         /** @description 一覧に並べる投稿。本文は先頭200文字までしか含まない */
         PostSummary: {
@@ -205,6 +212,10 @@ export interface components {
              * @description いいねの数
              */
             likeCount: number;
+            /** @description 自分がいいねを押したかどうか。未ログインなら false */
+            likedByMe: boolean;
+            /** @description 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false */
+            isMine: boolean;
             /**
              * Format: date-time
              * @description 投稿日時（UTC）
@@ -454,6 +465,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Post"];
+                };
+            };
+            /** @description 対象が存在しない */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Posts_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description 認証が必要 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description 権限が無い */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
             /** @description 対象が存在しない */

@@ -10,11 +10,12 @@ import (
 type BoardRepository interface {
 	ListTopics(ctx context.Context) ([]domain.Topic, error)
 	GetTopic(ctx context.Context, slug string) (domain.Topic, error)
-	GetPost(ctx context.Context, postID string) (domain.Post, error)
-	ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder) ([]domain.PostSummary, error)
+	GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error)
+	ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string) ([]domain.PostSummary, error)
 	CreatePost(ctx context.Context, topicID, authorID, title, body string) (domain.Post, error)
 	CreateLike(ctx context.Context, postID, authorID string) error
 	DeleteLike(ctx context.Context, postID, authorID string) error
+	DeletePost(ctx context.Context, postID, authorID string) error
 }
 
 // 本文の長さは文字で数える。DB の chk_posts_body が CHAR_LENGTH() だからである。
@@ -47,18 +48,18 @@ func (s *BoardService) ListTopics(ctx context.Context) ([]domain.Topic, error) {
 	return s.repo.ListTopics(ctx)
 }
 
-func (s *BoardService) ListPosts(ctx context.Context, slug string, sort domain.SortOrder) ([]domain.PostSummary, error) {
+func (s *BoardService) ListPosts(ctx context.Context, slug string, sort domain.SortOrder, viewerID string) ([]domain.PostSummary, error) {
 	topic, err := s.repo.GetTopic(ctx, slug)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.repo.ListPostsByTopic(ctx, topic.Id, sort)
+	return s.repo.ListPostsByTopic(ctx, topic.Id, sort, viewerID)
 }
 
 // GetPost は投稿を1件返す。検証する入力が無いため、そのまま委譲する。
-func (s *BoardService) GetPost(ctx context.Context, postID string) (domain.Post, error) {
-	return s.repo.GetPost(ctx, postID)
+func (s *BoardService) GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error) {
+	return s.repo.GetPost(ctx, postID, viewerID)
 }
 
 // CreatePost は投稿を作成する。
@@ -90,6 +91,7 @@ func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.
 	}
 
 	post.AuthorName = user.DisplayName
+	post.Topic = topic
 	return post, nil
 }
 
@@ -99,4 +101,9 @@ func (s *BoardService) Like(ctx context.Context, postID, userID string) error {
 
 func (s *BoardService) Unlike(ctx context.Context, postID, userID string) error {
 	return s.repo.DeleteLike(ctx, postID, userID)
+}
+
+// DeletePost は投稿を削除する。権限の判定はリポジトリが行う。
+func (s *BoardService) DeletePost(ctx context.Context, postID, userID string) error {
+	return s.repo.DeletePost(ctx, postID, userID)
 }
