@@ -8,11 +8,13 @@ export function PostItem({
   post,
   canLike,
   onToggleLike,
+  onDelete,
 }: {
   post: PostSummary;
   /** 未ログインのときは押せない。数だけ見せる */
   canLike: boolean;
   onToggleLike: () => void;
+  onDelete: () => void;
 }) {
   return (
     <article className="border-t border-border py-9">
@@ -37,6 +39,20 @@ export function PostItem({
       </p>
 
       <div className="flex flex-wrap items-center gap-6">
+        {/*
+          自分の投稿にだけ出す。authorName では比べない。
+          表示名は一意ではないので、同じ名前の人の投稿まで消せてしまう。
+        */}
+        {post.isMine && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="flex min-h-12 items-center py-3.5 text-[17px] text-danger underline underline-offset-4"
+          >
+            削除する
+          </button>
+        )}
+
         {/*
           「続きを読む」を出すかどうかは truncated で決める。
           bodyPreview の長さから推測しない。文字の数え方がサーバーと違う。

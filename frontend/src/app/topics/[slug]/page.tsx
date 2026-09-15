@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { api, type PostSummary, type SortOrder } from "@/lib/api";
@@ -63,6 +63,26 @@ function Board() {
     }
   }
 
+  const [failure, setFailure] = useState<string | null>(null);
+
+  async function remove(target: PostSummary) {
+    // 自前のダイアログを作らずブラウザのものを使う。
+    // 見た目は揃わないが、取り消せない操作に確認を挟むほうが先。
+    if (!window.confirm(`「${target.title}」を削除します。取り消せません。`)) {
+      return;
+    }
+
+    setFailure(null);
+    try {
+      await api.deletePost(target.id);
+      // いいねは外部キーの ON DELETE CASCADE で一緒に消える。ここで消す必要はない。
+      await mutate();
+    } catch (err) {
+      // 他人の投稿は 403、未ログインは 401 が返る。detail をそのまま出す。
+      setFailure(err instanceof ApiError ? err.detail : "削除に失敗しました");
+    }
+  }
+
   return (
     <main className="mx-auto w-full max-w-[840px] px-4 pb-22 md:px-8">
       <TopicNav slug={slug} sort={sort} />
@@ -71,6 +91,12 @@ function Board() {
         <p role="alert" className="mt-12 text-[19px] leading-loose text-danger">
           {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
         </p>
+      )}
+
+      {failure && (
+        <div role="alert" className="mt-9 border-l-4 border-danger bg-surface p-5">
+          <p className="text-[17px] leading-relaxed text-danger">{failure}</p>
+        </div>
       )}
 
       {/*
@@ -89,6 +115,7 @@ function Board() {
           post={post}
           canLike={Boolean(user)}
           onToggleLike={() => toggleLike(post)}
+          onDelete={() => remove(post)}
         />
       ))}
     </main>
