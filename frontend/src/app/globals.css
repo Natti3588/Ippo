@@ -47,6 +47,28 @@
   --font-sans: var(--font-ui);
   --font-read: var(--font-read);
 
+  /*
+    文字の大きさはここだけで決める。コンポーネントに px を直接書かない。
+    全体の縮尺を変えるときは、この7行を書き換えれば済む。
+
+    読み手が40〜60代なので、いちばん小さいものでも 15px で止めてある。
+    補助テキスト（日付・文字数）も 15px で、大きさではなく色で区別する。
+  */
+  --text-display: 28px;      /* ホームの見出し */
+  --text-display--line-height: 1.4;
+  --text-title: 24px;        /* 投稿詳細のタイトル */
+  --text-title--line-height: 1.35;
+  --text-heading: 22px;      /* 画面の見出し（ログイン・新規登録・投稿） */
+  --text-heading--line-height: 1.45;
+  --text-subtitle: 18px;     /* 一覧の投稿タイトル */
+  --text-subtitle--line-height: 1.55;
+  --text-body: 17px;         /* 投稿の本文（詳細） */
+  --text-body--line-height: 1.95;
+  --text-preview: 16px;      /* 一覧の本文プレビュー */
+  --text-preview--line-height: 1.85;
+  --text-ui: 15px;           /* ボタン・入力・ラベル・補助。これ以上小さくしない */
+  --text-ui--line-height: 1.6;
+
   --radius-ippo: 10px;
 }
 
