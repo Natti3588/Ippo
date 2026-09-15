@@ -4,17 +4,17 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { api, type CurrentUser } from "./api";
 
 type AuthState = {
-  /** ログイン中の利用者。未ログインなら null。確認中は undefined */
+  /** ログイン中の利用者。未ログインなら null、確認中は undefined */
   user: CurrentUser | null | undefined;
-  /** ログイン・新規登録の成功後に呼ぶ。再取得せずに手元の状態を更新する */
+  /** ログインと新規登録が成功したら呼ぶ。取り直さずに手元を書き換える */
   setUser: (user: CurrentUser | null) => void;
 };
 
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // undefined = まだ確かめていない。null = 未ログイン。
-  // この3つ目の状態が無いと、確認中に「ログイン」ボタンが一瞬出てしまう。
+  // undefined はまだ確かめていない状態、null は未ログイン。
+  // 2つで済ませると、確かめている最中に「ログイン」ボタンが一瞬出る。
   const [user, setUser] = useState<CurrentUser | null | undefined>(undefined);
 
   useEffect(() => {

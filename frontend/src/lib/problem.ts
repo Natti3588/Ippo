@@ -6,8 +6,8 @@ export type ProblemDetails = components["schemas"]["ProblemDetails"];
 /**
  * API がエラーを返したことを表す。
  *
- * detail には、利用者に見せてよい日本語だけが入る（バックエンドがそう作ってある）。
- * そのまま画面に出してよい。title は HTTP のステータス文（英語）なので出さない。
+ * detail に入るのは、利用者に見せてよい日本語だけ（バックエンドがそう作ってある）。
+ * そのまま画面に出せる。title は HTTP のステータス文なので出さない。
  */
 export class ApiError extends Error {
   readonly status: number;
@@ -24,9 +24,9 @@ export class ApiError extends Error {
 /**
  * レスポンスから ApiError を作る。
  *
- * 500 は契約に宣言していないので本文を持たない。
- * Problem Details として読めなかった場合も、ここで汎用の文言に倒す。
- * 画面側が「detail が空かもしれない」を毎回考えずに済むようにする。
+ * 500 は契約に書いていないので本文が無い。Problem Details として読めなければ、
+ * ここで汎用の文言に倒す。画面側で毎回「detail が空かもしれない」を
+ * 考えずに済ませたい。
  */
 export async function toApiError(res: Response): Promise<ApiError> {
   const fallback = "通信に失敗しました。しばらくしてからお試しください";

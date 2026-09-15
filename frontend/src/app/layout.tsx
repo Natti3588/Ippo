@@ -4,8 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
 import { Header } from "@/components/Header";
 
-// 日本語UI用。教育・行政で使われるユニバーサルデザイン書体。
-// 読み手が40〜60代なので、字形の見分けやすさを優先している。
+// 日本語のUI用。教育や行政で使われているユニバーサルデザイン書体。
+// 読み手が40〜60代なので、字形の見分けやすさを優先した。
 const ui = BIZ_UDPGothic({
   weight: ["400", "700"],
   subsets: ["latin"],
@@ -13,8 +13,8 @@ const ui = BIZ_UDPGothic({
   variable: "--font-ui",
 });
 
-// 英語本文用。画面で長文を読むために作られた書体。
-// 投稿本文は英語が多いので、本文にだけ当てる。
+// 英語の本文用。画面で長い文章を読むために作られた書体。
+// 投稿は英語が多いので、本文にだけ当てる。
 const read = Literata({
   subsets: ["latin"],
   display: "swap",

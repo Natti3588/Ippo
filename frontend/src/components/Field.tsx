@@ -5,9 +5,9 @@ type Props = {
   label: string;
   type: "email" | "password" | "text";
   autoComplete: string;
-  /** useForm の register(...) の戻り値をそのまま渡す */
+  /** register(...) が返したものを、そのまま渡す */
   registration: UseFormRegisterReturn;
-  /** この欄に対するエラー文。無ければ undefined */
+  /** この欄のエラー文。無ければ undefined */
   error?: string;
   hint?: string;
 };
@@ -20,24 +20,24 @@ export function Field({
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* htmlFor と id を結ぶ。ラベルを押したら入力欄に入る */}
+      {/* htmlFor と id を結んでおくと、ラベルを押しただけで入力欄に入る */}
       <label htmlFor={id} className="text-[17px] font-bold text-ink">
         {label}
       </label>
 
       {/*
-        value と onChange を持たない。
-        registration の中に name / onChange / onBlur / ref が入っており、
-        値は DOM 側が持つ。だから1文字打っても React は再描画しない。
+        value も onChange も持たせない。
+        name / onChange / onBlur / ref は registration の中に入っている。
+        値を持つのは DOM のほうなので、1文字打っても React は動かない。
       */}
       <input
         id={id}
         type={type}
         autoComplete={autoComplete}
-        // メールアドレスとパスワードに赤い波線を出さない
+        // スペルチェックの赤い波線を止める。メールにもパスワードにも要らない
         spellCheck={false}
         aria-invalid={error ? true : undefined}
-        // 読み上げに「この欄のエラーはこれ」と伝える
+        // 「この欄のエラーはこれ」を読み上げに伝える
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         {...registration}
         className={`w-full rounded-ippo border bg-surface p-4 text-[19px] text-ink ${

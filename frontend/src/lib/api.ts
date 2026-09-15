@@ -4,18 +4,18 @@ import { toApiError } from "./problem";
 /**
  * API のベースパス。
  *
- * 常に相対パスである。開発では Next.js の rewrites が、
- * 本番では CloudFront が localhost:8080 / ALB へ振り分ける。
- * 環境変数を置かないのは、設定を間違えた環境が別のオリジンを叩くのを防ぐため。
+ * 絶対 URL は書かない。開発では Next.js の rewrites、本番ではロードバランサが
+ * バックエンドへ振り分ける。環境変数にしないのは、設定を間違えた環境が
+ * よそのオリジンを叩いてしまうのを避けたいから。
  */
 const BASE = "/api";
 
 /**
  * API を1回呼ぶ。すべての呼び出しがここを通る。
  *
- * credentials: "include" をここに書いてあるのが重要である。
- * 付け忘れると Cookie が送られず、コンパイルは通ったまま 401 になる。
- * 各画面で書くと、1箇所忘れただけで「なぜかログアウトしている」が起きる。
+ * 肝は credentials: "include" を1か所にまとめたこと。
+ * 付け忘れても型は通るので、動かして初めて 401 で気づくことになる。
+ * 画面ごとに書いていたら、1か所忘れただけで「なぜかログアウトする」が起きる。
  */
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -31,7 +31,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw await toApiError(res);
   }
 
-  // 204 No Content には本文が無い。json() を呼ぶと例外になる。
+  // 204 は本文を持たない。json() を呼ぶと落ちる。
   if (res.status === 204) {
     return undefined as T;
   }
@@ -76,9 +76,9 @@ export const api = {
   /**
    * ログイン中の利用者を返す。未ログインなら null。
    *
-   * Cookie は HttpOnly で JavaScript から読めないため、
-   * 「ログインしているか」はこの呼び出しでしか分からない。
-   * 401 を例外にせず null にしているのは、未ログインが正常な状態だからである。
+   * Cookie は HttpOnly なので JavaScript からは読めない。
+   * つまり「ログインしているか」は、ここを呼ばないと分からない。
+   * 401 を例外にしないのは、未ログインが異常ではないから。
    */
   me: async (): Promise<CurrentUser | null> => {
     try {

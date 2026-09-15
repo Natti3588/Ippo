@@ -19,7 +19,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { setUser } = useAuth();
 
-  // 画面全体の失敗(401など)はフォームの外の話なので、これだけ useState で持つ
+  // 401 のような画面全体の失敗はフォームの外の話。これだけ useState で持つ
   const [failure, setFailure] = useState<string | null>(null);
 
   const {
@@ -27,7 +27,7 @@ export default function SignupPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    // 打っている最中は何も言わない。欄を離れたときに初めて出す
+    // 打っている最中は黙っている。欄を離れたときに初めて出す
     mode: "onBlur",
     defaultValues: { email: "", password: "", displayName: "" },
   });
@@ -36,11 +36,11 @@ export default function SignupPage() {
     setFailure(null);
     try {
       const user = await api.signup(values.email, values.password, values.displayName);
-      // 返ってきた利用者をそのまま入れる。GET /me を呼び直さない
+      // 返ってきた利用者をそのまま入れる。GET /me は呼び直さない
       setUser(user);
       router.push("/");
     } catch (err) {
-      // detail はバックエンドが利用者向けに書いた日本語なので、そのまま出す
+      // detail はバックエンドが利用者向けに書いた日本語。そのまま出す
       setFailure(err instanceof ApiError ? err.detail : "通信に失敗しました");
     }
   }
@@ -50,15 +50,15 @@ export default function SignupPage() {
       <h1 className="mb-10 text-[32px] font-bold leading-snug text-ink">新規登録</h1>
 
       {/* 画面全体の失敗はフォームの前にまとめて出す。
-          role="alert" で、表示された瞬間に読み上げられる */}
+          role="alert" を付けてあるので、出た瞬間に読み上げられる */}
       {failure && (
         <div role="alert" className="mb-9 border-l-4 border-danger bg-surface p-5">
           <p className="text-[17px] leading-relaxed text-danger">{failure}</p>
         </div>
       )}
 
-      {/* handleSubmit が preventDefault と値の収集をやる。
-          エラーがあれば最初の欄に自動で焦点が移る(RHF の既定) */}
+      {/* preventDefault と値集めは handleSubmit がやる。
+          エラーがあれば、最初の欄に焦点が移る */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-8">
         <Field
           id="email"
@@ -90,8 +90,8 @@ export default function SignupPage() {
           registration={register("password", {
             required: "パスワードを入力してください",
             minLength: { value: 8, message: "パスワードは8文字以上にしてください" },
-            // bcrypt は72バイトで切る。文字数ではなくバイト数で数える。
-            // 日本語や絵文字を入れると、8文字でも72バイトを超えうる。
+            // bcrypt が72バイトで切ってしまうので、文字数ではなくバイト数で見る。
+            // 日本語や絵文字が混ざると、8文字でも72バイトを超える。
             validate: (v) =>
               new TextEncoder().encode(v).length <= 72 ||
               "パスワードが長すぎます。短くしてください",
@@ -101,7 +101,7 @@ export default function SignupPage() {
         />
 
         {/* disabled にするのは送信中だけ。
-            入力の途中で押せなくすると、なぜ押せないか分からない */}
+            入力の途中で押せなくすると、なぜ押せないのか分からない */}
         <button
           type="submit"
           disabled={isSubmitting}

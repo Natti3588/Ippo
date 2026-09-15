@@ -18,7 +18,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { setUser } = useAuth();
 
-  // 画面全体の失敗(401など)はフォームの外の話なので、これだけ useState で持つ
+  // 401 のような画面全体の失敗はフォームの外の話。これだけ useState で持つ
   const [failure, setFailure] = useState<string | null>(null);
 
   const {
@@ -26,7 +26,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    // 打っている最中は何も言わない。欄を離れたときに初めて出す
+    // 打っている最中は黙っている。欄を離れたときに初めて出す
     mode: "onBlur",
     defaultValues: { email: "", password: "" },
   });
@@ -35,11 +35,11 @@ export default function LoginPage() {
     setFailure(null);
     try {
       const user = await api.login(values.email, values.password);
-      // 返ってきた利用者をそのまま入れる。GET /me を呼び直さない
+      // 返ってきた利用者をそのまま入れる。GET /me は呼び直さない
       setUser(user);
       router.push("/");
     } catch (err) {
-      // detail はバックエンドが利用者向けに書いた日本語なので、そのまま出す
+      // detail はバックエンドが利用者向けに書いた日本語。そのまま出す
       setFailure(err instanceof ApiError ? err.detail : "通信に失敗しました");
     }
   }
@@ -49,15 +49,15 @@ export default function LoginPage() {
       <h1 className="mb-10 text-[32px] font-bold leading-snug text-ink">ログイン</h1>
 
       {/* 画面全体の失敗はフォームの前にまとめて出す。
-          role="alert" で、表示された瞬間に読み上げられる */}
+          role="alert" を付けてあるので、出た瞬間に読み上げられる */}
       {failure && (
         <div role="alert" className="mb-9 border-l-4 border-danger bg-surface p-5">
           <p className="text-[17px] leading-relaxed text-danger">{failure}</p>
         </div>
       )}
 
-      {/* handleSubmit が preventDefault と値の収集をやる。
-          エラーがあれば最初の欄に自動で焦点が移る(RHF の既定) */}
+      {/* preventDefault と値集めは handleSubmit がやる。
+          エラーがあれば、最初の欄に焦点が移る */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-8">
         <Field
           id="email"
@@ -81,7 +81,7 @@ export default function LoginPage() {
         />
 
         {/* disabled にするのは送信中だけ。
-            入力の途中で押せなくすると、なぜ押せないか分からない */}
+            入力の途中で押せなくすると、なぜ押せないのか分からない */}
         <button
           type="submit"
           disabled={isSubmitting}

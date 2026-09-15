@@ -14,7 +14,7 @@ export function Header() {
       await api.logout();
     } finally {
       // 失敗しても手元はログアウト扱いにする。
-      // Cookie が消えていない可能性は残るが、画面に残り続けるほうが困る。
+      // Cookie が残っているかもしれないが、ログイン中の画面のままにするほうが困る。
       setUser(null);
       router.push("/");
     }
@@ -30,8 +30,8 @@ export function Header() {
           Ippo
         </Link>
 
-        {/* user が undefined のあいだは何も出さない。
-            出してから消すと、画面がちらつく */}
+        {/* undefined のあいだは何も出さない。
+            出してから消すとちらつく */}
         {user === undefined ? null : user ? (
           <div className="flex items-center gap-1">
             <Link

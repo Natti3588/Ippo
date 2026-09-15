@@ -53,11 +53,11 @@
 body {
   background: var(--ground);
   color: var(--ink);
-  /* 二本指の拡大は殺さない。ダブルタップの待ち時間だけ消す */
+  /* 二本指の拡大は残す。消すのはダブルタップの待ち時間だけ */
   touch-action: manipulation;
 }
 
-/* 押せるものには必ず輪郭を出す。outline を消すだけにしない */
+/* 押せるものには輪郭を出す。outline を消して終わりにしない */
 :focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
