@@ -86,7 +86,27 @@ func main() {
 	authMiddleware := handler.NewAuthMiddleware(authSvc, logger)
 	h := handler.NewServer(boardHandler, authHandler)
 
+	// 契約の外の経路を先に登録してから、生成されたルートを同じ mux に足す。
+	// BaseRouter を渡さないと生成側が自分で mux を作ってしまい、
+	// ここで登録したものが消える。
+	//
+	// GET を明示すると、それ以外のメソッドには ServeMux が 405 を返す。
+	// 書かないと POST でも DELETE でも 200 が返り、
+	// 「生きているか」を答えるだけの経路が、何にでも答える経路になる。
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/healthz", handler.Health)
+
+	// BaseURL でルートの先頭に /api を付ける。
+	//
+	// ALB はパスを書き換えないので、/api/posts は /api/posts のまま届く。
+	// ここで受けられるようにしておかないと、開発では動いて本番だけ 404 になる。
+	//
+	// /api が必要なのは、/posts がフロントとバックで衝突するからである。
+	// /posts/{id} は Next.js の画面、/api/posts/{id} は JSON を返す経路で、
+	// この接頭辞が無いと ALB が2つを区別できない。
 	router := api.HandlerWithOptions(h, api.StdHTTPServerOptions{
+		BaseURL:     "/api",
+		BaseRouter:  mux,
 		Middlewares: []api.MiddlewareFunc{authMiddleware.Attach},
 	})
 
