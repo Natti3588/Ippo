@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BIZ_UDPGothic, Literata } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth";
+import { Header } from "@/components/Header";
 
 // 日本語UI用。教育・行政で使われるユニバーサルデザイン書体。
 // 読み手が40〜60代なので、字形の見分けやすさを優先している。
@@ -30,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className={`${ui.variable} ${read.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <Header />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
