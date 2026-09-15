@@ -1,33 +1,30 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import useSWR from "swr";
 import { api, type CurrentUser } from "./api";
 
-type AuthState = {
-  /** ログイン中の利用者。未ログインなら null、確認中は undefined */
-  user: CurrentUser | null | undefined;
-  /** ログインと新規登録が成功したら呼ぶ。取り直さずに手元を書き換える */
-  setUser: (user: CurrentUser | null) => void;
-};
+/** SWR のキー。ログインとログアウトからも同じ文字列で差せるように外に出す。 */
+export const ME_KEY = "/me";
 
-const AuthContext = createContext<AuthState | null>(null);
+/**
+ * ログイン中の利用者を返す。
+ *
+ * user は3つの状態を持つ。undefined はまだ確かめていない、null は未ログイン、
+ * それ以外はログイン中。確認できるまで undefined なのは SWR の既定の振る舞いで、
+ * 自分で用意しなくてよくなった。
+ *
+ * Context を使わないのは、SWR のキャッシュがアプリ全体で1つだから。
+ * 同じキーを何か所で呼んでも、通信は1回にまとまる。
+ */
+export function useAuth() {
+  const { data, error, mutate } = useSWR(ME_KEY, () => api.me());
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // undefined はまだ確かめていない状態、null は未ログイン。
-  // 2つで済ませると、確かめている最中に「ログイン」ボタンが一瞬出る。
-  const [user, setUser] = useState<CurrentUser | null | undefined>(undefined);
+  return {
+    // 通信そのものが失敗したときは未ログイン扱いにする。
+    // api.me() は 401 を例外にせず null を返すので、ここに来るのは通信断など。
+    user: error ? null : data,
 
-  useEffect(() => {
-    api.me().then(setUser).catch(() => setUser(null));
-  }, []);
-
-  return <AuthContext value={{ user, setUser }}>{children}</AuthContext>;
-}
-
-export function useAuth(): AuthState {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth は AuthProvider の中でしか使えません");
-  }
-  return ctx;
+    /** ログインと新規登録が成功したら呼ぶ。取り直さずに手元を書き換える。 */
+    setUser: (user: CurrentUser | null) => mutate(user, { revalidate: false }),
+  };
 }
