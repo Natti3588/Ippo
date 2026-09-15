@@ -4,7 +4,16 @@ import Link from "next/link";
 import type { PostSummary } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 
-export function PostItem({ post }: { post: PostSummary }) {
+export function PostItem({
+  post,
+  canLike,
+  onToggleLike,
+}: {
+  post: PostSummary;
+  /** 未ログインのときは押せない。数だけ見せる */
+  canLike: boolean;
+  onToggleLike: () => void;
+}) {
   return (
     <article className="border-t border-border py-9">
       {/*
@@ -48,7 +57,36 @@ export function PostItem({ post }: { post: PostSummary }) {
           {formatDate(post.createdAt)}
         </span>
 
-        {/* いいねと削除は段階3・4で足す */}
+        <button
+          type="button"
+          onClick={onToggleLike}
+          disabled={!canLike}
+          className={`flex min-h-12 items-center gap-2.5 rounded-ippo border px-5 py-3 text-[17px] tabular-nums ${
+            post.likedByMe
+              ? "border-accent bg-accent-soft font-bold text-accent"
+              : "border-border-strong text-ink-soft"
+          } disabled:cursor-default`}
+          aria-pressed={post.likedByMe}
+          aria-label={post.likedByMe ? "いいねを取り消す" : "いいねする"}
+        >
+          {/*
+            色だけで区別しない。押していればハートを塗り、押していなければ
+            線だけにする。色の見分けがつきにくい人にも伝わるようにする。
+          */}
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill={post.likedByMe ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z" />
+          </svg>
+          {post.likeCount}
+        </button>
       </div>
     </article>
   );

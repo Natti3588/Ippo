@@ -3,8 +3,9 @@
 import { Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import useSWR from "swr";
-import { api, type SortOrder } from "@/lib/api";
+import { api, type PostSummary, type SortOrder } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
+import { useAuth } from "@/lib/auth";
 import { TopicNav } from "@/components/TopicNav";
 import { PostItem } from "@/components/PostItem";
 
@@ -20,9 +21,47 @@ function Board() {
     ? (raw as SortOrder)
     : "popular";
 
-  const { data: posts, error } = useSWR(["posts", slug, sort], () =>
+  const { user } = useAuth();
+  const { data: posts, error, mutate } = useSWR(["posts", slug, sort], () =>
     api.posts(slug, sort),
   );
+
+  async function toggleLike(target: PostSummary) {
+    if (!posts) return;
+
+    const next = posts.map((p) =>
+      p.id === target.id
+        ? {
+            ...p,
+            likedByMe: !p.likedByMe,
+            likeCount: p.likeCount + (p.likedByMe ? -1 : 1),
+          }
+        : p,
+    );
+
+    try {
+      await mutate(
+        async () => {
+          if (target.likedByMe) {
+            await api.unlike(target.id);
+          } else {
+            await api.like(target.id);
+          }
+          // 204 なので新しい一覧は返ってこない。手元で作ったものをそのまま使う。
+          return next;
+        },
+        {
+          optimisticData: next,
+          rollbackOnError: true,
+          // 成功しても取り直さない。人気順のときに、見ている最中で
+          // 並びが入れ替わってしまう。正確な数は次に開いたときに揃う。
+          revalidate: false,
+        },
+      );
+    } catch {
+      // rollbackOnError が数を戻してくれる。ここでは何もしない。
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-[840px] px-4 pb-22 md:px-8">
@@ -45,7 +84,12 @@ function Board() {
       )}
 
       {posts?.map((post) => (
-        <PostItem key={post.id} post={post} />
+        <PostItem
+          key={post.id}
+          post={post}
+          canLike={Boolean(user)}
+          onToggleLike={() => toggleLike(post)}
+        />
       ))}
     </main>
   );
