@@ -88,14 +88,14 @@ function Board() {
       <TopicNav slug={slug} sort={sort} />
 
       {error && (
-        <p role="alert" className="mt-12 text-[19px] leading-loose text-danger">
+        <p role="alert" className="mt-12 text-preview text-danger">
           {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
         </p>
       )}
 
       {failure && (
         <div role="alert" className="mt-9 border-l-4 border-danger bg-surface p-5">
-          <p className="text-[17px] leading-relaxed text-danger">{failure}</p>
+          <p className="text-ui text-danger">{failure}</p>
         </div>
       )}
 
@@ -104,7 +104,7 @@ function Board() {
         体感は変わらず、作る量が増えるだけ。
       */}
       {posts && posts.length === 0 && (
-        <p className="mt-12 text-[19px] leading-loose text-ink-soft">
+        <p className="mt-12 text-preview text-ink-soft">
           まだ投稿がありません。最初の一歩をどうぞ。
         </p>
       )}

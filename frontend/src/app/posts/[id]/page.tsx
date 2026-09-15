@@ -15,13 +15,13 @@ export default function PostDetailPage() {
   if (error) {
     return (
       <main className="mx-auto w-full max-w-[840px] px-4 py-16 md:px-8">
-        <p role="alert" className="text-[19px] leading-loose text-danger">
+        <p role="alert" className="text-preview text-danger">
           {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
         </p>
         <p className="mt-8">
           <Link
             href="/topics/study-method"
-            className="text-[17px] text-accent underline underline-offset-4"
+            className="text-ui text-accent underline underline-offset-4"
           >
             掲示板にもどる
           </Link>
@@ -42,7 +42,7 @@ export default function PostDetailPage() {
       <nav className="py-6">
         <Link
           href={`/topics/${post.topic.slug}`}
-          className="inline-flex min-h-12 items-center gap-2.5 text-[17px] text-ink-soft"
+          className="inline-flex min-h-12 items-center gap-2.5 text-ui text-ink-soft"
         >
           <svg
             width="18"
@@ -63,14 +63,14 @@ export default function PostDetailPage() {
 
       <article>
         {/* text-pretty で、見出しの最後の行に1語だけ残るのを防ぐ */}
-        <h1 className="mb-6 max-w-[22em] text-pretty font-read text-[34px] font-semibold leading-snug text-ink">
+        <h1 className="mb-6 max-w-[22em] text-pretty font-read text-title font-semibold text-ink">
           {post.title}
         </h1>
 
         <div className="mb-11 flex items-center gap-5 border-b-3 border-ink pb-8">
-          <span className="text-[17px] text-ink-soft">{post.authorName}</span>
+          <span className="text-ui text-ink-soft">{post.authorName}</span>
           {/* time にすると、読み上げが日付だと分かる */}
-          <time dateTime={post.createdAt} className="text-[17px] text-ink-soft">
+          <time dateTime={post.createdAt} className="text-ui text-ink-soft">
             {formatDateTime(post.createdAt)}
           </time>
         </div>
@@ -82,7 +82,7 @@ export default function PostDetailPage() {
           whitespace-pre-wrap は、書いた人の改行をそのまま出すため。
           これが無いと段落が全部つながる。
         */}
-        <div className="max-w-[34em] whitespace-pre-wrap font-read text-[21px] leading-[2.05] text-ink">
+        <div className="max-w-[34em] whitespace-pre-wrap font-read text-body text-ink">
           {post.body}
         </div>
 

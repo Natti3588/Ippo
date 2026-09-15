@@ -23,18 +23,18 @@ export function PostItem({
         色の見分けがつきにくい人に伝わらない。
       */}
       {post.isMine && (
-        <p className="mb-3 text-[15px] font-bold text-accent">あなたの投稿</p>
+        <p className="mb-3 text-ui font-bold text-accent">あなたの投稿</p>
       )}
 
       {/* 投稿のタイトルと本文にだけ英語向けの書体を当てる */}
       <Link
         href={`/posts/${post.id}`}
-        className="mb-4 block font-read text-[23px] font-semibold leading-relaxed text-ink"
+        className="mb-4 block font-read text-subtitle font-semibold text-ink"
       >
         {post.title}
       </Link>
 
-      <p className="mb-5 max-w-[34em] font-read text-[19px] leading-loose text-ink-soft">
+      <p className="mb-5 max-w-[34em] font-read text-preview text-ink-soft">
         {post.bodyPreview}
       </p>
 
@@ -47,7 +47,7 @@ export function PostItem({
           <button
             type="button"
             onClick={onDelete}
-            className="flex min-h-12 items-center py-3.5 text-[17px] text-danger underline underline-offset-4"
+            className="flex min-h-12 items-center py-3.5 text-ui text-danger underline underline-offset-4"
           >
             削除する
           </button>
@@ -60,7 +60,7 @@ export function PostItem({
         {post.truncated && (
           <Link
             href={`/posts/${post.id}`}
-            className="flex min-h-12 items-center text-[17px] font-bold text-accent underline underline-offset-4"
+            className="flex min-h-12 items-center text-ui font-bold text-accent underline underline-offset-4"
           >
             続きを読む
           </Link>
@@ -68,8 +68,8 @@ export function PostItem({
 
         <div className="grow" />
 
-        <span className="text-[17px] text-ink-soft">{post.authorName}</span>
-        <span className="text-[17px] text-ink-soft">
+        <span className="text-ui text-ink-soft">{post.authorName}</span>
+        <span className="text-ui text-ink-soft">
           {formatDate(post.createdAt)}
         </span>
 
@@ -77,7 +77,7 @@ export function PostItem({
           type="button"
           onClick={onToggleLike}
           disabled={!canLike}
-          className={`flex min-h-12 items-center gap-2.5 rounded-ippo border px-5 py-3 text-[17px] tabular-nums ${
+          className={`flex min-h-12 items-center gap-2.5 rounded-ippo border px-5 py-3 text-ui tabular-nums ${
             post.likedByMe
               ? "border-accent bg-accent-soft font-bold text-accent"
               : "border-border-strong text-ink-soft"

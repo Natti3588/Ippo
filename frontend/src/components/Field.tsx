@@ -21,7 +21,7 @@ export function Field({
   return (
     <div className="flex flex-col gap-2.5">
       {/* htmlFor と id を結んでおくと、ラベルを押しただけで入力欄に入る */}
-      <label htmlFor={id} className="text-[17px] font-bold text-ink">
+      <label htmlFor={id} className="text-ui font-bold text-ink">
         {label}
       </label>
 
@@ -40,17 +40,17 @@ export function Field({
         // 「この欄のエラーはこれ」を読み上げに伝える
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         {...registration}
-        className={`w-full rounded-ippo border bg-surface p-4 text-[19px] text-ink ${
+        className={`w-full rounded-ippo border bg-surface p-4 text-preview text-ink ${
           error ? "border-2 border-danger" : "border-border-strong"
         }`}
       />
 
       {error ? (
-        <p id={errorId} className="text-[17px] leading-relaxed text-danger">
+        <p id={errorId} className="text-ui text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={hintId} className="text-[15px] leading-relaxed text-ink-soft">
+        <p id={hintId} className="text-ui text-ink-soft">
           {hint}
         </p>
       ) : null}

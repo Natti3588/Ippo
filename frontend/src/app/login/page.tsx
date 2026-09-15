@@ -46,13 +46,13 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto w-full max-w-[440px] px-4 py-16 md:px-8">
-      <h1 className="mb-10 text-[32px] font-bold leading-snug text-ink">ログイン</h1>
+      <h1 className="mb-10 text-heading font-bold text-ink">ログイン</h1>
 
       {/* 画面全体の失敗はフォームの前にまとめて出す。
           role="alert" を付けてあるので、出た瞬間に読み上げられる */}
       {failure && (
         <div role="alert" className="mb-9 border-l-4 border-danger bg-surface p-5">
-          <p className="text-[17px] leading-relaxed text-danger">{failure}</p>
+          <p className="text-ui text-danger">{failure}</p>
         </div>
       )}
 
@@ -85,13 +85,13 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-15 w-full rounded-ippo bg-accent p-4 text-[19px] font-bold text-surface disabled:opacity-60"
+          className="min-h-15 w-full rounded-ippo bg-accent p-4 text-preview font-bold text-surface disabled:opacity-60"
         >
           {isSubmitting ? "送信中…" : "ログイン"}
         </button>
       </form>
 
-      <p className="mt-10 text-[17px] leading-loose text-ink-soft">
+      <p className="mt-10 text-ui text-ink-soft">
         はじめての方は{" "}
         <Link href="/signup" className="font-bold text-accent underline underline-offset-4">
           新規登録

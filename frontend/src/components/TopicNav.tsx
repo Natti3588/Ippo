@@ -25,7 +25,7 @@ export function TopicNav({ slug, sort }: { slug: string; sort: SortOrder }) {
           <Link
             key={t.slug}
             href={`/topics/${t.slug}`}
-            className={`inline-flex min-h-12 items-center rounded-ippo px-5 py-3 text-[19px] ${
+            className={`inline-flex min-h-12 items-center rounded-ippo px-5 py-3 text-preview ${
               t.slug === slug
                 ? "border-2 border-accent bg-accent-soft font-bold text-ink"
                 : "border border-border-strong bg-surface text-ink"
@@ -45,7 +45,7 @@ export function TopicNav({ slug, sort }: { slug: string; sort: SortOrder }) {
           <Link
             key={s.value}
             href={`/topics/${slug}?sort=${s.value}`}
-            className={`flex min-h-12 items-center border-b-3 py-3.5 text-[17px] ${
+            className={`flex min-h-12 items-center border-b-3 py-3.5 text-ui ${
               s.value === sort
                 ? "border-accent font-bold text-ink"
                 : "border-transparent text-ink-soft"
