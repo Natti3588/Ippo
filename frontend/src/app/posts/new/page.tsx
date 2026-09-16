@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import useSWR from "swr";
 import { api } from "@/lib/api";
@@ -28,7 +28,7 @@ function NewPost() {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     mode: "onBlur",
     defaultValues: {
@@ -52,6 +52,18 @@ function NewPost() {
       setFailure(err instanceof ApiError ? err.detail : "通信に失敗しました");
     }
   }
+
+  // 書きかけのまま閉じようとしたら止める。
+  // 送信中は止めない（これから消えるのが正しいため）。
+  useEffect(() => {
+    if (!isDirty || isSubmitting) return;
+
+    function warn(e: BeforeUnloadEvent) {
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [isDirty, isSubmitting]);
 
   // 未ログインでは書けない。ヘッダーにも「投稿する」を出していないが、
   // URL を直接開けるので、この経路は必ず通る。
