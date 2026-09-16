@@ -8,6 +8,7 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/problem";
+import { Counter } from "@/components/Counter";
 
 type FormValues = {
   topic: string;
@@ -26,6 +27,7 @@ function NewPost() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     mode: "onBlur",
@@ -140,9 +142,12 @@ function NewPost() {
         </fieldset>
 
         <div className="flex flex-col gap-2.5">
-          <label htmlFor="title" className="text-ui font-bold text-ink">
-            タイトル
-          </label>
+          <div className="flex items-baseline justify-between gap-4">
+            <label htmlFor="title" className="text-ui font-bold text-ink">
+              タイトル
+            </label>
+            <Counter control={control} name="title" max={100} />
+          </div>
           <input
             id="title"
             type="text"
@@ -165,9 +170,12 @@ function NewPost() {
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <label htmlFor="body" className="text-ui font-bold text-ink">
-            本文
-          </label>
+          <div className="flex items-baseline justify-between gap-4">
+            <label htmlFor="body" className="text-ui font-bold text-ink">
+              本文
+            </label>
+            <Counter control={control} name="body" max={15000} />
+          </div>
           {/*
             textarea も register で繋ぐ。value / onChange は持たせない。
             15,000文字まで書けるので、1文字ごとに再描画させない。
