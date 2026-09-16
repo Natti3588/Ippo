@@ -3,10 +3,20 @@
 import Link from "next/link";
 import useSWR from "swr";
 import { api } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 
 export default function HomePage() {
   // トピックは静的に書かない。増えたときに直し忘れる。
   const { data: topics } = useSWR("topics", () => api.topics());
+
+  // 先頭のトピックの最新1件。topics が取れるまでキーを null にして待たせる。
+  // SWR はキーが null のあいだ通信しない。
+  const first = topics?.[0];
+  const { data: latest } = useSWR(
+    first ? ["posts", first.slug, "newest"] : null,
+    () => api.posts(first!.slug, "newest"),
+  );
+  const post = latest?.[0];
 
   return (
     <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
@@ -41,7 +51,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 投稿の引用は段階2で足す */}
+      {/*
+        投稿が0件のときは、この節ごと出さない。空の枠を見せない。
+
+        「きのう書かれたもの」とは書かない。出せるのは先頭のトピックの
+        最新1件であって、全体の最新ではない。どのトピックのものかを
+        明記すれば、書いてあることはすべて事実になる。
+      */}
+      {post && first && (
+        <section className="pb-10">
+          <div className="border-t-3 border-ink pt-6">
+            <p className="mb-3 text-ui text-ink-soft">{first.name} の新しい投稿</p>
+
+            <Link
+              href={`/posts/${post.id}`}
+              className="mb-3 block font-read text-title font-semibold text-ink"
+            >
+              {post.title}
+            </Link>
+
+            <p className="mb-4 max-w-[32em] font-read text-body text-ink">
+              {post.bodyPreview}
+            </p>
+
+            <p className="text-ui text-ink-soft">
+              {post.authorName}　{formatDate(post.createdAt)}
+            </p>
+          </div>
+        </section>
+      )}
 
       {/* 理由。箱に入れず、罫線だけで区切る */}
       <section className="pb-10">
