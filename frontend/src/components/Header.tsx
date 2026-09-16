@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
 export function Header() {
   const { user, setUser } = useAuth();
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   async function handleLogout() {
     try {
@@ -21,8 +23,9 @@ export function Header() {
   }
 
   return (
-    <header className="border-b border-border">
-      <div className="mx-auto flex h-14 max-w-[680px] items-center justify-between gap-2.5 px-4 md:px-5">
+    <>
+      <header className="border-b border-border">
+        <div className="mx-auto flex h-14 max-w-[680px] items-center justify-between gap-2.5 px-4 md:px-5">
         <Link
           href="/"
           className="text-body font-bold tracking-wide text-ink md:text-subtitle"
@@ -54,6 +57,29 @@ export function Header() {
               投稿する
               <PencilIcon />
             </Link>
+            {/* 図形だけのボタンなので、読み上げ用の名前を必ず付ける */}
+            <button
+              type="button"
+              aria-label="メニュー"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen(true)}
+              className="flex h-11 w-11 items-center justify-center rounded-ippo border border-border-strong text-ink md:hidden"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </svg>
+            </button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -71,8 +97,73 @@ export function Header() {
             </Link>
           </div>
         )}
-      </div>
-    </header>
+        </div>
+      </header>
+
+      {/*
+        画面いっぱいに出す。横から滑り込ませない。
+        動きを付けるほどの画面ではないし、動かすと閉じ方が分かりにくくなる。
+      */}
+      {menuOpen && user && (
+        <div className="fixed inset-0 z-10 flex flex-col bg-ground md:hidden">
+          <div className="flex h-14 items-center justify-between border-b border-border px-4">
+            <span className="text-preview font-bold text-ink">Ippo</span>
+            <button
+              type="button"
+              aria-label="閉じる"
+              onClick={() => setMenuOpen(false)}
+              className="flex h-11 w-11 items-center justify-center rounded-ippo border border-border-strong text-ink"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="border-b border-border px-4 py-4">
+            <p className="text-ui text-ink-soft">ログイン中</p>
+            <p className="text-preview font-bold text-ink">{user.displayName} さん</p>
+          </div>
+
+          <nav className="flex flex-col">
+            <Link
+              href="/topics/study-method"
+              onClick={() => setMenuOpen(false)}
+              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink"
+            >
+              掲示板
+            </Link>
+            <Link
+              href="/settings"
+              onClick={() => setMenuOpen(false)}
+              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink"
+            >
+              設定
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                handleLogout();
+              }}
+              className="flex min-h-14 items-center border-b border-border px-4 text-left text-preview text-ink-soft"
+            >
+              ログアウト
+            </button>
+          </nav>
+        </div>
+      )}
+    </>
   );
 }
 
