@@ -20,12 +20,12 @@ export function TopicNav({ slug, sort }: { slug: string; sort: SortOrder }) {
         折り返して下に伸ばす。並び順は3つで固定なので、そちらはタブのまま。
         見た目を分けることで、増えるものと増えないものを区別している。
       */}
-      <nav className="flex flex-wrap gap-3 border-b border-border py-6">
+      <nav className="flex flex-wrap gap-2 border-b border-border py-4">
         {topics?.map((t) => (
           <Link
             key={t.slug}
             href={`/topics/${t.slug}`}
-            className={`inline-flex min-h-12 items-center rounded-ippo px-5 py-3 text-preview ${
+            className={`inline-flex min-h-11 items-center rounded-ippo px-3.5 py-2 text-preview ${
               t.slug === slug
                 ? "border-2 border-accent bg-accent-soft font-bold text-ink"
                 : "border border-border-strong bg-surface text-ink"
@@ -40,12 +40,12 @@ export function TopicNav({ slug, sort }: { slug: string; sort: SortOrder }) {
         並び順を URL に出す。戻るボタンで前の並びに戻れるし、
         人に送った URL が同じ画面を開く。
       */}
-      <div className="mt-10 flex items-baseline gap-6">
+      <div className="mt-6 flex items-baseline gap-4">
         {SORTS.map((s) => (
           <Link
             key={s.value}
             href={`/topics/${slug}?sort=${s.value}`}
-            className={`flex min-h-12 items-center border-b-3 py-3.5 text-ui ${
+            className={`flex min-h-11 items-center border-b-3 py-2.5 text-ui ${
               s.value === sort
                 ? "border-accent font-bold text-ink"
                 : "border-transparent text-ink-soft"

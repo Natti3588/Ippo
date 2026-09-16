@@ -19,7 +19,7 @@ export function Field({
   const hintId = `${id}-hint`;
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2">
       {/* htmlFor と id を結んでおくと、ラベルを押しただけで入力欄に入る */}
       <label htmlFor={id} className="text-ui font-bold text-ink">
         {label}
@@ -40,7 +40,7 @@ export function Field({
         // 「この欄のエラーはこれ」を読み上げに伝える
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         {...registration}
-        className={`w-full rounded-ippo border bg-surface p-4 text-preview text-ink ${
+        className={`w-full rounded-ippo border bg-surface p-3 text-preview text-ink ${
           error ? "border-2 border-danger" : "border-border-strong"
         }`}
       />

@@ -14,11 +14,11 @@ export default function PostDetailPage() {
 
   if (error) {
     return (
-      <main className="mx-auto w-full max-w-[840px] px-4 py-16 md:px-8">
+      <main className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
         <p role="alert" className="text-preview text-danger">
           {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
         </p>
-        <p className="mt-8">
+        <p className="mt-5">
           <Link
             href="/topics/study-method"
             className="text-ui text-accent underline underline-offset-4"
@@ -34,15 +34,15 @@ export default function PostDetailPage() {
   if (!post) return null;
 
   return (
-    <main className="mx-auto w-full max-w-[840px] px-4 pb-22 md:px-8">
+    <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
       {/*
         戻り先は post.topic から作る。
         一覧は topic を返さないので、パンくずはこの画面でしか作れない。
       */}
-      <nav className="py-6">
+      <nav className="py-4">
         <Link
           href={`/topics/${post.topic.slug}`}
-          className="inline-flex min-h-12 items-center gap-2.5 text-ui text-ink-soft"
+          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft"
         >
           <svg
             width="18"
@@ -63,11 +63,11 @@ export default function PostDetailPage() {
 
       <article>
         {/* text-pretty で、見出しの最後の行に1語だけ残るのを防ぐ */}
-        <h1 className="mb-6 max-w-[22em] text-pretty font-read text-title font-semibold text-ink">
+        <h1 className="mb-4 max-w-[22em] text-pretty font-read text-title font-semibold text-ink">
           {post.title}
         </h1>
 
-        <div className="mb-11 flex items-center gap-5 border-b-3 border-ink pb-8">
+        <div className="mb-7 flex items-center gap-3 border-b-3 border-ink pb-5">
           <span className="text-ui text-ink-soft">{post.authorName}</span>
           {/* time にすると、読み上げが日付だと分かる */}
           <time dateTime={post.createdAt} className="text-ui text-ink-soft">

@@ -46,20 +46,20 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[440px] px-4 py-16 md:px-8">
-      <h1 className="mb-10 text-heading font-bold text-ink">新規登録</h1>
+    <main className="mx-auto w-full max-w-[380px] px-4 py-10 md:px-5">
+      <h1 className="mb-6 text-heading font-bold text-ink">新規登録</h1>
 
       {/* 画面全体の失敗はフォームの前にまとめて出す。
           role="alert" を付けてあるので、出た瞬間に読み上げられる */}
       {failure && (
-        <div role="alert" className="mb-9 border-l-4 border-danger bg-surface p-5">
+        <div role="alert" className="mb-6 border-l-4 border-danger bg-surface p-3.5">
           <p className="text-ui text-danger">{failure}</p>
         </div>
       )}
 
       {/* preventDefault と値集めは handleSubmit がやる。
           エラーがあれば、最初の欄に焦点が移る */}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-8">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
         <Field
           id="email"
           label="メールアドレス"
@@ -105,13 +105,13 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-15 w-full rounded-ippo bg-accent p-4 text-preview font-bold text-surface disabled:opacity-60"
+          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60"
         >
           {isSubmitting ? "送信中…" : "新規登録"}
         </button>
       </form>
 
-      <p className="mt-10 text-ui text-ink-soft">
+      <p className="mt-6 text-ui text-ink-soft">
         すでに登録した方は{" "}
         <Link href="/login" className="font-bold text-accent underline underline-offset-4">
           ログイン

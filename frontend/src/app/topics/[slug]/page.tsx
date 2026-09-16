@@ -84,17 +84,17 @@ function Board() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[840px] px-4 pb-22 md:px-8">
+    <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
       <TopicNav slug={slug} sort={sort} />
 
       {error && (
-        <p role="alert" className="mt-12 text-preview text-danger">
+        <p role="alert" className="mt-8 text-preview text-danger">
           {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
         </p>
       )}
 
       {failure && (
-        <div role="alert" className="mt-9 border-l-4 border-danger bg-surface p-5">
+        <div role="alert" className="mt-6 border-l-4 border-danger bg-surface p-3.5">
           <p className="text-ui text-danger">{failure}</p>
         </div>
       )}
@@ -104,7 +104,7 @@ function Board() {
         体感は変わらず、作る量が増えるだけ。
       */}
       {posts && posts.length === 0 && (
-        <p className="mt-12 text-preview text-ink-soft">
+        <p className="mt-8 text-preview text-ink-soft">
           まだ投稿がありません。最初の一歩をどうぞ。
         </p>
       )}

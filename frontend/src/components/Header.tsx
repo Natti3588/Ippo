@@ -22,7 +22,7 @@ export function Header() {
 
   return (
     <header className="border-b border-border">
-      <div className="mx-auto flex h-18 max-w-[840px] items-center justify-between gap-4 px-4 md:px-8">
+      <div className="mx-auto flex h-14 max-w-[680px] items-center justify-between gap-2.5 px-4 md:px-5">
         <Link
           href="/"
           className="text-body font-bold tracking-wide text-ink md:text-subtitle"
@@ -36,20 +36,20 @@ export function Header() {
           <div className="flex items-center gap-1">
             <Link
               href="/settings"
-              className="hidden min-h-12 items-center px-4 text-ui text-ink-soft md:flex"
+              className="hidden min-h-11 items-center px-4 text-ui text-ink-soft md:flex"
             >
               {user.displayName} さん
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="hidden min-h-12 items-center px-4 text-ui text-ink-soft underline underline-offset-4 md:flex"
+              className="hidden min-h-11 items-center px-4 text-ui text-ink-soft underline underline-offset-4 md:flex"
             >
               ログアウト
             </button>
             <Link
               href="/posts/new"
-              className="ml-3 inline-flex min-h-12 items-center gap-2.5 rounded-ippo bg-accent px-5 py-3.5 text-ui font-bold text-surface"
+              className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface"
             >
               投稿する
               <PencilIcon />
@@ -59,13 +59,13 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="flex min-h-12 items-center px-4 text-ui text-ink-soft"
+              className="flex min-h-11 items-center px-4 text-ui text-ink-soft"
             >
               ログイン
             </Link>
             <Link
               href="/signup"
-              className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-5 py-3.5 text-ui font-bold text-surface"
+              className="inline-flex min-h-11 items-center rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface"
             >
               はじめる
             </Link>
