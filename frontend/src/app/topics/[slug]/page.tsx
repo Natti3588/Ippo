@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/problem";
 import { useAuth } from "@/lib/auth";
 import { TopicNav } from "@/components/TopicNav";
 import { PostItem } from "@/components/PostItem";
+import { Pagination } from "@/components/Pagination";
 
 const SORTS: SortOrder[] = ["popular", "newest", "oldest"];
 
@@ -21,23 +22,31 @@ function Board() {
     ? (raw as SortOrder)
     : "popular";
 
+  const parsed = Number.parseInt(params.get("page") ?? "", 10);
+  const page = Number.isInteger(parsed) && parsed >= 1 ? parsed : 1;
+
   const { user } = useAuth();
-  const { data: posts, error, mutate } = useSWR(["posts", slug, sort], () =>
-    api.posts(slug, sort),
+  const { data, error, mutate } = useSWR(["posts", slug, sort, page], () =>
+    api.posts(slug, sort, page),
+    { keepPreviousData: true },
   );
+  const posts = data?.items;
 
   async function toggleLike(target: PostSummary) {
-    if (!posts) return;
+    if (!data) return;
 
-    const next = posts.map((p) =>
-      p.id === target.id
-        ? {
-            ...p,
-            likedByMe: !p.likedByMe,
-            likeCount: p.likeCount + (p.likedByMe ? -1 : 1),
-          }
-        : p,
-    );
+    const next = {
+      ...data,
+      items: data.items.map((p) =>
+        p.id === target.id
+          ? {
+              ...p,
+              likedByMe: !p.likedByMe,
+              likeCount: p.likeCount + (p.likedByMe ? -1 : 1),
+            }
+          : p,
+      ),
+    };
 
     try {
       await mutate(
@@ -105,7 +114,9 @@ function Board() {
       */}
       {posts && posts.length === 0 && (
         <p className="mt-8 text-preview text-ink-soft">
-          まだ投稿がありません。最初の一歩をどうぞ。
+          {page > 1
+            ? "このページには投稿がありません。"
+            : "まだ投稿がありません。最初の一歩をどうぞ。"}
         </p>
       )}
 
@@ -118,6 +129,8 @@ function Board() {
           onDelete={() => remove(post)}
         />
       ))}
+
+      {data && <Pagination slug={slug} sort={sort} page={page} hasNext={data.hasNext} />}
     </main>
   );
 }
