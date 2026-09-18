@@ -133,14 +133,33 @@ export default function HomePage() {
 
       {/* 数を文字で書かない。トピックは後から増える */}
       <section className="pb-10">
-        <h2 className="mb-2 text-subtitle font-bold text-ink">こんなトピックがあります</h2>
+        <h2 className="mb-4 text-subtitle font-bold text-ink">こんなトピックがあります</h2>
         {topics?.map((t) => (
           <Link
             key={t.slug}
             href={`/topics/${t.slug}`}
-            className="flex min-h-11 items-center border-t border-border py-4 text-preview font-bold text-ink last:border-b"
+            className="flex min-h-11 items-center justify-between gap-4 border-t border-border py-4 text-preview font-bold text-ink last:border-b hover:bg-accent-soft transition-colors"
           >
             {t.name}
+            {/*
+              行全体がリンクだが、名前が1つ置いてあるだけでは押せるものに見えない。
+              右端の山かっこが「この先がある」ことを示す。
+              文字の隣にあるので、読み上げからは外す。
+            */}
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0 text-ink-faint"
+              aria-hidden="true"
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
           </Link>
         ))}
       </section>
