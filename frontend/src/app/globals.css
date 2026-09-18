@@ -88,6 +88,23 @@ body {
   touch-action: manipulation;
 }
 
+/*
+  Tailwind v4 の preflight は button を cursor: default にする（v3 は pointer だった）。
+  このアプリは a と button を同じ見た目で並べているので、そのままだと
+  「押せるのに矢印が出るもの」と「手のひらが出るもの」が混ざる。
+
+  :not(:disabled) にしているのは、送信中のボタンに手のひらを出さないため。
+  押せないものに押せる合図を出さない。
+
+  @layer base に入れているのは、個別に cursor-* を指定したいときに
+  ユーティリティ側が勝てるようにするため。
+*/
+@layer base {
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 /* 押せるものには輪郭を出す。outline を消して終わりにしない */
 :focus-visible {
   outline: 3px solid var(--accent);
