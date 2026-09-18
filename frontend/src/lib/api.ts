@@ -49,7 +49,8 @@ type Json<P extends keyof paths, M extends keyof paths[P]> = paths[P][M] extends
     : never;
 
 export type Topic = Json<"/topics", "get">[number];
-export type PostSummary = Json<"/topics/{slug}/posts", "get">[number];
+export type PostPage = Json<"/topics/{slug}/posts", "get">;
+export type PostSummary = PostPage["items"][number];
 export type Post = Json<"/posts/{postId}", "get">;
 export type CurrentUser = Json<"/me", "get">;
 export type SortOrder = NonNullable<
@@ -101,8 +102,10 @@ export const api = {
 
   topics: () => request<Topic[]>("/topics"),
 
-  posts: (slug: string, sort: SortOrder = "popular") =>
-    request<PostSummary[]>(`/topics/${encodeURIComponent(slug)}/posts?sort=${sort}`),
+  posts: (slug: string, sort: SortOrder = "popular", page = 1) =>
+    request<PostPage>(
+      `/topics/${encodeURIComponent(slug)}/posts?sort=${sort}&page=${page}`,
+    ),
 
   post: (postId: string) => request<Post>(`/posts/${encodeURIComponent(postId)}`),
 

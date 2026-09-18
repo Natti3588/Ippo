@@ -16,7 +16,7 @@ export default function HomePage() {
     first ? ["posts", first.slug, "newest"] : null,
     () => api.posts(first!.slug, "newest"),
   );
-  const post = latest?.[0];
+  const post = latest?.items[0];
 
   return (
     <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">

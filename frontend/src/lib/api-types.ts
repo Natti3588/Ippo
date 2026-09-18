@@ -128,7 +128,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description トピックの投稿を、指定された並び順で取得する。 既定は人気順 */
+        /** @description トピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目 */
         get: operations["Topics_listPosts"];
         put?: never;
         /** @description トピックに投稿する */
@@ -194,6 +194,13 @@ export interface components {
             createdAt: string;
             /** @description この投稿が属するトピック。詳細ページから一覧へ戻るために使う */
             topic: components["schemas"]["Topic"];
+        };
+        /** @description 投稿一覧の1ページ分。1ページは10件で固定 */
+        PostPage: {
+            /** @description このページの投稿。最大10件 */
+            items: components["schemas"]["PostSummary"][];
+            /** @description 次のページがあるかどうか。総ページ数と総件数は返さない */
+            hasNext: boolean;
         };
         /** @description 一覧に並べる投稿。本文は先頭200文字までしか含まない */
         PostSummary: {
@@ -616,6 +623,8 @@ export interface operations {
         parameters: {
             query?: {
                 sort?: components["schemas"]["SortOrder"];
+                /** @description 何ページ目か。1始まり。1ページは10件で固定 */
+                page?: number;
             };
             header?: never;
             path: {
@@ -631,7 +640,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PostSummary"][];
+                    "application/json": components["schemas"]["PostPage"];
                 };
             };
             /** @description 入力が不正 */
