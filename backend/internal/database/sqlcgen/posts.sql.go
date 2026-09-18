@@ -146,11 +146,14 @@ LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
 ORDER BY p.created_at DESC, p.id DESC
+LIMIT ? OFFSET ?
 `
 
 type ListPostsByTopicNewestParams struct {
 	ViewerID []byte
 	TopicID  []byte
+	Limit    int32
+	Offset   int32
 }
 
 type ListPostsByTopicNewestRow struct {
@@ -166,7 +169,12 @@ type ListPostsByTopicNewestRow struct {
 }
 
 func (q *Queries) ListPostsByTopicNewest(ctx context.Context, arg ListPostsByTopicNewestParams) ([]ListPostsByTopicNewestRow, error) {
-	rows, err := q.db.QueryContext(ctx, listPostsByTopicNewest, arg.ViewerID, arg.TopicID)
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicNewest,
+		arg.ViewerID,
+		arg.TopicID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -218,11 +226,14 @@ LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
 ORDER BY p.created_at ASC, p.id ASC
+LIMIT ? OFFSET ?
 `
 
 type ListPostsByTopicOldestParams struct {
 	ViewerID []byte
 	TopicID  []byte
+	Limit    int32
+	Offset   int32
 }
 
 type ListPostsByTopicOldestRow struct {
@@ -238,7 +249,12 @@ type ListPostsByTopicOldestRow struct {
 }
 
 func (q *Queries) ListPostsByTopicOldest(ctx context.Context, arg ListPostsByTopicOldestParams) ([]ListPostsByTopicOldestRow, error) {
-	rows, err := q.db.QueryContext(ctx, listPostsByTopicOldest, arg.ViewerID, arg.TopicID)
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicOldest,
+		arg.ViewerID,
+		arg.TopicID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -291,11 +307,14 @@ LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = ?
 GROUP BY p.id, u.display_name
 ORDER BY like_count DESC, p.created_at DESC, p.id DESC
+LIMIT ? OFFSET ?
 `
 
 type ListPostsByTopicPopularParams struct {
 	ViewerID []byte
 	TopicID  []byte
+	Limit    int32
+	Offset   int32
 }
 
 type ListPostsByTopicPopularRow struct {
@@ -314,8 +333,15 @@ type ListPostsByTopicPopularRow struct {
 // 1本だけ変えても SQL も Go もエラーにならず、同じ投稿が並び順によって
 // 違う長さのプレビューを返すだけになる。詳細は repository/convert.go の
 // toDomainPostSummary のコメントを参照。
+// LIMIT / OFFSET も3本すべてに要る。1本だけ足しても SQL も Go もエラーにならず、
+// 並び順を変えただけで突然全件返る一覧ができあがる。
 func (q *Queries) ListPostsByTopicPopular(ctx context.Context, arg ListPostsByTopicPopularParams) ([]ListPostsByTopicPopularRow, error) {
-	rows, err := q.db.QueryContext(ctx, listPostsByTopicPopular, arg.ViewerID, arg.TopicID)
+	rows, err := q.db.QueryContext(ctx, listPostsByTopicPopular,
+		arg.ViewerID,
+		arg.TopicID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}

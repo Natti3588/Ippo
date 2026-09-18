@@ -2,6 +2,8 @@
 -- 1本だけ変えても SQL も Go もエラーにならず、同じ投稿が並び順によって
 -- 違う長さのプレビューを返すだけになる。詳細は repository/convert.go の
 -- toDomainPostSummary のコメントを参照。
+-- LIMIT / OFFSET も3本すべてに要る。1本だけ足しても SQL も Go もエラーにならず、
+-- 並び順を変えただけで突然全件返る一覧ができあがる。
 
 -- name: ListPostsByTopicPopular :many
 SELECT
@@ -22,7 +24,8 @@ JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = sqlc.arg(topic_id)
 GROUP BY p.id, u.display_name
-ORDER BY like_count DESC, p.created_at DESC, p.id DESC;
+ORDER BY like_count DESC, p.created_at DESC, p.id DESC
+LIMIT ? OFFSET ?;
 
 -- name: ListPostsByTopicNewest :many
 SELECT
@@ -43,7 +46,8 @@ JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = sqlc.arg(topic_id)
 GROUP BY p.id, u.display_name
-ORDER BY p.created_at DESC, p.id DESC;
+ORDER BY p.created_at DESC, p.id DESC
+LIMIT ? OFFSET ?;
 
 -- name: ListPostsByTopicOldest :many
 SELECT
@@ -64,7 +68,8 @@ JOIN users u ON u.id = p.author_id
 LEFT JOIN likes l ON l.post_id = p.id
 WHERE p.topic_id = sqlc.arg(topic_id)
 GROUP BY p.id, u.display_name
-ORDER BY p.created_at ASC, p.id ASC;
+ORDER BY p.created_at ASC, p.id ASC
+LIMIT ? OFFSET ?;
 
 -- name: CreatePost :exec
 INSERT INTO posts (id, topic_id, author_id, title, body, created_at)
