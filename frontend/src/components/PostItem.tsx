@@ -47,7 +47,7 @@ export function PostItem({
           <button
             type="button"
             onClick={onDelete}
-            className="flex min-h-11 items-center py-2.5 text-ui text-danger underline underline-offset-4"
+            className="flex min-h-11 items-center py-2.5 text-ui text-danger underline underline-offset-4 hover:bg-danger-soft transition-colors"
           >
             削除する
           </button>
@@ -60,7 +60,7 @@ export function PostItem({
         {post.truncated && (
           <Link
             href={`/posts/${post.id}`}
-            className="flex min-h-11 items-center text-ui font-bold text-accent underline underline-offset-4"
+            className="flex min-h-11 items-center text-ui font-bold text-accent underline underline-offset-4 hover:text-ink transition-colors"
           >
             続きを読む
           </Link>
@@ -77,10 +77,10 @@ export function PostItem({
           type="button"
           onClick={onToggleLike}
           disabled={!canLike}
-          className={`flex min-h-11 items-center gap-2 rounded-ippo border px-3.5 py-2 text-ui tabular-nums ${
+          className={`flex min-h-11 items-center gap-2 rounded-ippo border px-3.5 py-2 text-ui tabular-nums transition-colors ${
             post.likedByMe
-              ? "border-accent bg-accent-soft font-bold text-accent"
-              : "border-border-strong text-ink-soft"
+              ? "border-accent bg-accent-soft font-bold text-accent enabled:hover:border-accent-strong"
+              : "border-border-strong text-ink-soft enabled:hover:border-accent enabled:hover:text-accent"
           } disabled:cursor-default`}
           aria-pressed={post.likedByMe}
           aria-label={post.likedByMe ? "いいねを取り消す" : "いいねする"}

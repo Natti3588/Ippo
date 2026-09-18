@@ -105,7 +105,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60"
+          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
         >
           {isSubmitting ? "送信中…" : "新規登録"}
         </button>
@@ -113,7 +113,7 @@ export default function SignupPage() {
 
       <p className="mt-6 text-ui text-ink-soft">
         すでに登録した方は{" "}
-        <Link href="/login" className="font-bold text-accent underline underline-offset-4">
+        <Link href="/login" className="font-bold text-accent underline underline-offset-4 hover:text-ink transition-colors">
           ログイン
         </Link>
       </p>

@@ -28,7 +28,7 @@ export function TopicNav({ slug, sort }: { slug: string; sort: SortOrder }) {
             className={`inline-flex min-h-11 items-center rounded-ippo px-3.5 py-2 text-preview ${
               t.slug === slug
                 ? "border-2 border-accent bg-accent-soft font-bold text-ink"
-                : "border border-border-strong bg-surface text-ink"
+                : "border border-border-strong bg-surface text-ink hover:bg-accent-soft hover:border-accent transition-colors"
             }`}
           >
             {t.name}
@@ -45,7 +45,7 @@ export function TopicNav({ slug, sort }: { slug: string; sort: SortOrder }) {
           <Link
             key={s.value}
             href={`/topics/${slug}?sort=${s.value}`}
-            className={`flex min-h-11 items-center border-b-3 py-2.5 text-ui ${
+            className={`flex min-h-11 items-center border-b-3 py-2.5 text-ui hover:text-ink transition-colors ${
               s.value === sort
                 ? "border-accent font-bold text-ink"
                 : "border-transparent text-ink-soft"

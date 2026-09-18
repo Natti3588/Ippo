@@ -21,7 +21,7 @@ export function Pagination({
       {page > 1 ? (
         <Link
           href={href(page - 1)}
-          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong bg-surface px-4 py-2 text-ui text-ink"
+          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong bg-surface px-4 py-2 text-ui text-ink hover:bg-accent-soft hover:border-accent transition-colors"
         >
           ← 前のページ
         </Link>
@@ -34,7 +34,7 @@ export function Pagination({
       {hasNext ? (
         <Link
           href={href(page + 1)}
-          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong bg-surface px-4 py-2 text-ui text-ink"
+          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong bg-surface px-4 py-2 text-ui text-ink hover:bg-accent-soft hover:border-accent transition-colors"
         >
           次のページ →
         </Link>

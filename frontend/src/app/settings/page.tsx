@@ -67,7 +67,7 @@ export default function SettingsPage() {
         <p className="mb-5 text-preview text-ink">設定を開くにはログインが必要です。</p>
         <Link
           href="/login"
-          className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface"
+          className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
         >
           ログイン
         </Link>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60"
+              className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
             >
               {isSubmitting ? "保存中…" : "保存する"}
             </button>
@@ -157,7 +157,7 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong px-5 py-2.5 text-ui text-ink"
+          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong px-5 py-2.5 text-ui text-ink hover:bg-accent-soft hover:border-accent transition-colors"
         >
           ログアウトする
         </button>

@@ -34,7 +34,7 @@ export default function HomePage() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/signup"
-            className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface"
+            className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
           >
             はじめる
           </Link>
@@ -44,7 +44,7 @@ export default function HomePage() {
           */}
           <Link
             href={topics ? `/topics/${topics[0].slug}` : "/topics/study-method"}
-            className="inline-flex min-h-12 items-center rounded-ippo border border-ink px-5 py-3 text-preview text-ink"
+            className="inline-flex min-h-12 items-center rounded-ippo border border-ink px-5 py-3 text-preview text-ink hover:bg-accent-soft hover:border-accent transition-colors"
           >
             読むだけ見てみる
           </Link>

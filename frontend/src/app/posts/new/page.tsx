@@ -73,7 +73,7 @@ function NewPost() {
         <p className="mb-5 text-preview text-ink">投稿するにはログインが必要です。</p>
         <Link
           href="/login"
-          className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface"
+          className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
         >
           ログイン
         </Link>
@@ -89,7 +89,7 @@ function NewPost() {
       <nav className="py-4">
         <Link
           href="/topics/study-method"
-          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft"
+          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft hover:text-ink transition-colors"
         >
           <svg
             width="16"
@@ -135,7 +135,7 @@ function NewPost() {
               // 文字だけが当たり判定になるのを避ける。
               <label
                 key={t.slug}
-                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ippo border border-border-strong bg-surface px-3.5 py-2.5 has-checked:border-2 has-checked:border-accent has-checked:bg-accent-soft"
+                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ippo border border-border-strong bg-surface px-3.5 py-2.5 has-checked:border-2 has-checked:border-accent has-checked:bg-accent-soft hover:bg-accent-soft hover:border-accent transition-colors"
               >
                 <input
                   type="radio"
@@ -217,13 +217,13 @@ function NewPost() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60"
+            className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
           >
             {isSubmitting ? "送信中…" : "投稿する"}
           </button>
           <Link
             href="/topics/study-method"
-            className="inline-flex min-h-11 items-center text-ui text-ink-soft underline underline-offset-4"
+            className="inline-flex min-h-11 items-center text-ui text-ink-soft underline underline-offset-4 hover:text-ink transition-colors"
           >
             やめる
           </Link>

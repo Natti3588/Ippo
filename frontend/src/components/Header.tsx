@@ -39,20 +39,20 @@ export function Header() {
           <div className="flex items-center gap-1">
             <Link
               href="/settings"
-              className="hidden min-h-11 items-center px-4 text-ui text-ink-soft md:flex"
+              className="hidden min-h-11 items-center px-4 text-ui text-ink-soft md:flex hover:text-ink transition-colors"
             >
               {user.displayName} さん
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="hidden min-h-11 items-center px-4 text-ui text-ink-soft underline underline-offset-4 md:flex"
+              className="hidden min-h-11 items-center px-4 text-ui text-ink-soft underline underline-offset-4 md:flex hover:text-ink transition-colors"
             >
               ログアウト
             </button>
             <Link
               href="/posts/new"
-              className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface"
+              className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
             >
               投稿する
               <PencilIcon />
@@ -63,7 +63,7 @@ export function Header() {
               aria-label="メニュー"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen(true)}
-              className="flex h-11 w-11 items-center justify-center rounded-ippo border border-border-strong text-ink md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-ippo border border-border-strong text-ink md:hidden hover:bg-accent-soft hover:border-accent transition-colors"
             >
               <svg
                 width="22"
@@ -85,13 +85,13 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="flex min-h-11 items-center px-4 text-ui text-ink-soft"
+              className="flex min-h-11 items-center px-4 text-ui text-ink-soft hover:text-ink transition-colors"
             >
               ログイン
             </Link>
             <Link
               href="/signup"
-              className="inline-flex min-h-11 items-center rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface"
+              className="inline-flex min-h-11 items-center rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
             >
               はじめる
             </Link>
@@ -112,7 +112,7 @@ export function Header() {
               type="button"
               aria-label="閉じる"
               onClick={() => setMenuOpen(false)}
-              className="flex h-11 w-11 items-center justify-center rounded-ippo border border-border-strong text-ink"
+              className="flex h-11 w-11 items-center justify-center rounded-ippo border border-border-strong text-ink hover:bg-accent-soft hover:border-accent transition-colors"
             >
               <svg
                 width="22"
@@ -139,14 +139,14 @@ export function Header() {
             <Link
               href="/topics/study-method"
               onClick={() => setMenuOpen(false)}
-              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink"
+              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink hover:bg-accent-soft transition-colors"
             >
               掲示板
             </Link>
             <Link
               href="/settings"
               onClick={() => setMenuOpen(false)}
-              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink"
+              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink hover:bg-accent-soft transition-colors"
             >
               設定
             </Link>
@@ -156,7 +156,7 @@ export function Header() {
                 setMenuOpen(false);
                 handleLogout();
               }}
-              className="flex min-h-14 items-center border-b border-border px-4 text-left text-preview text-ink-soft"
+              className="flex min-h-14 items-center border-b border-border px-4 text-left text-preview text-ink-soft hover:bg-accent-soft hover:text-ink transition-colors"
             >
               ログアウト
             </button>

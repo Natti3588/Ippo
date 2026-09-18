@@ -13,6 +13,9 @@
   --border: #e0dfce;
   --border-strong: #c9c8b4;
   --danger: #9b3d24;
+  --accent-strong: #435a23;
+  --accent-deep: #36481c;
+  --danger-soft: #f6e8e3;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +32,9 @@
     --border: #333a26;
     --border-strong: #4a5137;
     --danger: #e08a6e;
+    --accent-strong: #b2d07c;
+    --accent-deep: #c2dc92;
+    --danger-soft: #2f1d16;
   }
 }
 
@@ -43,6 +49,9 @@
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-danger: var(--danger);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-deep: var(--accent-deep);
+  --color-danger-soft: var(--danger-soft);
 
   --font-sans: var(--font-ui);
   --font-read: var(--font-read);

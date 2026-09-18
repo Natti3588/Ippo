@@ -85,7 +85,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60"
+          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
         >
           {isSubmitting ? "送信中…" : "ログイン"}
         </button>
@@ -93,7 +93,7 @@ export default function LoginPage() {
 
       <p className="mt-6 text-ui text-ink-soft">
         はじめての方は{" "}
-        <Link href="/signup" className="font-bold text-accent underline underline-offset-4">
+        <Link href="/signup" className="font-bold text-accent underline underline-offset-4 hover:text-ink transition-colors">
           新規登録
         </Link>
       </p>

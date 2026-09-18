@@ -21,7 +21,7 @@ export default function PostDetailPage() {
         <p className="mt-5">
           <Link
             href="/topics/study-method"
-            className="text-ui text-accent underline underline-offset-4"
+            className="text-ui text-accent underline underline-offset-4 hover:text-ink transition-colors"
           >
             掲示板にもどる
           </Link>
@@ -42,7 +42,7 @@ export default function PostDetailPage() {
       <nav className="py-4">
         <Link
           href={`/topics/${post.topic.slug}`}
-          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft"
+          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft hover:text-ink transition-colors"
         >
           <svg
             width="18"
