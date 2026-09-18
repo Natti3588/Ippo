@@ -88,6 +88,15 @@ type Post struct {
 	Topic Topic `json:"topic"`
 }
 
+// PostPage 投稿一覧の1ページ分。1ページは10件で固定
+type PostPage struct {
+	// HasNext 次のページがあるかどうか。総ページ数と総件数は返さない
+	HasNext bool `json:"hasNext"`
+
+	// Items このページの投稿。最大10件
+	Items []PostSummary `json:"items"`
+}
+
 // PostSummary 一覧に並べる投稿。本文は先頭200文字までしか含まない
 type PostSummary struct {
 	// AuthorName 投稿者の名前
@@ -164,6 +173,9 @@ type UpdateProfileRequest struct {
 // TopicsListPostsParams defines parameters for TopicsListPosts.
 type TopicsListPostsParams struct {
 	Sort *SortOrder `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Page 何ページ目か。1始まり。1ページは10件で固定
+	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
 }
 
 // AuthLoginJSONRequestBody defines body for AuthLogin for application/json ContentType.
@@ -442,6 +454,19 @@ func (siw *ServerInterfaceWrapper) TopicsListPosts(w http.ResponseWriter, r *htt
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: "int32"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
 		}
 		return
 	}

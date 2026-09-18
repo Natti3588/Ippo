@@ -69,6 +69,15 @@ model PostSummary {
   createdAt: utcDateTime;
 }
 
+@doc("投稿一覧の1ページ分。1ページは10件で固定")
+model PostPage {
+  @doc("このページの投稿。最大10件")
+  items: PostSummary[];
+
+  @doc("次のページがあるかどうか。総ページ数と総件数は返さない")
+  hasNext: boolean;
+}
+
 @doc("投稿の作成リクエスト")
 model CreatePostRequest {
   @minLength(1)
