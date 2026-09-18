@@ -90,7 +90,7 @@ func (r *BoardRepository) ListTopics(ctx context.Context) ([]domain.Topic, error
 	return toDomainTopics(rows)
 }
 
-func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string) ([]domain.PostSummary, error) {
+func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error) {
 	id, err := toBinaryUUID(topicID)
 	if err != nil {
 		return nil, err
@@ -103,19 +103,19 @@ func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, 
 
 	switch sort {
 	case domain.SortPopular:
-		rows, err := r.q.ListPostsByTopicPopular(ctx, sqlcgen.ListPostsByTopicPopularParams{TopicID: id, ViewerID: vID})
+		rows, err := r.q.ListPostsByTopicPopular(ctx, sqlcgen.ListPostsByTopicPopularParams{TopicID: id, ViewerID: vID, Limit: limit, Offset: offset})
 		if err != nil {
 			return nil, err
 		}
 		return postsFromPopular(rows)
 	case domain.SortNewest:
-		rows, err := r.q.ListPostsByTopicNewest(ctx, sqlcgen.ListPostsByTopicNewestParams{TopicID: id, ViewerID: vID})
+		rows, err := r.q.ListPostsByTopicNewest(ctx, sqlcgen.ListPostsByTopicNewestParams{TopicID: id, ViewerID: vID, Limit: limit, Offset: offset})
 		if err != nil {
 			return nil, err
 		}
 		return postsFromNewest(rows)
 	case domain.SortOldest:
-		rows, err := r.q.ListPostsByTopicOldest(ctx, sqlcgen.ListPostsByTopicOldestParams{TopicID: id, ViewerID: vID})
+		rows, err := r.q.ListPostsByTopicOldest(ctx, sqlcgen.ListPostsByTopicOldestParams{TopicID: id, ViewerID: vID, Limit: limit, Offset: offset})
 		if err != nil {
 			return nil, err
 		}

@@ -11,7 +11,7 @@ type BoardRepository interface {
 	ListTopics(ctx context.Context) ([]domain.Topic, error)
 	GetTopic(ctx context.Context, slug string) (domain.Topic, error)
 	GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error)
-	ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string) ([]domain.PostSummary, error)
+	ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error)
 	CreatePost(ctx context.Context, topicID, authorID, title, body string) (domain.Post, error)
 	CreateLike(ctx context.Context, postID, authorID string) error
 	DeleteLike(ctx context.Context, postID, authorID string) error
@@ -40,6 +40,9 @@ type BoardService struct {
 	repo BoardRepository
 }
 
+// PageSize は一覧1ページの件数。クライアントからは変えられない。
+const PageSize int32 = 10
+
 func NewBoardService(repo BoardRepository) *BoardService {
 	return &BoardService{repo: repo}
 }
@@ -48,13 +51,22 @@ func (s *BoardService) ListTopics(ctx context.Context) ([]domain.Topic, error) {
 	return s.repo.ListTopics(ctx)
 }
 
-func (s *BoardService) ListPosts(ctx context.Context, slug string, sort domain.SortOrder, viewerID string) ([]domain.PostSummary, error) {
+func (s *BoardService) ListPosts(ctx context.Context, slug string, sort domain.SortOrder, viewerID string, page int32) (domain.PostPage, error) {
 	topic, err := s.repo.GetTopic(ctx, slug)
 	if err != nil {
-		return nil, err
+		return domain.PostPage{}, err
 	}
 
-	return s.repo.ListPostsByTopic(ctx, topic.Id, sort, viewerID)
+	rows, err := s.repo.ListPostsByTopic(ctx, topic.Id, sort, viewerID, PageSize+1, (page-1)*PageSize)
+	if err != nil {
+		return domain.PostPage{}, err
+	}
+
+	hasNext := len(rows) > int(PageSize)
+	if hasNext {
+		rows = rows[:PageSize]
+	}
+	return domain.PostPage{Items: rows, HasNext: hasNext}, nil
 }
 
 // GetPost は投稿を1件返す。検証する入力が無いため、そのまま委譲する。

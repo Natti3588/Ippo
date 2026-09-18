@@ -44,13 +44,23 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
+	page := int32(1)
+	if params.Page != nil {
+		page = *params.Page
+	}
+	if page < 1 || page > 1000 {
+		h.logger.InfoContext(r.Context(), "ページ番号の指定が不正です", "op", "listPosts")
+		writeProblem(r.Context(), w, h.logger, http.StatusBadRequest, "ページ番号の指定が不正です")
+		return
+	}
+
 	// 未ログインでも読める。その場合 likedByMe と isMine は false になる。
 	var viewerID string
 	if user, ok := userFrom(r.Context()); ok {
 		viewerID = user.Id
 	}
 
-	posts, err := h.svc.ListPosts(r.Context(), slug, sort, viewerID)
+	pageData, err := h.svc.ListPosts(r.Context(), slug, sort, viewerID, page)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "トピックが見つかりません")
@@ -61,7 +71,7 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
-	apiPosts, err := toAPIPostSummaries(posts, viewerID)
+	items, err := toAPIPostSummaries(pageData.Items, viewerID)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -69,7 +79,7 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(apiPosts); err != nil {
+	if err := json.NewEncoder(w).Encode(api.PostPage{Items: items, HasNext: pageData.HasNext}); err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to encode response", "error", err)
 	}
 }
