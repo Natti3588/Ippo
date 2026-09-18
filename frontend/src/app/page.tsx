@@ -80,7 +80,14 @@ export default function HomePage() {
         明記すれば、書いてあることはすべて事実になる。
       */}
       {post && first && (
-        <section className="pb-10">
+        /*
+          上の3pxで始まり、下の罫線で閉じる。始まりの印だけ置くと、
+          どこで終わったのか分からないまま次の見出しが来る。
+          閉じたあとの間隔を広く取るのは、節の切れ目が
+          節の中の間隔（見出しと一覧のあいだ16px）より
+          はっきり広くないと、別の話が始まったと読めないため。
+        */
+        <section className="mb-12 border-b border-border pb-8">
           <div className="border-t-3 border-ink pt-6">
             <p className="mb-3 text-ui text-ink-soft">{first.name} の新しい投稿</p>
 
@@ -131,9 +138,15 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 数を文字で書かない。トピックは後から増える */}
+      {/*
+        見出しは名詞にする。矢印の付いた行が並んでいれば一覧だと分かるので、
+        見出しは何の一覧かだけを言えばよい。文章にすると、読み終えるまで
+        何の節なのか分からない。設定画面の見出し（設定・表示名）とも揃う。
+
+        数を文字で書かない。トピックは後から増える。
+      */}
       <section className="pb-10">
-        <h2 className="mb-4 text-subtitle font-bold text-ink">こんなトピックがあります</h2>
+        <h2 className="mb-4 text-subtitle font-bold text-ink">トピック一覧</h2>
         {topics?.map((t) => (
           <Link
             key={t.slug}
