@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useBoardHref } from "@/lib/topics";
 
 export function Header() {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const boardHref = useBoardHref();
 
   async function handleLogout() {
     try {
@@ -26,12 +28,32 @@ export function Header() {
     <>
       <header className="border-b border-border">
         <div className="mx-auto flex h-14 max-w-[680px] items-center justify-between gap-2.5 px-4 md:px-5">
-        <Link
-          href="/"
-          className="text-body font-bold tracking-wide text-ink md:text-subtitle"
-        >
-          Ippo
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            className="text-body font-bold tracking-wide text-ink md:text-subtitle"
+          >
+            Ippo
+          </Link>
+
+          {/*
+            掲示板はこのアプリの本体なので、口座まわりの操作（設定・ログアウト）
+            とは反対側、ロゴの隣に置く。
+
+            狭い画面では出さない。ロゴ・投稿する・メニューで既に埋まっていて、
+            4つ目を入れると折り返す。スマホには開くメニューの中に同じ行がある。
+
+            ログインしていなくても出す。未ログインでも投稿は全部読める。
+          */}
+          {boardHref && (
+            <Link
+              href={boardHref}
+              className="hidden min-h-11 items-center px-3 text-ui text-ink-soft md:flex hover:text-ink transition-colors"
+            >
+              掲示板
+            </Link>
+          )}
+        </div>
 
         {/* undefined のあいだは何も出さない。
             出してから消すとちらつく */}
@@ -136,13 +158,15 @@ export function Header() {
           </div>
 
           <nav className="flex flex-col">
-            <Link
-              href="/topics/study-method"
-              onClick={() => setMenuOpen(false)}
-              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink hover:bg-accent-soft transition-colors"
-            >
-              掲示板
-            </Link>
+            {boardHref && (
+              <Link
+                href={boardHref}
+                onClick={() => setMenuOpen(false)}
+                className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink hover:bg-accent-soft transition-colors"
+              >
+                掲示板
+              </Link>
+            )}
             <Link
               href="/settings"
               onClick={() => setMenuOpen(false)}
