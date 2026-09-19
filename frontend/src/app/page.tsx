@@ -44,16 +44,24 @@ export default function HomePage() {
       {user === null && (
         <section className="pt-14 pb-10">
           <h1 className="mb-5 text-display font-bold text-ink">
-            はじめの一歩は、
+            はじめの Ippo は
             <br />
             今日でいい
           </h1>
-          <p className="mb-7 max-w-[26em] text-preview text-ink-soft">
-            英語を始めた人が、読んだ本や聞いた番組のことを書いていく掲示板です。
-            <br />
-            添削はありません。会費もありません。
+          {/*
+            説明を2つに分ける。前半は「これが何か」なので、見出しと対等に読ませたい。
+            後半は始める前の条件なので、一段落とす。
+
+            大きさ・太さ・色を3つとも落とすと、説明文が注釈に見える。
+            ここで落とすのは色だけにして、大きさは本文のままにしてある。
+          */}
+          <p className="mb-2 max-w-[26em] text-body text-ink">
+            「いつか英語を話したい」で止まっている人のための掲示板です。
           </p>
-          <div className="flex flex-wrap items-center gap-3">
+          <p className="mb-8 max-w-[26em] text-ui text-ink-soft">
+            英語が話せたら、選べるものが増えます。その日までの勉強法や教材を、ここで教えあいます。
+          </p>
+          <div className="flex flex-wrap items-center gap-5">
             <Link
               href="/signup"
               className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
@@ -70,9 +78,28 @@ export default function HomePage() {
             {boardHref && (
               <Link
                 href={boardHref}
-                className="inline-flex min-h-12 items-center rounded-ippo border border-ink px-5 py-3 text-preview text-ink hover:bg-accent-soft hover:border-accent transition-colors"
+                className="inline-flex min-h-12 items-center gap-1.5 text-preview text-accent hover:text-ink transition-colors"
               >
                 読むだけ見てみる
+                {/*
+                  枠線のボタンにしない。塗りと線のボタンが並ぶ形にすると、
+                  ひかえめな選択肢が主ボタンと同じ重さに見える。
+                  山かっこはトピックの一覧と同じもので、この先があることを示す。
+                */}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="shrink-0"
+                  aria-hidden="true"
+                >
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
               </Link>
             )}
           </div>
