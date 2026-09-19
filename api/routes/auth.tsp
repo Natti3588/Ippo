@@ -2,46 +2,6 @@ using Http;
 
 namespace Ippo;
 
-@doc("入力が不正")
-model BadRequestProblem {
-  ...BadRequestResponse;
-  ...Body<ProblemDetails>;
-
-  @header contentType: "application/problem+json";
-}
-
-@doc("認証が必要")
-model UnauthorizedProblem {
-  ...UnauthorizedResponse;
-  ...Body<ProblemDetails>;
-
-  @header contentType: "application/problem+json";
-}
-
-@doc("対象が存在しない")
-model NotFoundProblem {
-  ...NotFoundResponse;
-  ...Body<ProblemDetails>;
-
-  @header contentType: "application/problem+json";
-}
-
-@doc("権限が無い")
-model ForbiddenProblem {
-  ...ForbiddenResponse;
-  ...Body<ProblemDetails>;
-
-  @header contentType: "application/problem+json";
-}
-
-@doc("既に存在する")
-model ConflictProblem {
-  ...ConflictResponse;
-  ...Body<ProblemDetails>;
-
-  @header contentType: "application/problem+json";
-}
-
 @route("/auth")
 namespace Auth {
   @route("signup")
