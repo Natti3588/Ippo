@@ -59,7 +59,9 @@ export default function HomePage() {
             「いつか英語を話したい」で止まっている人のための掲示板です。
           </p>
           <p className="mb-8 max-w-[26em] text-ui text-ink-soft">
-            英語が話せたら、選べるものが増えます。その日までの勉強法や教材を、ここで教えあいます。
+            英語が話せたら、選べるものが増えます。
+            <br />
+            その日までの勉強法や教材を、ここで教えあいます。
           </p>
           <div className="flex flex-wrap items-center gap-5">
             <Link
@@ -166,7 +168,7 @@ export default function HomePage() {
           <div className="border-t border-b border-border py-6">
             <h2 className="mb-2 text-subtitle font-bold text-ink">お金がかかりません</h2>
             <p className="max-w-[30em] text-ui text-ink-soft">
-              教材も月額もありません。必要なのは、書く時間だけです。
+              月額も登録料もありません。お金をかけずに使えた教材は、使った人が書いています。
             </p>
           </div>
         </section>

@@ -113,7 +113,9 @@ export default function SettingsPage() {
           だから変えると過去の投稿の表示もすべて変わる。これは仕様。
         */}
         <p className="mb-4 max-w-[30em] text-ui text-ink-soft">
-          投稿に表示される名前です。変えると、これまでに書いた投稿の表示もすべて新しい名前に変わります。
+          投稿に表示される名前です。
+          <br />
+          変えると、これまでに書いた投稿の表示もすべて新しい名前に変わります。
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3">
