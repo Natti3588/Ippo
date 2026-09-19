@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/problem";
 import { Counter } from "@/components/Counter";
+import { useBoardHref } from "@/lib/topics";
 
 type FormValues = {
   topic: string;
@@ -23,6 +24,12 @@ function NewPost() {
 
   const { data: topics } = useSWR("topics", () => api.topics());
   const [failure, setFailure] = useState<string | null>(null);
+  const boardHref = useBoardHref();
+
+  // 来たときに ?topic= が付いていれば、そのトピックへ戻す。
+  // 付いていなければ既定のトピックへ。
+  const fromTopic = params.get("topic");
+  const backHref = fromTopic ? `/topics/${fromTopic}` : boardHref;
 
   const {
     register,
@@ -86,27 +93,29 @@ function NewPost() {
 
   return (
     <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
-      <nav className="py-4">
-        <Link
-          href="/topics/study-method"
-          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft hover:text-ink transition-colors"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+      {backHref && (
+        <nav className="py-4">
+          <Link
+            href={backHref}
+            className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft hover:text-ink transition-colors"
           >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          掲示板にもどる
-        </Link>
-      </nav>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+            掲示板にもどる
+          </Link>
+        </nav>
+      )}
 
       <h1 className="mb-2 text-heading font-bold text-ink">投稿する</h1>
       <p className="mb-7 max-w-[30em] text-ui text-ink-soft">
@@ -221,12 +230,14 @@ function NewPost() {
           >
             {isSubmitting ? "送信中…" : "投稿する"}
           </button>
-          <Link
-            href="/topics/study-method"
-            className="inline-flex min-h-11 items-center text-ui text-ink-soft underline underline-offset-4 hover:text-ink transition-colors"
-          >
-            やめる
-          </Link>
+          {backHref && (
+            <Link
+              href={backHref}
+              className="inline-flex min-h-11 items-center text-ui text-ink-soft underline underline-offset-4 hover:text-ink transition-colors"
+            >
+              やめる
+            </Link>
+          )}
         </div>
       </form>
     </main>

@@ -5,9 +5,11 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
+import { useBoardHref } from "@/lib/topics";
 
 export default function HomePage() {
   const { user } = useAuth();
+  const boardHref = useBoardHref();
 
   // トピックは静的に書かない。増えたときに直し忘れる。
   const { data: topics } = useSWR("topics", () => api.topics());
@@ -61,13 +63,18 @@ export default function HomePage() {
             {/*
               未ログインでも投稿を全部読める。
               登録の前に中を見せられることが、このサービスの強み。
+
+              トピックが取れるまでは出さない。控えの slug を書くと、
+              トピックの並びを変えた日に、この1箇所だけ古い行き先を指す。
             */}
-            <Link
-              href={topics ? `/topics/${topics[0].slug}` : "/topics/study-method"}
-              className="inline-flex min-h-12 items-center rounded-ippo border border-ink px-5 py-3 text-preview text-ink hover:bg-accent-soft hover:border-accent transition-colors"
-            >
-              読むだけ見てみる
-            </Link>
+            {boardHref && (
+              <Link
+                href={boardHref}
+                className="inline-flex min-h-12 items-center rounded-ippo border border-ink px-5 py-3 text-preview text-ink hover:bg-accent-soft hover:border-accent transition-colors"
+              >
+                読むだけ見てみる
+              </Link>
+            )}
           </div>
         </section>
       )}
