@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -12,6 +12,23 @@ export function Header() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const boardHref = useBoardHref();
+
+  /*
+    掲示板にいるときだけ、いま見ているトピックを投稿画面へ渡す。
+
+    投稿画面は ?topic= を読んで、そのトピックを選んだ状態で開き、
+    「やめる」の戻り先にも使う。渡さないと、さっきまで読んでいた
+    トピックをもう一度選び直させたうえ、やめたときに別のトピックへ送ることになる。
+
+    slug が配列になるのは catch-all の経路のときで、このアプリには無い。
+    それでも型は string | string[] なので、文字列のときだけ使う。
+  */
+  const routeParams = useParams();
+  const currentSlug =
+    typeof routeParams?.slug === "string" ? routeParams.slug : null;
+  const newPostHref = currentSlug
+    ? `/posts/new?topic=${encodeURIComponent(currentSlug)}`
+    : "/posts/new";
 
   async function handleLogout() {
     try {
@@ -73,7 +90,7 @@ export function Header() {
               ログアウト
             </button>
             <Link
-              href="/posts/new"
+              href={newPostHref}
               className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
             >
               投稿する
