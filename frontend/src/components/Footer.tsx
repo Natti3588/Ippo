@@ -14,8 +14,10 @@ export function Footer() {
     <footer className="mt-auto border-t border-border">
       <div className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
         <p className="text-subtitle font-bold text-ink">Ippo</p>
-        <p className="mt-2 max-w-[30em] text-ui text-ink-soft">
-          英語を始めた人が、読んだ本や聞いた番組のことを書いていく掲示板です。
+        <p className="mt-2 max-w-[35em] text-ui text-ink-soft">
+          英語を始めようと考えている人や英語を始めた人が
+          <br />
+          読んだ本や効率的な勉強法・モチベーションの維持のやり方・おすすめの教材などを共有していく掲示板です。
         </p>
 
         {/*
