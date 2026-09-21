@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // output: "export" は書かない。書くと投稿詳細が壊れる。
   //
   // 静的エクスポートはビルドの時点で HTML を吐き切るので、/posts/[id] の id を
