@@ -8,4 +8,7 @@ var (
 
 	// ErrDatabaseMigrationInit はマイグレーション実行を初期化できなかったことを表す。
 	ErrDatabaseMigrationInit = errors.New("マイグレートの初期化に失敗しました")
+
+	// ErrMissingDatabaseEnv はDB接続に必要な環境変数が足りないことを表す。
+	ErrMissingDatabaseEnv = errors.New("接続に必要な環境変数が不足しています")
 )
