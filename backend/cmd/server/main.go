@@ -31,10 +31,11 @@ func main() {
 		Level: slog.LevelInfo,
 	})))
 
-	// DATABASE_URL は互換性のため名前を維持する。値はMySQLのDSN。
-	rawDSN := os.Getenv("DATABASE_URL")
-	if rawDSN == "" {
-		logger.Error("環境変数 DATABASE_URL が設定されていません")
+	// ローカルの Docker-Compose は DATABASE_URL
+	// ECSでは DB_* の5つの環境変数から組み立てる
+	rawDSN, err := database.DSNFromEnv()
+	if err != nil {
+		logger.Error("接続情報が足りません", "error", err)
 		os.Exit(1)
 	}
 
