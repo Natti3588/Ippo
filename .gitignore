@@ -12,7 +12,6 @@ tsp-output/
 *.tfstate
 *.tfstate.*
 *.tfvars
-.terraform.lock.hcl
 
 # 環境変数
 .env
