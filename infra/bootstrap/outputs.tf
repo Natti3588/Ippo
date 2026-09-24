@@ -20,3 +20,7 @@ output "acm_cloudfront_arn" {
 output "acm_alb_arn" {
   value = aws_acm_certificate_validation.alb.certificate_arn
 }
+
+output "ecr_repository_urls" {
+  value = { for k, v in aws_ecr_repository.app : k => v.repository_url }
+}
