@@ -11,3 +11,12 @@ output "name_servers" {
 output "zone_id" {
   value = aws_route53_zone.main.zone_id
 }
+
+# 検証の完了まで待ってから出力
+output "acm_cloudfront_arn" {
+  value = aws_acm_certificate_validation.cloudfront.certificate_arn
+}
+
+output "acm_alb_arn" {
+  value = aws_acm_certificate_validation.alb.certificate_arn
+}
