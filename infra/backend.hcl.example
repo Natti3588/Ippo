@@ -1,0 +1,3 @@
+bucket = "ippo-tfstate-<AWSアカウントID>"
+key    = "ippo/terraform.tfstate"
+region = "ap-northeast-1"
