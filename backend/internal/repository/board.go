@@ -25,6 +25,7 @@ func NewBoardRepository(db *sql.DB) *BoardRepository {
 	return &BoardRepository{q: sqlcgen.New(db)}
 }
 
+// GetTopic は指定のトピック の domain.Topic を返す。
 func (r *BoardRepository) GetTopic(ctx context.Context, slug string) (domain.Topic, error) {
 	row, err := r.q.GetTopicBySlug(ctx, slug)
 	if err != nil {
@@ -37,7 +38,6 @@ func (r *BoardRepository) GetTopic(ctx context.Context, slug string) (domain.Top
 }
 
 // GetPost は投稿を1件、本文の全文つきで返す。
-// 解析できない ID は「存在しない」と同じに扱う。CreateLike と同じ方針である。
 func (r *BoardRepository) GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error) {
 	id, err := toBinaryUUID(postID)
 	if err != nil {
@@ -82,6 +82,7 @@ func (r *BoardRepository) GetPost(ctx context.Context, postID, viewerID string) 
 	}, nil
 }
 
+// ListTopics は既存のトピックを一覧として返す。
 func (r *BoardRepository) ListTopics(ctx context.Context) ([]domain.Topic, error) {
 	rows, err := r.q.ListTopics(ctx)
 	if err != nil {
@@ -90,6 +91,7 @@ func (r *BoardRepository) ListTopics(ctx context.Context) ([]domain.Topic, error
 	return toDomainTopics(rows)
 }
 
+// ListPostsByTopic は指定のトピックの一覧を返す。
 func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error) {
 	id, err := toBinaryUUID(topicID)
 	if err != nil {
@@ -125,9 +127,38 @@ func (r *BoardRepository) ListPostsByTopic(ctx context.Context, topicID string, 
 	}
 }
 
+// ListPosts は投稿一覧をトピックに絞らず返す。
+func (r *BoardRepository) ListPosts(ctx context.Context, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error) {
+	vID, err := viewerBinaryUUID(viewerID)
+	if err != nil {
+		return nil, err
+	}
+
+	switch sort {
+	case domain.SortPopular:
+		rows, err := r.q.ListPostsByPopular(ctx, sqlcgen.ListPostsByPopularParams{ViewerID: vID, Limit: limit, Offset: offset})
+		if err != nil {
+			return nil, err
+		}
+		return postsFromAllPopular(rows)
+	case domain.SortNewest:
+		rows, err := r.q.ListPostsByNewest(ctx, sqlcgen.ListPostsByNewestParams{ViewerID: vID, Limit: limit, Offset: offset})
+		if err != nil {
+			return nil, err
+		}
+		return postsFromAllNewest(rows)
+	case domain.SortOldest:
+		rows, err := r.q.ListPostsByOldest(ctx, sqlcgen.ListPostsByOldestParams{ViewerID: vID, Limit: limit, Offset: offset})
+		if err != nil {
+			return nil, err
+		}
+		return postsFromAllOldest(rows)
+	default:
+		return nil, fmt.Errorf("未知の並び順: %q", sort)
+	}
+}
+
 // CreatePost は投稿を作成し、作成した投稿を返す。
-// MySQL に RETURNING が無いため、ID と作成時刻は INSERT の前に Go 側で決める。
-// AuthorName は posts に持たないため、ここでは埋めない。呼び出し側が埋める。
 func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, title, body string) (domain.Post, error) {
 	tID, err := toBinaryUUID(topicID)
 	if err != nil {
@@ -139,10 +170,6 @@ func (r *BoardRepository) CreatePost(ctx context.Context, topicID, authorID, tit
 		return domain.Post{}, err
 	}
 
-	// v7 は先頭48ビットがミリ秒のタイムスタンプなので、主キーが時刻順に並ぶ。
-	// これにより posts の一覧で id を第2・第3ソートキーに使ったとき、
-	// この変更以降に作られた投稿どうしは、同じ秒でも実際の作成順に並ぶ。
-	// v4 で採番された既存の行は先頭バイトが乱数なので、この性質を持たない。
 	id, err := uuid.NewV7()
 	if err != nil {
 		return domain.Post{}, fmt.Errorf("UUIDの生成に失敗: %w", err)
@@ -218,9 +245,6 @@ func (r *BoardRepository) DeleteLike(ctx context.Context, postID, authorID strin
 // DeletePost は投稿を削除する。
 //
 // 他人の投稿には domain.ErrForbidden、存在しない投稿には domain.ErrNotFound を返す。
-// 先に投稿者を読んでから削除するのは、この2つを区別して返すためである。
-// DELETE 自体にも author_id の条件を入れてあるので、
-// ここの判定を書き間違えても他人の投稿は消えない。
 func (r *BoardRepository) DeletePost(ctx context.Context, postID, authorID string) error {
 	pID, err := toBinaryUUID(postID)
 	if err != nil {
