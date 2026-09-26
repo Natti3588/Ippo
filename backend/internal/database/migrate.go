@@ -16,9 +16,7 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-// normalizeDSN は接続に必要な設定をコードで強制する。
-// 環境変数は README・Dockerfile・タスク定義に複製されるため、
-// どこかで書き落としても気づけない。書き忘れられない場所に置く。
+// normalizeDSN は接続に必要な設定をコードで強制して返す。
 func normalizeDSN(raw string) (*mysql.Config, error) {
 	cfg, err := mysql.ParseDSN(raw)
 	if err != nil {
@@ -26,14 +24,14 @@ func normalizeDSN(raw string) (*mysql.Config, error) {
 		return nil, ErrInvalidDatabaseDSN
 	}
 
-	cfg.ParseTime = true        // TIMESTAMP を time.Time で受け取る
-	cfg.Loc = time.UTC          // Go 側の解釈を UTC に固定する
-	cfg.MultiStatements = false // アプリの接続では複数文を許可しない
+	cfg.ParseTime = true
+	cfg.Loc = time.UTC
+	cfg.MultiStatements = false
 
 	if cfg.Params == nil {
 		cfg.Params = map[string]string{}
 	}
-	cfg.Params["time_zone"] = "'+00:00'" // MySQL のセッションを UTC に固定する
+	cfg.Params["time_zone"] = "'+00:00'"
 
 	return cfg, nil
 }
