@@ -36,10 +36,8 @@ func normalizeDSN(raw string) (*mysql.Config, error) {
 	return cfg, nil
 }
 
-// migrationURL は golang-migrate に渡す URL を組み立てる。
-// ドライバは受け取った DSN の user と password を QueryUnescape するため、
-// ここで先にエスケープしておく。記号を含むパスワードで認証が壊れるのを防ぐ。
-// multiStatements はドライバ側が有効化するので、ここでは設定しない。
+// migrationURL は golang-migrate用の URL を返す。
+// ドライバーが user / password を QueryUnEscape するため、事前にエスケープする。
 func migrationURL(cfg *mysql.Config) string {
 	c := *cfg
 	c.User = url.QueryEscape(cfg.User)
