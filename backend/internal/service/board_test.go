@@ -51,7 +51,7 @@ func TestListPostsPaging(t *testing.T) {
 			}
 			repo := &pagingBoardRepository{posts: posts}
 
-			got, err := NewBoardService(repo).ListPosts(
+			got, err := NewBoardService(repo).ListPostsByTopic(
 				context.Background(), "study-method", domain.SortPopular, "", tt.page,
 			)
 			if err != nil {
@@ -86,7 +86,7 @@ func (r *missingTopicRepository) GetTopic(_ context.Context, _ string) (domain.T
 }
 
 func TestListPostsPropagatesNotFound(t *testing.T) {
-	_, err := NewBoardService(&missingTopicRepository{}).ListPosts(
+	_, err := NewBoardService(&missingTopicRepository{}).ListPostsByTopic(
 		context.Background(), "no-such-topic", domain.SortPopular, "", 1,
 	)
 	if !errors.Is(err, domain.ErrNotFound) {

@@ -60,7 +60,7 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 		viewerID = user.Id
 	}
 
-	pageData, err := h.svc.ListPosts(r.Context(), slug, sort, viewerID, page)
+	pageData, err := h.svc.ListPostsByTopic(r.Context(), slug, sort, viewerID, page)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "トピックが見つかりません")

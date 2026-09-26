@@ -9,6 +9,7 @@ import (
 
 type BoardRepository interface {
 	ListTopics(ctx context.Context) ([]domain.Topic, error)
+	ListPosts(ctx context.Context, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error)
 	GetTopic(ctx context.Context, slug string) (domain.Topic, error)
 	GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error)
 	ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error)
@@ -18,20 +19,11 @@ type BoardRepository interface {
 	DeletePost(ctx context.Context, postID, authorID string) error
 }
 
-// 本文の長さは文字で数える。DB の chk_posts_body が CHAR_LENGTH() だからである。
-//
-// 15,000 は TEXT の上限から決めた。utf8mb4 の1文字は最大4バイトなので、
-// 15,000文字 × 4 = 60,000バイト < 65,535バイト（TEXT の上限）に収まる。
-// これ以上広げるなら列を MEDIUMTEXT に変える必要がある。
+// 長さは文字数で数える（DB の CHECK 制約が CHAR_LENGTH() のため）。
+// 本文上限 15000 は utf8mb4 × 4バイトで TEXT(65,535バイト) に収まる値。
 const (
-	minPostBodyChars = 1
-	maxPostBodyChars = 15000
-)
-
-// タイトルの長さも文字で数える。DB の chk_posts_title が CHAR_LENGTH() で、
-// 契約の @maxLength が文字数で、列の VARCHAR(100) も文字数である。
-// 4者すべてが同じ単位で 100 を意味している。
-const (
+	minPostBodyChars  = 1
+	maxPostBodyChars  = 15000
 	minPostTitleChars = 1
 	maxPostTitleChars = 100
 )
@@ -40,7 +32,7 @@ type BoardService struct {
 	repo BoardRepository
 }
 
-// PageSize は一覧1ページの件数。クライアントからは変えられない。
+// PageSize は一覧1ページの件数。
 const PageSize int32 = 10
 
 func NewBoardService(repo BoardRepository) *BoardService {
@@ -51,7 +43,7 @@ func (s *BoardService) ListTopics(ctx context.Context) ([]domain.Topic, error) {
 	return s.repo.ListTopics(ctx)
 }
 
-func (s *BoardService) ListPosts(ctx context.Context, slug string, sort domain.SortOrder, viewerID string, page int32) (domain.PostPage, error) {
+func (s *BoardService) ListPostsByTopic(ctx context.Context, slug string, sort domain.SortOrder, viewerID string, page int32) (domain.PostPage, error) {
 	topic, err := s.repo.GetTopic(ctx, slug)
 	if err != nil {
 		return domain.PostPage{}, err
@@ -75,9 +67,6 @@ func (s *BoardService) GetPost(ctx context.Context, postID, viewerID string) (do
 }
 
 // CreatePost は投稿を作成する。
-//
-// タイトルを本文より先に検査する。どちらも不正なときに返る detail が
-// 実行ごとに変わらないようにするためである。
 func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.User, title, body string) (domain.Post, error) {
 	if n := utf8.RuneCountInString(title); n < minPostTitleChars || n > maxPostTitleChars {
 		return domain.Post{}, &domain.InvalidInputError{
