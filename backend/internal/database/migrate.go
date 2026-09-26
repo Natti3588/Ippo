@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/golang-migrate/migrate/v4"
@@ -16,26 +15,6 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-// normalizeDSN は接続に必要な設定をコードで強制して返す。
-func normalizeDSN(raw string) (*mysql.Config, error) {
-	cfg, err := mysql.ParseDSN(raw)
-	if err != nil {
-		// このエラーには DSN 全体（パスワードを含む）が入りうるため、意図的に包まない
-		return nil, ErrInvalidDatabaseDSN
-	}
-
-	cfg.ParseTime = true
-	cfg.Loc = time.UTC
-	cfg.MultiStatements = false
-
-	if cfg.Params == nil {
-		cfg.Params = map[string]string{}
-	}
-	cfg.Params["time_zone"] = "'+00:00'"
-
-	return cfg, nil
-}
-
 // migrationURL は golang-migrate用の URL を返す。
 // ドライバーが user / password を QueryUnEscape するため、事前にエスケープする。
 func migrationURL(cfg *mysql.Config) string {
@@ -43,15 +22,6 @@ func migrationURL(cfg *mysql.Config) string {
 	c.User = url.QueryEscape(cfg.User)
 	c.Passwd = url.QueryEscape(cfg.Passwd)
 	return "mysql://" + c.FormatDSN()
-}
-
-// AppDSN はアプリケーションが接続に使う DSN を返す。
-func AppDSN(raw string) (string, error) {
-	cfg, err := normalizeDSN(raw)
-	if err != nil {
-		return "", err
-	}
-	return cfg.FormatDSN(), nil
 }
 
 // Migrate は埋め込まれたマイグレーションを適用する。
