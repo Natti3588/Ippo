@@ -68,6 +68,23 @@ export interface paths {
         patch: operations["Me_update"];
         trace?: never;
     };
+    "/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description すべてのトピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目 */
+        get: operations["Posts_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/posts/{postId}": {
         parameters: {
             query?: never;
@@ -75,11 +92,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description 投稿を1件取得する。本文は全文を返す */
+        /** @description 投稿を1件取得する。 本文は全文を返す */
         get: operations["Posts_get"];
         put?: never;
         post?: never;
-        /** @description 自分の投稿を削除する。いいねも一緒に消える */
+        /** @description 自分の投稿を削除する。 いいねも一緒に消える */
         delete: operations["Posts_remove"];
         options?: never;
         head?: never;
@@ -183,32 +200,32 @@ export interface components {
              * @description いいねの数
              */
             likeCount: number;
-            /** @description 自分がいいねを押したかどうか。未ログインなら false */
+            /** @description 自分がいいねを押したかどうか。 未ログインなら false */
             likedByMe: boolean;
-            /** @description 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false */
+            /** @description 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false */
             isMine: boolean;
             /**
              * Format: date-time
              * @description 投稿日時（UTC）
              */
             createdAt: string;
-            /** @description この投稿が属するトピック。詳細ページから一覧へ戻るために使う */
+            /** @description その投稿が属するトピック。 詳細ページから一覧へ戻るために使う */
             topic: components["schemas"]["Topic"];
         };
-        /** @description 投稿一覧の1ページ分。1ページは10件で固定 */
+        /** @description 投稿一覧の1ページ分。 1ページは10件で固定 */
         PostPage: {
-            /** @description このページの投稿。最大10件 */
+            /** @description このページの投稿。 最大10件 */
             items: components["schemas"]["PostSummary"][];
-            /** @description 次のページがあるかどうか。総ページ数と総件数は返さない */
+            /** @description 次のページがあるかどうか。 総ページ数と総件数は返さない */
             hasNext: boolean;
         };
-        /** @description 一覧に並べる投稿。本文は先頭200文字までしか含まない */
+        /** @description 一覧に並べる投稿。 本文は先頭200文字までしか含まない */
         PostSummary: {
             /** Format: uuid */
             id: string;
-            /** @description タイトル。100文字に制限しているため、一覧でも全文を返す */
+            /** @description タイトル。 100文字に制限しているため、一覧でも全文を返す */
             title: string;
-            /** @description 本文の先頭200文字。truncated が true なら続きがある */
+            /** @description 本文の先頭200文字。 truncated が true なら続きがある */
             bodyPreview: string;
             /** @description 本文が200文字を超えて切り詰められたかどうか */
             truncated: boolean;
@@ -219,19 +236,21 @@ export interface components {
              * @description いいねの数
              */
             likeCount: number;
-            /** @description 自分がいいねを押したかどうか。未ログインなら false */
+            /** @description 自分がいいねを押したかどうか。 未ログインなら false */
             likedByMe: boolean;
-            /** @description 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false */
+            /** @description 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false */
             isMine: boolean;
             /**
              * Format: date-time
              * @description 投稿日時（UTC）
              */
             createdAt: string;
+            /** @description この投稿が属するトピック。 「すべて」の一覧でどの投稿のトピックかを示すために使う */
+            topic: components["schemas"]["Topic"];
         };
         /** @description RFC 9457 の Problem Details */
         ProblemDetails: {
-            /** @description 問題の種類を表すURI。このAPIでは常に about:blank */
+            /** @description 問題の種類を表すURI。 このAPIでは常に about:blank */
             type: string;
             /** @description HTTPステータスの標準の語句 */
             title: string;
@@ -274,7 +293,12 @@ export interface components {
         };
     };
     responses: never;
-    parameters: never;
+    parameters: {
+        /** @description ページ番号（1始まり・1ページ10件） */
+        "ListPostsQuery.page": number;
+        /** @description 投稿一覧の並び順 */
+        "ListPostsQuery.sort": components["schemas"]["SortOrder"];
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -454,6 +478,40 @@ export interface operations {
             };
         };
     };
+    Posts_list: {
+        parameters: {
+            query?: {
+                /** @description 投稿一覧の並び順 */
+                sort?: components["parameters"]["ListPostsQuery.sort"];
+                /** @description ページ番号（1始まり・1ページ10件） */
+                page?: components["parameters"]["ListPostsQuery.page"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostPage"];
+                };
+            };
+            /** @description 入力が不正 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     Posts_get: {
         parameters: {
             query?: never;
@@ -622,9 +680,10 @@ export interface operations {
     Topics_listPosts: {
         parameters: {
             query?: {
-                sort?: components["schemas"]["SortOrder"];
-                /** @description 何ページ目か。1始まり。1ページは10件で固定 */
-                page?: number;
+                /** @description 投稿一覧の並び順 */
+                sort?: components["parameters"]["ListPostsQuery.sort"];
+                /** @description ページ番号（1始まり・1ページ10件） */
+                page?: components["parameters"]["ListPostsQuery.page"];
             };
             header?: never;
             path: {
