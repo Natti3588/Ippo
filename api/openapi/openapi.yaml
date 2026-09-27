@@ -114,10 +114,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateProfileRequest'
+  /posts:
+    get:
+      operationId: Posts_list
+      description: すべてのトピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目
+      parameters:
+        - $ref: '#/components/parameters/ListPostsQuery.sort'
+        - $ref: '#/components/parameters/ListPostsQuery.page'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostPage'
+        '400':
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /posts/{postId}:
     get:
       operationId: Posts_get
-      description: 投稿を1件取得する。本文は全文を返す
+      description: 投稿を1件取得する。 本文は全文を返す
       parameters:
         - name: postId
           in: path
@@ -139,7 +159,7 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
     delete:
       operationId: Posts_remove
-      description: 自分の投稿を削除する。いいねも一緒に消える
+      description: 自分の投稿を削除する。 いいねも一緒に消える
       parameters:
         - name: postId
           in: path
@@ -234,25 +254,8 @@ paths:
           required: true
           schema:
             type: string
-        - name: sort
-          in: query
-          required: false
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/SortOrder'
-            default: popular
-          explode: false
-        - name: page
-          in: query
-          required: false
-          description: 何ページ目か。1始まり。1ページは10件で固定
-          schema:
-            type: integer
-            format: int32
-            minimum: 1
-            maximum: 1000
-            default: 1
-          explode: false
+        - $ref: '#/components/parameters/ListPostsQuery.sort'
+        - $ref: '#/components/parameters/ListPostsQuery.page'
       responses:
         '200':
           description: The request has succeeded.
@@ -313,6 +316,29 @@ paths:
             schema:
               $ref: '#/components/schemas/CreatePostRequest'
 components:
+  parameters:
+    ListPostsQuery.page:
+      name: page
+      in: query
+      required: false
+      description: ページ番号（1始まり・1ページ10件）
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 1000
+        default: 1
+      explode: false
+    ListPostsQuery.sort:
+      name: sort
+      in: query
+      required: false
+      description: 投稿一覧の並び順
+      schema:
+        allOf:
+          - $ref: '#/components/schemas/SortOrder'
+        default: popular
+      explode: false
   schemas:
     CreatePostRequest:
       type: object
@@ -388,10 +414,10 @@ components:
           description: いいねの数
         likedByMe:
           type: boolean
-          description: 自分がいいねを押したかどうか。未ログインなら false
+          description: 自分がいいねを押したかどうか。 未ログインなら false
         isMine:
           type: boolean
-          description: 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
+          description: 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false
         createdAt:
           type: string
           format: date-time
@@ -399,7 +425,7 @@ components:
         topic:
           allOf:
             - $ref: '#/components/schemas/Topic'
-          description: この投稿が属するトピック。詳細ページから一覧へ戻るために使う
+          description: その投稿が属するトピック。 詳細ページから一覧へ戻るために使う
       description: トピックに書き込む投稿
     PostPage:
       type: object
@@ -411,11 +437,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PostSummary'
-          description: このページの投稿。最大10件
+          description: このページの投稿。 最大10件
         hasNext:
           type: boolean
-          description: 次のページがあるかどうか。総ページ数と総件数は返さない
-      description: 投稿一覧の1ページ分。1ページは10件で固定
+          description: 次のページがあるかどうか。 総ページ数と総件数は返さない
+      description: 投稿一覧の1ページ分。 1ページは10件で固定
     PostSummary:
       type: object
       required:
@@ -428,16 +454,17 @@ components:
         - likedByMe
         - isMine
         - createdAt
+        - topic
       properties:
         id:
           type: string
           format: uuid
         title:
           type: string
-          description: タイトル。100文字に制限しているため、一覧でも全文を返す
+          description: タイトル。 100文字に制限しているため、一覧でも全文を返す
         bodyPreview:
           type: string
-          description: 本文の先頭200文字。truncated が true なら続きがある
+          description: 本文の先頭200文字。 truncated が true なら続きがある
         truncated:
           type: boolean
           description: 本文が200文字を超えて切り詰められたかどうか
@@ -450,15 +477,19 @@ components:
           description: いいねの数
         likedByMe:
           type: boolean
-          description: 自分がいいねを押したかどうか。未ログインなら false
+          description: 自分がいいねを押したかどうか。 未ログインなら false
         isMine:
           type: boolean
-          description: 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
+          description: 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false
         createdAt:
           type: string
           format: date-time
           description: 投稿日時（UTC）
-      description: 一覧に並べる投稿。本文は先頭200文字までしか含まない
+        topic:
+          allOf:
+            - $ref: '#/components/schemas/Topic'
+          description: この投稿が属するトピック。 「すべて」の一覧でどの投稿のトピックかを示すために使う
+      description: 一覧に並べる投稿。 本文は先頭200文字までしか含まない
     ProblemDetails:
       type: object
       required:
@@ -469,7 +500,7 @@ components:
       properties:
         type:
           type: string
-          description: 問題の種類を表すURI。このAPIでは常に about:blank
+          description: 問題の種類を表すURI。 このAPIでは常に about:blank
         title:
           type: string
           description: HTTPステータスの標準の語句

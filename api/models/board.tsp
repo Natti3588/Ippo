@@ -1,3 +1,5 @@
+using Http;
+
 namespace Ippo;
 
 @doc("投稿を分類するカテゴリ")
@@ -26,28 +28,28 @@ model Post {
   @doc("いいねの数")
   likeCount: int32;
 
-  @doc("自分がいいねを押したかどうか。未ログインなら false")
+  @doc("自分がいいねを押したかどうか。 未ログインなら false")
   likedByMe: boolean;
 
-  @doc("自分の投稿かどうか。true のときだけ削除できる。未ログインなら false")
+  @doc("自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false")
   isMine: boolean;
 
   @doc("投稿日時（UTC）")
   createdAt: utcDateTime;
 
-  @doc("この投稿が属するトピック。詳細ページから一覧へ戻るために使う")
+  @doc("その投稿が属するトピック。 詳細ページから一覧へ戻るために使う")
   topic: Topic;
 }
 
-@doc("一覧に並べる投稿。本文は先頭200文字までしか含まない")
+@doc("一覧に並べる投稿。 本文は先頭200文字までしか含まない")
 model PostSummary {
   @format("uuid")
   id: string;
 
-  @doc("タイトル。100文字に制限しているため、一覧でも全文を返す")
+  @doc("タイトル。 100文字に制限しているため、一覧でも全文を返す")
   title: string;
 
-  @doc("本文の先頭200文字。truncated が true なら続きがある")
+  @doc("本文の先頭200文字。 truncated が true なら続きがある")
   bodyPreview: string;
 
   @doc("本文が200文字を超えて切り詰められたかどうか")
@@ -59,22 +61,25 @@ model PostSummary {
   @doc("いいねの数")
   likeCount: int32;
 
-  @doc("自分がいいねを押したかどうか。未ログインなら false")
+  @doc("自分がいいねを押したかどうか。 未ログインなら false")
   likedByMe: boolean;
 
-  @doc("自分の投稿かどうか。true のときだけ削除できる。未ログインなら false")
+  @doc("自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false")
   isMine: boolean;
 
   @doc("投稿日時（UTC）")
   createdAt: utcDateTime;
+
+  @doc("この投稿が属するトピック。 「すべて」の一覧でどの投稿のトピックかを示すために使う")
+  topic: Topic;
 }
 
-@doc("投稿一覧の1ページ分。1ページは10件で固定")
+@doc("投稿一覧の1ページ分。 1ページは10件で固定")
 model PostPage {
-  @doc("このページの投稿。最大10件")
+  @doc("このページの投稿。 最大10件")
   items: PostSummary[];
 
-  @doc("次のページがあるかどうか。総ページ数と総件数は返さない")
+  @doc("次のページがあるかどうか。 総ページ数と総件数は返さない")
   hasNext: boolean;
 }
 
@@ -94,4 +99,17 @@ enum SortOrder {
   popular,
   newest,
   oldest,
+}
+
+@doc("投稿一覧の並び順とページ")
+model ListPostsQuery {
+  @doc("投稿一覧の並び順")
+  @query
+  sort?: SortOrder = SortOrder.popular;
+
+  @doc("ページ番号（1始まり・1ページ10件）")
+  @minValue(1)
+  @maxValue(1000)
+  @query
+  page?: int32 = 1;
 }

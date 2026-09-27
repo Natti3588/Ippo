@@ -4,7 +4,7 @@ namespace Ippo;
 
 @doc("RFC 9457 の Problem Details")
 model ProblemDetails {
-  @doc("問題の種類を表すURI。このAPIでは常に about:blank")
+  @doc("問題の種類を表すURI。 このAPIでは常に about:blank")
   type: string;
 
   @doc("HTTPステータスの標準の語句")
