@@ -118,9 +118,8 @@ func (r *fakeMissingTopicRepository) GetTopic(_ context.Context, _ string) (doma
 }
 
 func TestListPostsByTopicPropagatesNotFound(t *testing.T) {
-	_, err := NewBoardService(&fakeMissingTopicRepository{}).ListPostsByTopic(
-		context.Background(), "no-such-topic", domain.SortPopular, "", 1,
-	)
+	svc := NewBoardService(&fakeMissingTopicRepository{})
+	_, err := svc.ListPostsByTopic(context.Background(), "no-such-topic", domain.SortPopular, "", 1)
 	if !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("err = %v, want domain.ErrNotFound", err)
 	}
