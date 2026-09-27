@@ -39,10 +39,12 @@ func NewBoardService(repo BoardRepository) *BoardService {
 	return &BoardService{repo: repo}
 }
 
+// ListTopics はトピック一覧を返す。
 func (s *BoardService) ListTopics(ctx context.Context) ([]domain.Topic, error) {
 	return s.repo.ListTopics(ctx)
 }
 
+// ListPostsByTopic は投稿一覧をトピックで絞り返す。
 func (s *BoardService) ListPostsByTopic(ctx context.Context, slug string, sort domain.SortOrder, viewerID string, page int32) (domain.PostPage, error) {
 	topic, err := s.repo.GetTopic(ctx, slug)
 	if err != nil {
@@ -50,6 +52,20 @@ func (s *BoardService) ListPostsByTopic(ctx context.Context, slug string, sort d
 	}
 
 	rows, err := s.repo.ListPostsByTopic(ctx, topic.Id, sort, viewerID, PageSize+1, (page-1)*PageSize)
+	if err != nil {
+		return domain.PostPage{}, err
+	}
+
+	hasNext := len(rows) > int(PageSize)
+	if hasNext {
+		rows = rows[:PageSize]
+	}
+	return domain.PostPage{Items: rows, HasNext: hasNext}, nil
+}
+
+// ListPosts は投稿一覧をトピックで絞らずに返す。
+func (s *BoardService) ListPosts(ctx context.Context, sort domain.SortOrder, viewerID string, page int32) (domain.PostPage, error) {
+	rows, err := s.repo.ListPosts(ctx, sort, viewerID, PageSize+1, (page-1)*PageSize)
 	if err != nil {
 		return domain.PostPage{}, err
 	}
@@ -96,10 +112,12 @@ func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.
 	return post, nil
 }
 
+// Like は指定の投稿のいいねを追加する。
 func (s *BoardService) Like(ctx context.Context, postID, userID string) error {
 	return s.repo.CreateLike(ctx, postID, userID)
 }
 
+// Unlike は指定の投稿のいいねを削除する。
 func (s *BoardService) Unlike(ctx context.Context, postID, userID string) error {
 	return s.repo.DeleteLike(ctx, postID, userID)
 }
