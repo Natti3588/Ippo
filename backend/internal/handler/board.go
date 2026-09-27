@@ -84,6 +84,50 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 	}
 }
 
+func (h *BoardHandler) PostsList(w http.ResponseWriter, r *http.Request, params api.PostsListParams) {
+	sort, ok := toDomainSortOrder(params.Sort)
+	if !ok {
+		h.logger.InfoContext(r.Context(), "並び順の指定が不正です", "op", "postsList")
+		writeProblem(r.Context(), w, h.logger, http.StatusBadRequest, "並び順の指定が不正です")
+		return
+	}
+
+	page := int32(1)
+	if params.Page != nil {
+		page = *params.Page
+	}
+	if page < 1 || page > 1000 {
+		h.logger.InfoContext(r.Context(), "ページ番号の指定が不正です", "op", "postsList")
+		writeProblem(r.Context(), w, h.logger, http.StatusBadRequest, "ページ番号の指定が不正です")
+		return
+	}
+
+	// 未ログインでも読める。その場合 likedByMe と isMine は false になる。
+	var viewerID string
+	if user, ok := userFrom(r.Context()); ok {
+		viewerID = user.Id
+	}
+
+	pageData, err := h.svc.ListPosts(r.Context(), sort, viewerID, page)
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "failed to list posts", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	items, err := toAPIPostSummaries(pageData.Items, viewerID)
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(api.PostPage{Items: items, HasNext: pageData.HasNext}); err != nil {
+		h.logger.ErrorContext(r.Context(), "failed to encode response", "error", err)
+	}
+}
+
 func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId string) {
 	// 未ログインでも読める。その場合 likedByMe と isMine は false になる。
 	var viewerID string

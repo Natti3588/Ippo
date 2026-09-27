@@ -89,6 +89,7 @@ func toAPIPostSummary(p domain.PostSummary, viewerID string) (api.PostSummary, e
 		LikedByMe:   p.LikedByMe,
 		IsMine:      viewerID != "" && p.AuthorID == viewerID,
 		CreatedAt:   p.CreatedAt.UTC(),
+		Topic:       api.Topic{Name: p.Topic.Name, Slug: p.Topic.Slug},
 	}, nil
 }
 

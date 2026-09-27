@@ -72,54 +72,57 @@ type Post struct {
 	CreatedAt time.Time          `json:"createdAt"`
 	Id        openapi_types.UUID `json:"id"`
 
-	// IsMine 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
+	// IsMine 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false
 	IsMine bool `json:"isMine"`
 
 	// LikeCount いいねの数
 	LikeCount int32 `json:"likeCount"`
 
-	// LikedByMe 自分がいいねを押したかどうか。未ログインなら false
+	// LikedByMe 自分がいいねを押したかどうか。 未ログインなら false
 	LikedByMe bool `json:"likedByMe"`
 
 	// Title タイトル
 	Title string `json:"title"`
 
-	// Topic この投稿が属するトピック。詳細ページから一覧へ戻るために使う
+	// Topic その投稿が属するトピック。 詳細ページから一覧へ戻るために使う
 	Topic Topic `json:"topic"`
 }
 
-// PostPage 投稿一覧の1ページ分。1ページは10件で固定
+// PostPage 投稿一覧の1ページ分。 1ページは10件で固定
 type PostPage struct {
-	// HasNext 次のページがあるかどうか。総ページ数と総件数は返さない
+	// HasNext 次のページがあるかどうか。 総ページ数と総件数は返さない
 	HasNext bool `json:"hasNext"`
 
-	// Items このページの投稿。最大10件
+	// Items このページの投稿。 最大10件
 	Items []PostSummary `json:"items"`
 }
 
-// PostSummary 一覧に並べる投稿。本文は先頭200文字までしか含まない
+// PostSummary 一覧に並べる投稿。 本文は先頭200文字までしか含まない
 type PostSummary struct {
 	// AuthorName 投稿者の名前
 	AuthorName string `json:"authorName"`
 
-	// BodyPreview 本文の先頭200文字。truncated が true なら続きがある
+	// BodyPreview 本文の先頭200文字。 truncated が true なら続きがある
 	BodyPreview string `json:"bodyPreview"`
 
 	// CreatedAt 投稿日時（UTC）
 	CreatedAt time.Time          `json:"createdAt"`
 	Id        openapi_types.UUID `json:"id"`
 
-	// IsMine 自分の投稿かどうか。true のときだけ削除できる。未ログインなら false
+	// IsMine 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false
 	IsMine bool `json:"isMine"`
 
 	// LikeCount いいねの数
 	LikeCount int32 `json:"likeCount"`
 
-	// LikedByMe 自分がいいねを押したかどうか。未ログインなら false
+	// LikedByMe 自分がいいねを押したかどうか。 未ログインなら false
 	LikedByMe bool `json:"likedByMe"`
 
-	// Title タイトル。100文字に制限しているため、一覧でも全文を返す
+	// Title タイトル。 100文字に制限しているため、一覧でも全文を返す
 	Title string `json:"title"`
+
+	// Topic この投稿が属するトピック。 「すべて」の一覧でどの投稿のトピックかを示すために使う
+	Topic Topic `json:"topic"`
 
 	// Truncated 本文が200文字を超えて切り詰められたかどうか
 	Truncated bool `json:"truncated"`
@@ -136,7 +139,7 @@ type ProblemDetails struct {
 	// Title HTTPステータスの標準の語句
 	Title string `json:"title"`
 
-	// Type 問題の種類を表すURI。このAPIでは常に about:blank
+	// Type 問題の種類を表すURI。 このAPIでは常に about:blank
 	Type string `json:"type"`
 }
 
@@ -170,12 +173,28 @@ type UpdateProfileRequest struct {
 	DisplayName string `json:"displayName"`
 }
 
+// ListPostsQueryPage defines model for ListPostsQuery.page.
+type ListPostsQueryPage = int32
+
+// ListPostsQuerySort ソート順
+type ListPostsQuerySort = SortOrder
+
+// PostsListParams defines parameters for PostsList.
+type PostsListParams struct {
+	// Sort 投稿一覧の並び順
+	Sort *ListPostsQuerySort `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Page ページ番号（1始まり・1ページ10件）
+	Page *ListPostsQueryPage `form:"page,omitempty" json:"page,omitempty"`
+}
+
 // TopicsListPostsParams defines parameters for TopicsListPosts.
 type TopicsListPostsParams struct {
-	Sort *SortOrder `form:"sort,omitempty" json:"sort,omitempty"`
+	// Sort 投稿一覧の並び順
+	Sort *ListPostsQuerySort `form:"sort,omitempty" json:"sort,omitempty"`
 
-	// Page 何ページ目か。1始まり。1ページは10件で固定
-	Page *int32 `form:"page,omitempty" json:"page,omitempty"`
+	// Page ページ番号（1始まり・1ページ10件）
+	Page *ListPostsQueryPage `form:"page,omitempty" json:"page,omitempty"`
 }
 
 // AuthLoginJSONRequestBody defines body for AuthLogin for application/json ContentType.
@@ -207,6 +226,9 @@ type ServerInterface interface {
 
 	// (PATCH /me)
 	MeUpdate(w http.ResponseWriter, r *http.Request)
+
+	// (GET /posts)
+	PostsList(w http.ResponseWriter, r *http.Request, params PostsListParams)
 
 	// (DELETE /posts/{postId})
 	PostsRemove(w http.ResponseWriter, r *http.Request, postId string)
@@ -300,6 +322,52 @@ func (siw *ServerInterfaceWrapper) MeUpdate(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.MeUpdate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostsList operation middleware
+func (siw *ServerInterfaceWrapper) PostsList(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostsListParams
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "sort", r.URL.Query(), &params.Sort, runtime.BindQueryParameterOptions{Type: "", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sort"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "page" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "page", r.URL.Query(), &params.Page, runtime.BindQueryParameterOptions{Type: "integer", Format: "int32"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "page"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "page", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostsList(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -633,6 +701,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/signup", wrapper.AuthSignup)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/me", wrapper.MeGet)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/me", wrapper.MeUpdate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts", wrapper.PostsList)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsRemove)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsGet)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsUnlike)
