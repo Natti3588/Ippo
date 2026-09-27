@@ -10,7 +10,7 @@ import (
 	"github.com/Natti3588/Ippo/backend/internal/domain"
 )
 
-type pagingBoardRepository struct {
+type fakePagingRepository struct {
 	BoardRepository
 	posts   []domain.PostSummary
 	limit   int32
@@ -18,18 +18,18 @@ type pagingBoardRepository struct {
 	topicID string
 }
 
-func (r *pagingBoardRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
+func (r *fakePagingRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
 	return domain.Topic{Id: "topic-id"}, nil
 }
 
-func (r *pagingBoardRepository) ListPostsByTopic(_ context.Context, topicID string, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
+func (r *fakePagingRepository) ListPostsByTopic(_ context.Context, topicID string, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
 	r.topicID = topicID
 	r.limit = limit
 	r.offset = offset
 	return r.posts, nil
 }
 
-func (r *pagingBoardRepository) ListPosts(_ context.Context, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
+func (r *fakePagingRepository) ListPosts(_ context.Context, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
 	r.limit = limit
 	r.offset = offset
 	return r.posts, nil
@@ -79,7 +79,7 @@ func TestListPostsPaging(t *testing.T) {
 				for i := range posts {
 					posts[i].Id = strconv.Itoa(i)
 				}
-				repo := &pagingBoardRepository{posts: posts}
+				repo := &fakePagingRepository{posts: posts}
 
 				got, err := m.call(NewBoardService(repo), tt.page)
 				if err != nil {
@@ -109,16 +109,16 @@ func TestListPostsPaging(t *testing.T) {
 	}
 }
 
-type missingTopicRepository struct {
+type fakeMissingTopicRepository struct {
 	BoardRepository
 }
 
-func (r *missingTopicRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
+func (r *fakeMissingTopicRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
 	return domain.Topic{}, domain.ErrNotFound
 }
 
 func TestListPostsByTopicPropagatesNotFound(t *testing.T) {
-	_, err := NewBoardService(&missingTopicRepository{}).ListPostsByTopic(
+	_, err := NewBoardService(&fakeMissingTopicRepository{}).ListPostsByTopic(
 		context.Background(), "no-such-topic", domain.SortPopular, "", 1,
 	)
 	if !errors.Is(err, domain.ErrNotFound) {
@@ -126,16 +126,16 @@ func TestListPostsByTopicPropagatesNotFound(t *testing.T) {
 	}
 }
 
-type createPostRepository struct {
+type fakeCreatePostRepository struct {
 	BoardRepository
 	created bool
 }
 
-func (r *createPostRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
+func (r *fakeCreatePostRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
 	return domain.Topic{Id: "topic-id", Slug: "study-method", Name: "効率的な勉強法"}, nil
 }
 
-func (r *createPostRepository) CreatePost(_ context.Context, _, _, title, body string) (domain.Post, error) {
+func (r *fakeCreatePostRepository) CreatePost(_ context.Context, _, _, title, body string) (domain.Post, error) {
 	r.created = true
 	return domain.Post{Id: "post-id", Title: title, Body: body}, nil
 }
@@ -171,7 +171,7 @@ func TestCreatePostValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := &createPostRepository{}
+			repo := &fakeCreatePostRepository{}
 
 			_, err := NewBoardService(repo).CreatePost(
 				context.Background(), "study-method", user, tt.title, tt.body,
@@ -202,7 +202,7 @@ func TestCreatePostValidation(t *testing.T) {
 
 // リポジトリが返さない投稿者名とトピックを、サービスが補うことを確かめる。
 func TestCreatePostFillsAuthorAndTopic(t *testing.T) {
-	repo := &createPostRepository{}
+	repo := &fakeCreatePostRepository{}
 	user := domain.User{Id: "user-id", DisplayName: "みどり"}
 
 	post, err := NewBoardService(repo).CreatePost(
