@@ -18,7 +18,8 @@ namespace Topics {
     @doc("何ページ目か。1始まり。1ページは10件で固定")
     @minValue(1)
     @maxValue(1000)
-    @query page?: int32 = 1,
+    @query
+    page?: int32 = 1,
   ): PostPage | BadRequestProblem | NotFoundProblem;
 
   @doc("トピックに投稿する")
@@ -58,7 +59,5 @@ namespace Posts {
   @doc("いいねを取り消す")
   @route("{postId}/like")
   @delete
-  op unlike(@path postId: string):
-    | NoContentResponse
-    | UnauthorizedProblem;
+  op unlike(@path postId: string): NoContentResponse | UnauthorizedProblem;
 }
