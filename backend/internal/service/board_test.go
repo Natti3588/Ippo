@@ -109,6 +109,29 @@ func TestListPostsPaging(t *testing.T) {
 	}
 }
 
+func TestListPostsByTopicFillsTopic(t *testing.T) {
+	posts := make([]domain.PostSummary, 3)
+	for i := range posts {
+		posts[i].Id = strconv.Itoa(i)
+	}
+	repo := &fakePagingRepository{posts: posts}
+
+	svc := NewBoardService(repo)
+	got, err := svc.ListPostsByTopic(context.Background(), "study-method", domain.SortPopular, "", 1)
+	if err != nil {
+		t.Fatalf("ListPostsByTopic が失敗した: %v", err)
+	}
+	if len(got.Items) != 3 {
+		t.Fatalf("件数 = %d, want %d", len(got.Items), 3)
+	}
+
+	for i := range got.Items {
+		if got.Items[i].Topic.Id != "topic-id" {
+			t.Errorf("Items[%d].Topic.Id = %q, want %q", i, got.Items[i].Topic.Id, "topic-id")
+		}
+	}
+}
+
 type fakeMissingTopicRepository struct {
 	BoardRepository
 }
@@ -118,7 +141,9 @@ func (r *fakeMissingTopicRepository) GetTopic(_ context.Context, _ string) (doma
 }
 
 func TestListPostsByTopicPropagatesNotFound(t *testing.T) {
-	svc := NewBoardService(&fakeMissingTopicRepository{})
+	repo := &fakeMissingTopicRepository{}
+
+	svc := NewBoardService(repo)
 	_, err := svc.ListPostsByTopic(context.Background(), "no-such-topic", domain.SortPopular, "", 1)
 	if !errors.Is(err, domain.ErrNotFound) {
 		t.Fatalf("err = %v, want domain.ErrNotFound", err)
@@ -172,9 +197,9 @@ func TestCreatePostValidation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := &fakeCreatePostRepository{}
 
-			_, err := NewBoardService(repo).CreatePost(
-				context.Background(), "study-method", user, tt.title, tt.body,
-			)
+			svc := NewBoardService(repo)
+
+			_, err := svc.CreatePost(context.Background(), "study-method", user, tt.title, tt.body)
 
 			if tt.wantDetail == "" {
 				if err != nil {
@@ -204,9 +229,9 @@ func TestCreatePostFillsAuthorAndTopic(t *testing.T) {
 	repo := &fakeCreatePostRepository{}
 	user := domain.User{Id: "user-id", DisplayName: "みどり"}
 
-	post, err := NewBoardService(repo).CreatePost(
-		context.Background(), "study-method", user, "はじめまして", "よろしくお願いします",
-	)
+	svc := NewBoardService(repo)
+
+	post, err := svc.CreatePost(context.Background(), "study-method", user, "はじめまして", "よろしくお願いします")
 	if err != nil {
 		t.Fatalf("CreatePost が失敗した: %v", err)
 	}

@@ -55,6 +55,9 @@ func (s *BoardService) ListPostsByTopic(ctx context.Context, slug string, sort d
 	if err != nil {
 		return domain.PostPage{}, err
 	}
+	for i := range rows {
+		rows[i].Topic = topic
+	}
 
 	hasNext := len(rows) > int(PageSize)
 	if hasNext {
