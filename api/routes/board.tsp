@@ -11,16 +11,10 @@ namespace Topics {
   @doc("トピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目")
   @route("{slug}/posts")
   @get
-  op listPosts(
-    @path slug: string,
-    @query sort?: SortOrder = SortOrder.popular,
-
-    @doc("何ページ目か。1始まり。1ページは10件で固定")
-    @minValue(1)
-    @maxValue(1000)
-    @query
-    page?: int32 = 1,
-  ): PostPage | BadRequestProblem | NotFoundProblem;
+  op listPosts(@path slug: string, ...ListPostsQuery):
+    | PostPage
+    | BadRequestProblem
+    | NotFoundProblem;
 
   @doc("トピックに投稿する")
   @route("{slug}/posts")
@@ -34,12 +28,16 @@ namespace Topics {
 
 @route("/posts")
 namespace Posts {
-  @doc("投稿を1件取得する。本文は全文を返す")
+  @doc("すべてのトピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目")
+  @get
+  op list(...ListPostsQuery): PostPage | BadRequestProblem;
+
+  @doc("投稿を1件取得する。 本文は全文を返す")
   @route("{postId}")
   @get
   op get(@path postId: string): Post | NotFoundProblem;
 
-  @doc("自分の投稿を削除する。いいねも一緒に消える")
+  @doc("自分の投稿を削除する。 いいねも一緒に消える")
   @route("{postId}")
   @delete
   op remove(@path postId: string):
