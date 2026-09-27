@@ -12,16 +12,24 @@ import (
 
 type pagingBoardRepository struct {
 	BoardRepository
-	posts  []domain.PostSummary
-	limit  int32
-	offset int32
+	posts   []domain.PostSummary
+	limit   int32
+	offset  int32
+	topicID string
 }
 
 func (r *pagingBoardRepository) GetTopic(_ context.Context, _ string) (domain.Topic, error) {
 	return domain.Topic{Id: "topic-id"}, nil
 }
 
-func (r *pagingBoardRepository) ListPostsByTopic(_ context.Context, _ string, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
+func (r *pagingBoardRepository) ListPostsByTopic(_ context.Context, topicID string, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
+	r.topicID = topicID
+	r.limit = limit
+	r.offset = offset
+	return r.posts, nil
+}
+
+func (r *pagingBoardRepository) ListPosts(_ context.Context, _ domain.SortOrder, _ string, limit, offset int32) ([]domain.PostSummary, error) {
 	r.limit = limit
 	r.offset = offset
 	return r.posts, nil
@@ -43,37 +51,61 @@ func TestListPostsPaging(t *testing.T) {
 		{"3ページ目は20件飛ばす", 11, 3, 10, true, 20},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			posts := make([]domain.PostSummary, tt.rows)
-			for i := range posts {
-				posts[i].Id = strconv.Itoa(i)
-			}
-			repo := &pagingBoardRepository{posts: posts}
+	methods := []struct {
+		name        string
+		call        func(s *BoardService, page int32) (domain.PostPage, error)
+		wantTopicID string
+	}{
+		{
+			name: "ListPostsByTopic",
+			call: func(s *BoardService, page int32) (domain.PostPage, error) {
+				return s.ListPostsByTopic(context.Background(), "study-method", domain.SortPopular, "", page)
+			},
+			wantTopicID: "topic-id",
+		},
+		{
+			name: "ListPosts",
+			call: func(s *BoardService, page int32) (domain.PostPage, error) {
+				return s.ListPosts(context.Background(), domain.SortPopular, "", page)
+			},
+			wantTopicID: "",
+		},
+	}
 
-			got, err := NewBoardService(repo).ListPostsByTopic(
-				context.Background(), "study-method", domain.SortPopular, "", tt.page,
-			)
-			if err != nil {
-				t.Fatalf("ListPosts が失敗した: %v", err)
-			}
+	for _, m := range methods {
+		for _, tt := range tests {
+			t.Run(m.name+"/"+tt.name, func(t *testing.T) {
+				posts := make([]domain.PostSummary, tt.rows)
+				for i := range posts {
+					posts[i].Id = strconv.Itoa(i)
+				}
+				repo := &pagingBoardRepository{posts: posts}
 
-			if len(got.Items) != tt.wantItems {
-				t.Errorf("件数 = %d, want %d", len(got.Items), tt.wantItems)
-			}
-			if got.HasNext != tt.wantHasNext {
-				t.Errorf("HasNext = %v, want %v", got.HasNext, tt.wantHasNext)
-			}
-			if repo.offset != tt.wantOffset {
-				t.Errorf("OFFSET = %d, want %d", repo.offset, tt.wantOffset)
-			}
-			if repo.limit != PageSize+1 {
-				t.Errorf("LIMIT = %d, want %d（1件多く取る）", repo.limit, PageSize+1)
-			}
-			if n := len(got.Items); n > 0 && got.Items[n-1].Id != strconv.Itoa(n-1) {
-				t.Errorf("最後の要素の Id = %q, want %q", got.Items[n-1].Id, strconv.Itoa(n-1))
-			}
-		})
+				got, err := m.call(NewBoardService(repo), tt.page)
+				if err != nil {
+					t.Fatalf("%s が失敗した: %v", m.name, err)
+				}
+
+				if len(got.Items) != tt.wantItems {
+					t.Errorf("件数 = %d, want %d", len(got.Items), tt.wantItems)
+				}
+				if got.HasNext != tt.wantHasNext {
+					t.Errorf("HasNext = %v, want %v", got.HasNext, tt.wantHasNext)
+				}
+				if repo.offset != tt.wantOffset {
+					t.Errorf("OFFSET = %d, want %d", repo.offset, tt.wantOffset)
+				}
+				if repo.limit != PageSize+1 {
+					t.Errorf("LIMIT = %d, want %d（1件多く取る）", repo.limit, PageSize+1)
+				}
+				if n := len(got.Items); n > 0 && got.Items[n-1].Id != strconv.Itoa(n-1) {
+					t.Errorf("最後の要素の Id = %q, want %q", got.Items[n-1].Id, strconv.Itoa(n-1))
+				}
+				if repo.topicID != m.wantTopicID {
+					t.Errorf("topicID = %q, want %q", repo.topicID, m.wantTopicID)
+				}
+			})
+		}
 	}
 }
 
@@ -85,7 +117,7 @@ func (r *missingTopicRepository) GetTopic(_ context.Context, _ string) (domain.T
 	return domain.Topic{}, domain.ErrNotFound
 }
 
-func TestListPostsPropagatesNotFound(t *testing.T) {
+func TestListPostsByTopicPropagatesNotFound(t *testing.T) {
 	_, err := NewBoardService(&missingTopicRepository{}).ListPostsByTopic(
 		context.Background(), "no-such-topic", domain.SortPopular, "", 1,
 	)
