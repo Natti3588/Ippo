@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -27,5 +28,18 @@ func writeProblem(ctx context.Context, w http.ResponseWriter, logger *slog.Logge
 	}
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		logger.ErrorContext(ctx, "エラーレスポンスの書き込みに失敗", "error", err)
+	}
+}
+
+// ParamErrorHandler は、生成コードがクエリやパスの引数を解釈できなかったときの応答を返す。
+func ParamErrorHandler(logger *slog.Logger) func(w http.ResponseWriter, r *http.Request, err error) {
+	return func(w http.ResponseWriter, r *http.Request, err error) {
+		logger.InfoContext(r.Context(), "リクエストを解釈できません", "error", err)
+
+		detail := "リクエストの形式が不正です"
+		if formatErr, ok := errors.AsType[*api.InvalidParamFormatError](err); ok {
+			detail = formatErr.ParamName + " の形式が不正です"
+		}
+		writeProblem(r.Context(), w, logger, http.StatusBadRequest, detail)
 	}
 }
