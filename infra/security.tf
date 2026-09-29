@@ -57,7 +57,7 @@ resource "aws_vpc_security_group_ingress_rule" "frontend_from_alb" {
   to_port                      = 3000
 }
 
-# ECR・CloudWatch Logs・Secrets Manager へ出る。公開 IP から IGW 経由。
+# ECR・CloudWatch Logs・Secrets Manager へ出る。アプリ用プライベートサブネットから NAT インスタンスを経由。
 resource "aws_vpc_security_group_egress_rule" "frontend_all" {
   security_group_id = aws_security_group.frontend.id
   cidr_ipv4         = "0.0.0.0/0"
