@@ -6,11 +6,14 @@ import { formatDate } from "@/lib/format";
 
 export function PostItem({
   post,
+  showTopic = false,
   canLike,
   onToggleLike,
   onDelete,
 }: {
   post: PostSummary;
+  /** 「すべて」の一覧のときだけ true。どのトピックの投稿かを示す */
+  showTopic?: boolean;
   /** 未ログインのときは押せない。数だけ見せる */
   canLike: boolean;
   onToggleLike: () => void;
@@ -18,6 +21,23 @@ export function PostItem({
 }) {
   return (
     <article className="border-t border-border py-6">
+      {/*
+        「すべて」の一覧でだけ、どのトピックの投稿かを出す。
+
+        上に並ぶトピックのチップと形が似るので、同じくリンクにする。
+        押すとそのトピックの一覧へ移る。似た見た目で違う動きをすると迷わせる。
+        ただし大きさと文字の色は一段落とし、選ぶための部品ではなく
+        投稿に付いた札に見せる。高さ 28px で、押せる大きさの基準 24px は満たす。
+      */}
+      {showTopic && (
+        <Link
+          href={`/topics/${post.topic.slug}`}
+          className="mb-2.5 inline-flex min-h-7 items-center rounded-ippo border border-border-strong bg-surface px-2.5 py-0.5 text-ui text-ink-soft hover:bg-accent-soft hover:border-accent hover:text-ink transition-colors"
+        >
+          {post.topic.name}
+        </Link>
+      )}
+
       {/*
         自分の投稿かどうかを文字でも示す。枠の色だけで示すと、
         色の見分けがつきにくい人に伝わらない。
