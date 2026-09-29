@@ -107,6 +107,10 @@ export const api = {
       `/topics/${encodeURIComponent(slug)}/posts?sort=${sort}&page=${page}`,
     ),
 
+  /** すべてのトピックの投稿。並び順とページはトピック別の一覧と同じ */
+  allPosts: (sort: SortOrder = "popular", page = 1) =>
+    request<PostPage>(`/posts?sort=${sort}&page=${page}`),
+
   post: (postId: string) => request<Post>(`/posts/${encodeURIComponent(postId)}`),
 
   createPost: (slug: string, title: string, body: string) =>
