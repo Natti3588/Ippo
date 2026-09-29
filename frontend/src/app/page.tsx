@@ -5,11 +5,10 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
-import { useBoardHref } from "@/lib/topics";
+import { BOARD_HREF } from "@/lib/topics";
 
 export default function HomePage() {
   const { user } = useAuth();
-  const boardHref = useBoardHref();
 
   // トピックは静的に書かない。増えたときに直し忘れる。
   const { data: topics } = useSWR("topics", () => api.topics());
@@ -73,37 +72,32 @@ export default function HomePage() {
             {/*
               未ログインでも投稿を全部読める。
               登録の前に中を見せられることが、このサービスの強み。
-
-              トピックが取れるまでは出さない。控えの slug を書くと、
-              トピックの並びを変えた日に、この1箇所だけ古い行き先を指す。
             */}
-            {boardHref && (
-              <Link
-                href={boardHref}
-                className="inline-flex min-h-12 items-center gap-1.5 text-preview text-accent hover:text-ink transition-colors"
+            <Link
+              href={BOARD_HREF}
+              className="inline-flex min-h-12 items-center gap-1.5 text-preview text-accent hover:text-ink transition-colors"
+            >
+              読むだけ見てみる
+              {/*
+                枠線のボタンにしない。塗りと線のボタンが並ぶ形にすると、
+                ひかえめな選択肢が主ボタンと同じ重さに見える。
+                山かっこはトピックの一覧と同じもので、この先があることを示す。
+              */}
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0"
+                aria-hidden="true"
               >
-                読むだけ見てみる
-                {/*
-                  枠線のボタンにしない。塗りと線のボタンが並ぶ形にすると、
-                  ひかえめな選択肢が主ボタンと同じ重さに見える。
-                  山かっこはトピックの一覧と同じもので、この先があることを示す。
-                */}
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="shrink-0"
-                  aria-hidden="true"
-                >
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
-              </Link>
-            )}
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </Link>
           </div>
         </section>
       )}

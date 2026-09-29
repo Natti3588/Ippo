@@ -6,11 +6,10 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
 import { formatDateTime } from "@/lib/format";
-import { useBoardHref } from "@/lib/topics";
+import { BOARD_HREF } from "@/lib/topics";
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const boardHref = useBoardHref();
 
   const { data: post, error } = useSWR(["post", id], () => api.post(id));
 
@@ -20,16 +19,14 @@ export default function PostDetailPage() {
         <p role="alert" className="text-preview text-danger">
           {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
         </p>
-        {boardHref && (
-          <p className="mt-5">
-            <Link
-              href={boardHref}
-              className="text-ui text-accent underline underline-offset-4 hover:text-ink transition-colors"
-            >
-              掲示板にもどる
-            </Link>
-          </p>
-        )}
+        <p className="mt-5">
+          <Link
+            href={BOARD_HREF}
+            className="text-ui text-accent underline underline-offset-4 hover:text-ink transition-colors"
+          >
+            掲示板にもどる
+          </Link>
+        </p>
       </main>
     );
   }

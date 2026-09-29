@@ -5,13 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { useBoardHref } from "@/lib/topics";
+import { BOARD_HREF } from "@/lib/topics";
 
 export function Header() {
   const { user, setUser } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const boardHref = useBoardHref();
 
   /*
     掲示板にいるときだけ、いま見ているトピックを投稿画面へ渡す。
@@ -62,14 +61,12 @@ export function Header() {
 
             ログインしていなくても出す。未ログインでも投稿は全部読める。
           */}
-          {boardHref && (
-            <Link
-              href={boardHref}
-              className="hidden min-h-11 items-center px-3 text-ui text-ink-soft md:flex hover:text-ink transition-colors"
-            >
-              掲示板
-            </Link>
-          )}
+          <Link
+            href={BOARD_HREF}
+            className="hidden min-h-11 items-center px-3 text-ui text-ink-soft md:flex hover:text-ink transition-colors"
+          >
+            掲示板
+          </Link>
         </div>
 
         {/* undefined のあいだは何も出さない。
@@ -175,15 +172,13 @@ export function Header() {
           </div>
 
           <nav className="flex flex-col">
-            {boardHref && (
-              <Link
-                href={boardHref}
-                onClick={() => setMenuOpen(false)}
-                className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink hover:bg-accent-soft transition-colors"
-              >
-                掲示板
-              </Link>
-            )}
+            <Link
+              href={BOARD_HREF}
+              onClick={() => setMenuOpen(false)}
+              className="flex min-h-14 items-center border-b border-border px-4 text-preview text-ink hover:bg-accent-soft transition-colors"
+            >
+              掲示板
+            </Link>
             <Link
               href="/settings"
               onClick={() => setMenuOpen(false)}
