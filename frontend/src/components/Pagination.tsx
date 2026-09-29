@@ -2,19 +2,20 @@ import Link from "next/link";
 import type { SortOrder } from "@/lib/api";
 
 export function Pagination({
-  slug,
+  basePath,
   sort,
   page,
   hasNext,
 }: {
-  slug: string;
+  /** 一覧の行き先。/topics/{slug} か /posts */
+  basePath: string;
   sort: SortOrder;
   page: number;
   hasNext: boolean;
 }) {
   if (page === 1 && !hasNext) return null;
 
-  const href = (p: number) => `/topics/${slug}?sort=${sort}&page=${p}`;
+  const href = (p: number) => `${basePath}?sort=${sort}&page=${p}`;
 
   return (
     <nav className="mt-10 flex items-center justify-between border-t border-border pt-6">
