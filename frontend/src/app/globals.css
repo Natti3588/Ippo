@@ -4,6 +4,7 @@
   color-scheme: light;
 
   --ground: #f5f4ec;
+  --ground-deep: #ebe9dd;
   --surface: #ffffff;
   --ink: #232619;
   --ink-soft: #5f6552;
@@ -23,6 +24,7 @@
     color-scheme: dark;
 
     --ground: #14170e;
+    --ground-deep: #0e100a;
     --surface: #1c2015;
     --ink: #e8eadf;
     --ink-soft: #a6ab96;
@@ -40,6 +42,7 @@
 
 @theme inline {
   --color-ground: var(--ground);
+  --color-ground-deep: var(--ground-deep);
   --color-surface: var(--surface);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);

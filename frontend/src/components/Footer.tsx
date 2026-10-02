@@ -11,7 +11,12 @@ export function Footer() {
   return (
     // mt-auto で下へ寄せる。body が flex flex-col なので、
     // 内容が短い画面（ログインなど）でも余白を吸って画面の底に着く。
-    <footer className="mt-auto border-t border-border">
+    //
+    // bg-ground-deep で面の色を変える。本文の区切り線やページ送りと同じ
+    // border-t 1本だけでは、どこからフッターか分からない。地より一段濃い
+    // 色の帯にして、ページの外側だと分かるようにする。#ebe9dd と背景の差は
+    // surface（白）と背景の差と同じ 1.10:1。
+    <footer className="mt-auto border-t border-border bg-ground-deep">
       <div className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
         <p className="text-subtitle font-bold text-ink">Ippo</p>
         <p className="mt-2 max-w-[35em] text-ui text-ink-soft">
@@ -23,10 +28,10 @@ export function Footer() {
         {/*
           ここから下は利用者向けではない。採用選考で見る人が
           リポジトリへ行けるようにするためのもの。
-          だから小さく、薄い色で、罫線の下に置く。
+          だから小さく、罫線の下に置く。
         */}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-5">
-          <p className="text-ui text-ink-faint">© 2026 Ippo</p>
+          <p className="text-ui text-ink-soft">© 2026 Ippo</p>
 
           <div className="flex items-center gap-1">
             <External href="https://github.com/Natti3588" label="GitHub">
