@@ -23,16 +23,18 @@ export function PostItem({
     <article className="border-t border-border py-6">
       {/*
         「すべて」の一覧でだけ、どのトピックの投稿かを出す。
+        押すとそのトピックの一覧へ移るので、リンクのまま。
 
-        上に並ぶトピックのチップと形が似るので、同じくリンクにする。
-        押すとそのトピックの一覧へ移る。似た見た目で違う動きをすると迷わせる。
-        ただし大きさと文字の色は一段落とし、選ぶための部品ではなく
-        投稿に付いた札に見せる。高さ 28px で、押せる大きさの基準 24px は満たす。
+        枠と背景は付けない。付けると上に並ぶトピック選択のチップ
+        （TopicNav の chipClass）と同じ形になり、「選んでいるトピック」と
+        「この投稿のトピック」の区別がつかなくなる。文字だけのリンクにして、
+        選ぶための部品ではなく投稿に付いた札だと分かるようにする。
+        高さ 28px（min-h-7）で、押せる大きさの基準 24px は満たす。
       */}
       {showTopic && (
         <Link
           href={`/topics/${post.topic.slug}`}
-          className="mb-2.5 inline-flex min-h-7 items-center rounded-ippo border border-border-strong bg-surface px-2.5 py-0.5 text-ui text-ink-soft hover:bg-accent-soft hover:border-accent hover:text-ink transition-colors"
+          className="mb-1.5 inline-flex min-h-7 items-center text-ui text-ink-soft underline-offset-4 hover:text-ink hover:underline transition-colors"
         >
           {post.topic.name}
         </Link>
