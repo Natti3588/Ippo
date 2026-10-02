@@ -159,7 +159,7 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={handleLogout}
-          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong px-5 py-2.5 text-ui text-ink hover:bg-accent-soft hover:border-accent transition-colors"
+          className="inline-flex min-h-11 items-center rounded-ippo border border-border-strong bg-surface px-5 py-2.5 text-ui text-ink hover:bg-accent-soft hover:border-accent transition-colors"
         >
           ログアウトする
         </button>
