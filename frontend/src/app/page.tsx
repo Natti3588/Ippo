@@ -54,7 +54,7 @@ export default function HomePage() {
             大きさ・太さ・色を3つとも落とすと、説明文が注釈に見える。
             ここで落とすのは色だけにして、大きさは本文のままにしてある。
           */}
-          <p className="mb-2 max-w-[26em] text-body text-ink">
+          <p className="mb-2 max-w-[30em] text-body text-ink">
             「いつか英語を話したい」で止まっている人のための掲示板です。
           </p>
           <p className="mb-8 max-w-[26em] text-ui text-ink-soft">
