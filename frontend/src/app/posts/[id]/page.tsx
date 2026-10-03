@@ -69,7 +69,7 @@ export default function PostDetailPage() {
         </h1>
 
         <div className="mb-7 flex items-center gap-3 border-b-3 border-ink pb-5">
-          <span className="text-ui text-ink-soft">{post.authorName}</span>
+          <span className="text-ui text-ink-soft wrap-anywhere">{post.authorName}</span>
           {/* time にすると、読み上げが日付だと分かる */}
           <time dateTime={post.createdAt} className="text-ui text-ink-soft">
             {formatDateTime(post.createdAt)}

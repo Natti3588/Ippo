@@ -77,7 +77,8 @@ export function Header() {
               href="/settings"
               className="hidden min-h-11 items-center px-4 text-ui text-ink-soft md:flex hover:text-ink transition-colors"
             >
-              {user.displayName} さん
+              <span className="max-w-[10em] truncate">{user.displayName}</span>
+              &nbsp;さん
             </Link>
             <button
               type="button"
@@ -88,7 +89,7 @@ export function Header() {
             </button>
             <Link
               href={newPostHref}
-              className="ml-3 inline-flex min-h-11 items-center gap-2 rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
+              className="ml-3 inline-flex min-h-11 shrink-0 items-center gap-2 rounded-ippo bg-accent px-3.5 py-2.5 text-ui font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
             >
               投稿する
               <PencilIcon />
@@ -168,7 +169,7 @@ export function Header() {
 
           <div className="border-b border-border px-4 py-4">
             <p className="text-ui text-ink-soft">ログイン中</p>
-            <p className="text-preview font-bold text-ink">{user.displayName} さん</p>
+            <p className="text-preview font-bold text-ink wrap-anywhere">{user.displayName} さん</p>
           </div>
 
           <nav className="flex flex-col">

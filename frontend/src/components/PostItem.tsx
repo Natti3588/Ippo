@@ -90,7 +90,7 @@ export function PostItem({
 
         <div className="grow" />
 
-        <span className="text-ui text-ink-soft">{post.authorName}</span>
+        <span className="text-ui text-ink-soft wrap-anywhere">{post.authorName}</span>
         <span className="text-ui text-ink-soft">
           {formatDate(post.createdAt)}
         </span>

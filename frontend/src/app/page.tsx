@@ -34,7 +34,7 @@ export default function HomePage() {
       */}
       {user && (
         <section className="pt-14 pb-10">
-          <h1 className="text-display font-bold text-ink">
+          <h1 className="text-display font-bold text-ink wrap-anywhere">
             おかえりなさい、{user.displayName}さん
           </h1>
         </section>
@@ -132,7 +132,7 @@ export default function HomePage() {
               {post.bodyPreview}
             </p>
 
-            <p className="text-ui text-ink-soft">
+            <p className="text-ui text-ink-soft wrap-anywhere">
               {post.authorName}　{formatDate(post.createdAt)}
             </p>
           </div>
