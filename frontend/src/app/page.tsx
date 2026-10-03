@@ -149,20 +149,26 @@ export default function HomePage() {
         <section className="pb-10">
           <div className="border-t border-border py-6">
             <h2 className="mb-2 text-subtitle font-bold text-ink">うまく書けなくていい</h2>
-            <p className="max-w-[30em] text-ui text-ink-soft">
-              添削も採点もありません。読んだ本、聞いた番組、続かなかった日のこと。そのまま書く場所です。
+            <p className="max-w-[36em] text-ui text-ink-soft">
+              添削も採点もありません。
+              <br />
+              読んだ本や聞いた番組、続かなかった日のことを、思ったまま書いてください。
             </p>
           </div>
           <div className="border-t border-border py-6">
-            <h2 className="mb-2 text-subtitle font-bold text-ink">読むだけでも続く</h2>
-            <p className="max-w-[30em] text-ui text-ink-soft">
-              登録しなくても全部読めます。同じところでつまずいた人が、先にいます。
+            <h2 className="mb-2 text-subtitle font-bold text-ink">読むだけでいい</h2>
+            <p className="max-w-[36em] text-ui text-ink-soft">
+              登録しなくても、投稿はすべて読めます。
+              <br />
+              同じところでつまずいた人も、ここに書いています。
             </p>
           </div>
           <div className="border-t border-b border-border py-6">
-            <h2 className="mb-2 text-subtitle font-bold text-ink">お金がかかりません</h2>
-            <p className="max-w-[30em] text-ui text-ink-soft">
-              月額も登録料もありません。お金をかけずに使えた教材は、使った人が書いています。
+            <h2 className="mb-2 text-subtitle font-bold text-ink">お金をかけなくていい</h2>
+            <p className="max-w-[36em] text-ui text-ink-soft">
+              月額も登録料もありません。
+              <br />
+              無料の教材も、おすすめの教材も、実際に使った人が紹介しています。
             </p>
           </div>
         </section>
