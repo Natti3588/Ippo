@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Suspense, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { flushSync } from "react-dom";
+import { useForm, type FieldErrors } from "react-hook-form";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/problem";
 import { Counter } from "@/components/Counter";
+import { Markdown } from "@/components/Markdown";
 import { BOARD_HREF } from "@/lib/topics";
+
+type Tab = "write" | "preview";
 
 type FormValues = {
   topic: string;
@@ -24,6 +28,11 @@ function NewPost() {
 
   const { data: topics } = useSWR("topics", () => api.topics());
   const [failure, setFailure] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("write");
+  const [previewBody, setPreviewBody] = useState("");
+  const [previewHeight, setPreviewHeight] = useState<number>();
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ write: null, preview: null });
 
   // 来たときに ?topic= が付いていれば、そのトピックへ戻す。
   // 付いていなければ、すべての投稿の一覧へ。
@@ -34,6 +43,8 @@ function NewPost() {
     register,
     handleSubmit,
     control,
+    getValues,
+    setFocus,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     mode: "onBlur",
@@ -43,6 +54,11 @@ function NewPost() {
       title: "",
       body: "",
     },
+  });
+
+  const bodyField = register("body", {
+    required: "本文を入力してください",
+    maxLength: { value: 15000, message: "本文は15000文字以内にしてください" },
   });
 
   async function onSubmit(values: FormValues) {
@@ -57,6 +73,39 @@ function NewPost() {
     } catch (err) {
       setFailure(err instanceof ApiError ? err.detail : "通信に失敗しました");
     }
+  }
+
+  // プレビューを開いた瞬間にだけ本文を読む。
+  // useWatch で追うと、15,000文字の本文を1文字ごとに描き直すことになる。
+  function selectTab(next: Tab) {
+    // すでにプレビュー中なら textarea は隠れていて、高さが 0 と測れてしまう。
+    if (next === "preview" && tab === "write") {
+      setPreviewBody(getValues("body"));
+      // textarea は利用者が高さを変えられるので、rows から決めた値だと食い違う。
+      // 隠される前の、いま見えている高さをここで測って、プレビューに揃える。
+      setPreviewHeight(bodyRef.current?.offsetHeight);
+    }
+    setTab(next);
+  }
+
+  function onTabKeyDown(e: KeyboardEvent) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    // タブは2つだけなので、どちらの矢印でももう片方へ移る
+    const next: Tab = tab === "write" ? "preview" : "write";
+    selectTab(next);
+    tabRefs.current[next]?.focus();
+  }
+
+  // 本文が空などで送信が止まったとき、プレビュー中なら書くタブへ戻す。
+  // react-hook-form も最初のエラーへフォーカスを移そうとするが、
+  // その時点では textarea が hidden のままなので効かない。
+  // flushSync で描き直しを済ませてから、こちらでフォーカスを移す。
+  // タイトルなど先に並ぶ項目にもエラーがあるときは、そちらへのフォーカスを奪わない。
+  function onInvalid(errs: FieldErrors<FormValues>) {
+    if (!errs.body) return;
+    flushSync(() => setTab("write"));
+    if (!errs.topic && !errs.title) setFocus("body");
   }
 
   // 書きかけのまま閉じようとしたら止める。
@@ -125,7 +174,7 @@ function NewPost() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="flex flex-col gap-5">
         {/*
           トピックの選択。掲示板の中にフォームがあったときは、
           画面の slug がそのまま投稿先だった。独立するとその前提が消える。
@@ -194,24 +243,83 @@ function NewPost() {
             </label>
             <Counter control={control} name="body" max={15000} />
           </div>
+          <div
+            role="tablist"
+            aria-label="本文の表示"
+            onKeyDown={onTabKeyDown}
+            className="flex gap-1 border-b border-border"
+          >
+            {(["write", "preview"] as const).map((t) => (
+              <button
+                key={t}
+                ref={(el) => {
+                  tabRefs.current[t] = el;
+                }}
+                type="button"
+                role="tab"
+                id={`body-tab-${t}`}
+                aria-selected={tab === t}
+                aria-controls={`body-panel-${t}`}
+                tabIndex={tab === t ? 0 : -1}
+                onClick={() => selectTab(t)}
+                className={`-mb-px flex min-h-11 items-center border-b-2 px-4 text-ui transition-colors ${
+                  tab === t
+                    ? "border-accent font-bold text-ink"
+                    : "border-transparent text-ink-soft hover:text-ink"
+                }`}
+              >
+                {t === "write" ? "書く" : "プレビュー"}
+              </button>
+            ))}
+          </div>
+
           {/*
+            textarea は外さずに hidden で隠す。外すと、ブラウザが持っている
+            取り消し（Ctrl+Z）の履歴とカーソルの位置が消える。
             textarea も register で繋ぐ。value / onChange は持たせない。
             15,000文字まで書けるので、1文字ごとに再描画させない。
           */}
-          <textarea
-            id="body"
-            rows={12}
-            placeholder="やっと1冊終わりました。選んだのは…"
-            aria-invalid={errors.body ? true : undefined}
-            aria-describedby={errors.body ? "body-error" : undefined}
-            {...register("body", {
-              required: "本文を入力してください",
-              maxLength: { value: 15000, message: "本文は15000文字以内にしてください" },
-            })}
-            className={`w-full rounded-ippo border bg-surface p-3.5 font-read text-body text-ink ${
-              errors.body ? "border-2 border-danger" : "border-border-strong"
-            }`}
-          />
+          <div
+            role="tabpanel"
+            id="body-panel-write"
+            aria-labelledby="body-tab-write"
+            hidden={tab !== "write"}
+          >
+            <textarea
+              id="body"
+              rows={12}
+              placeholder="やっと1冊終わりました。選んだのは…"
+              aria-invalid={errors.body ? true : undefined}
+              aria-describedby={errors.body ? "body-error" : undefined}
+              {...bodyField}
+              ref={(el) => {
+                bodyField.ref(el);
+                bodyRef.current = el;
+              }}
+              className={`w-full resize-y rounded-ippo border bg-surface p-3.5 font-read text-body text-ink ${
+                errors.body ? "border-2 border-danger" : "border-border-strong"
+              }`}
+            />
+          </div>
+          <div
+            role="tabpanel"
+            id="body-panel-preview"
+            aria-labelledby="body-tab-preview"
+            hidden={tab !== "preview"}
+            tabIndex={0}
+            style={{ height: previewHeight }}
+            className="overflow-y-auto rounded-ippo border border-border-strong bg-surface p-3.5 font-read text-body text-ink wrap-anywhere"
+          >
+            {previewBody.trim() ? (
+              <Markdown>{previewBody}</Markdown>
+            ) : (
+              <p className="text-ui text-ink-soft">プレビューする本文がありません</p>
+            )}
+          </div>
+
+          <p className="text-ui text-ink-soft">
+            {"## 見出し　- 箇条書き　**太字**　`表現`　[文字](URL)　> 引用　![説明](URL)"}
+          </p>
           {errors.body && (
             <p id="body-error" className="text-ui text-danger">
               {errors.body.message}

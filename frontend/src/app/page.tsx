@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
+import { Markdown } from "@/components/Markdown";
 import { BOARD_HREF } from "@/lib/topics";
 
 export default function HomePage() {
@@ -129,7 +130,7 @@ export default function HomePage() {
             </Link>
 
             <p className="mb-4 max-w-[32em] font-read text-body text-ink wrap-anywhere">
-              {post.bodyPreview}
+              <Markdown plain>{post.bodyPreview}</Markdown>
             </p>
 
             <p className="text-ui text-ink-soft wrap-anywhere">

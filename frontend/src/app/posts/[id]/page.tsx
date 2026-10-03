@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { api } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
 import { formatDateTime } from "@/lib/format";
+import { Markdown } from "@/components/Markdown";
 import { BOARD_HREF } from "@/lib/topics";
 
 export default function PostDetailPage() {
@@ -80,11 +81,11 @@ export default function PostDetailPage() {
           本文。34em で行長を止める。
           15,000文字まで許しているので、画面幅いっぱいだと折り返しで目線が迷う。
 
-          whitespace-pre-wrap は、書いた人の改行をそのまま出すため。
-          これが無いと段落が全部つながる。
+          改行は Markdown 側（remark-breaks）が <br> にする。
+          whitespace-pre-wrap を付けると、タグの間の改行まで表示されて余白が崩れる。
         */}
-        <div className="max-w-[34em] whitespace-pre-wrap font-read text-body text-ink wrap-anywhere">
-          {post.body}
+        <div className="max-w-[34em] font-read text-body text-ink wrap-anywhere">
+          <Markdown>{post.body}</Markdown>
         </div>
 
         {/* いいねと削除は段階2・3で足す */}

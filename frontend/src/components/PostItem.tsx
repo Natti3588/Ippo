@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { PostSummary } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { Markdown } from "@/components/Markdown";
 
 export function PostItem({
   post,
@@ -57,7 +58,7 @@ export function PostItem({
       </Link>
 
       <p className="mb-3 max-w-[34em] font-read text-preview text-ink-soft wrap-anywhere">
-        {post.bodyPreview}
+        <Markdown plain>{post.bodyPreview}</Markdown>
       </p>
 
       <div className="flex flex-wrap items-center gap-4">
