@@ -123,12 +123,12 @@ export default function HomePage() {
 
             <Link
               href={`/posts/${post.id}`}
-              className="mb-3 block font-read text-title font-semibold text-ink"
+              className="mb-3 block font-read text-title font-semibold text-ink wrap-anywhere"
             >
               {post.title}
             </Link>
 
-            <p className="mb-4 max-w-[32em] font-read text-body text-ink">
+            <p className="mb-4 max-w-[32em] font-read text-body text-ink wrap-anywhere">
               {post.bodyPreview}
             </p>
 

@@ -51,12 +51,12 @@ export function PostItem({
       {/* 投稿のタイトルと本文にだけ英語向けの書体を当てる */}
       <Link
         href={`/posts/${post.id}`}
-        className="mb-3 block font-read text-subtitle font-semibold text-ink"
+        className="mb-3 block font-read text-subtitle font-semibold text-ink wrap-anywhere"
       >
         {post.title}
       </Link>
 
-      <p className="mb-3 max-w-[34em] font-read text-preview text-ink-soft">
+      <p className="mb-3 max-w-[34em] font-read text-preview text-ink-soft wrap-anywhere">
         {post.bodyPreview}
       </p>
 

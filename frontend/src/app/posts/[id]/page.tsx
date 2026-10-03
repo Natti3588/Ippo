@@ -64,7 +64,7 @@ export default function PostDetailPage() {
 
       <article>
         {/* text-pretty で、見出しの最後の行に1語だけ残るのを防ぐ */}
-        <h1 className="mb-4 max-w-[22em] text-pretty font-read text-title font-semibold text-ink">
+        <h1 className="mb-4 max-w-[22em] text-pretty font-read text-title font-semibold text-ink wrap-anywhere">
           {post.title}
         </h1>
 
@@ -83,7 +83,7 @@ export default function PostDetailPage() {
           whitespace-pre-wrap は、書いた人の改行をそのまま出すため。
           これが無いと段落が全部つながる。
         */}
-        <div className="max-w-[34em] whitespace-pre-wrap font-read text-body text-ink">
+        <div className="max-w-[34em] whitespace-pre-wrap font-read text-body text-ink wrap-anywhere">
           {post.body}
         </div>
 
