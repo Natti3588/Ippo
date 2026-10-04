@@ -56,14 +56,17 @@ export function Header() {
             掲示板はこのアプリの本体なので、口座まわりの操作（設定・ログアウト）
             とは反対側、ロゴの隣に置く。
 
-            狭い画面では出さない。ロゴ・投稿する・メニューで既に埋まっていて、
-            4つ目を入れると折り返す。スマホには開くメニューの中に同じ行がある。
+            狭い画面では、ログイン中は出さない。ロゴ・投稿する・メニューで
+            既に埋まっていて、4つ目を入れると折り返す。開くメニューの中に同じ行がある。
 
-            ログインしていなくても出す。未ログインでも投稿は全部読める。
+            未ログインのときはメニューが無いので、そのまま出す。
+            登録の前に中を見せるための入口になる。未ログインでも投稿は全部読める。
           */}
           <Link
             href={BOARD_HREF}
-            className="hidden min-h-11 items-center px-3 text-ui text-ink-soft md:flex hover:text-ink transition-colors"
+            className={`min-h-11 items-center px-3 text-ui text-ink-soft md:flex hover:text-ink transition-colors ${
+              user === null ? "flex" : "hidden"
+            }`}
           >
             掲示板
           </Link>
