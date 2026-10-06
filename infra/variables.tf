@@ -29,3 +29,8 @@ variable "backend_image_tag" {
   description = "backend のイメージタグ。 gitのコミットID"
   type        = string
 }
+
+variable "frontend_image_tag" {
+  description = "frontend のイメージタグ。 gitのコミットID"
+  type        = string
+}

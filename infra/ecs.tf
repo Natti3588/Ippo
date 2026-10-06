@@ -82,3 +82,72 @@ resource "aws_ecs_service" "backend" {
     aws_iam_role_policy_attachment.ecs_execution,
   ]
 }
+
+resource "aws_ecs_task_definition" "frontend" {
+  family                   = "ippo-frontend"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.ecs_execution.arn
+
+  runtime_platform {
+    operating_system_family = "LINUX"
+    cpu_architecture        = "X86_64"
+  }
+
+  container_definitions = jsonencode([
+    {
+      name      = "frontend"
+      image     = "${data.aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}"
+      essential = true
+
+      portMappings = [{
+        containerPort = 3000,
+        protocol      = "tcp"
+      }]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.frontend.name
+          awslogs-region        = var.region
+          awslogs-stream-prefix = "frontend"
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_service" "frontend" {
+  name                              = "ippo-frontend"
+  cluster                           = aws_ecs_cluster.ippo.id
+  task_definition                   = aws_ecs_task_definition.frontend.arn
+  launch_type                       = "FARGATE"
+  desired_count                     = 1
+  health_check_grace_period_seconds = 60
+
+  network_configuration {
+    subnets          = aws_subnet.app[*].id
+    security_groups  = [aws_security_group.frontend.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.frontend.arn
+    container_name   = "frontend"
+    container_port   = 3000
+  }
+
+  deployment_circuit_breaker {
+    enable   = true
+    rollback = true
+  }
+
+  depends_on = [
+    aws_lb_listener.https,
+    aws_route.app_default,
+    aws_iam_role_policy_attachment.ecs_execution,
+  ]
+}
