@@ -89,6 +89,13 @@ resource "aws_instance" "nat" {
     #!/bin/bash
     set -euxo pipefail
 
+    # t4g.nano のメモリ（約 400MB）では、dnf がリポジトリの一覧を読む途中で
+    # メモリ不足で強制終了され、以降の設定が1行も流れない。作業用にスワップを足す。
+    dd if=/dev/zero of=/swapfile bs=1M count=1024
+    chmod 600 /swapfile
+    mkswap /swapfile
+    swapon /swapfile
+
     # AL2023 には iptables が入っていない。
     dnf install -y iptables-services
     systemctl enable --now iptables
