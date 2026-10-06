@@ -24,3 +24,8 @@ variable "dev_allow_cidrs" {
   type        = list(string)
   default     = []
 }
+
+variable "backend_image_tag" {
+  description = "backend のイメージタグ。 gitのコミットID"
+  type        = string
+}
