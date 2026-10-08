@@ -75,6 +75,10 @@ resource "aws_ecs_service" "backend" {
     rollback = true
   }
 
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
+  }
+
   depends_on = [
     aws_lb_listener.https,
     aws_route.app_default,
@@ -143,6 +147,10 @@ resource "aws_ecs_service" "frontend" {
   deployment_circuit_breaker {
     enable   = true
     rollback = true
+  }
+
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
   }
 
   depends_on = [
