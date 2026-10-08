@@ -102,6 +102,9 @@ func main() {
 	// 超過したリクエストも 400 として1行記録されるほうが追いやすい。
 	root = handler.LimitBody(root)
 
+	// API は利用者ごとに中身が変わるので、CloudFront にもブラウザにもキャッシュっさせない。
+	root = handler.NoStore(root)
+
 	// タイムアウトはすべて明示する。http.Server のゼロ値は「無制限」であり、
 	// http.ListenAndServe はゼロ値の Server を作る。
 	// 書かないことが「無制限を選ぶ」ことになるため、4つとも値を置く。
