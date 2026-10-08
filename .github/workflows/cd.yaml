@@ -1,0 +1,78 @@
+name: cd
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cd
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECS_CLUSTER: ippo
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ippo-github-actions-deploy
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - id: image
+        env:
+          REPOSITORY: ${{ steps.ecr.outputs.registry }}/ippo-${{ matrix.app }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          image="$REPOSITORY:${HEAD_SHA::7}"
+          docker build -t "$image" ${{ matrix.app }}
+          docker push "$image"
+          echo "uri=$image" >> "$GITHUB_OUTPUT"
+
+      - id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition-family: ippo-${{ matrix.app }}
+          container-name: ${{ matrix.app }}
+          image: ${{ steps.image.outputs.uri }}
+
+      - id: deploy
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render.outputs.task-definition }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ippo-${{ matrix.app }}
+          wait-for-service-stability: true
+
+      - name: Fail if the deployment was rolled back
+        env:
+          SERVICE: ippo-${{ matrix.app }}
+          WANT: ${{ steps.deploy.outputs.task-definition-arn }}
+        run: |
+          got=$(aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$SERVICE" \
+            --query 'services[0].taskDefinition' --output text)
+          if [ "$got" != "$WANT" ]; then
+            echo "$SERVICE is running $got, not $WANT"
+            exit 1
+          fi
