@@ -57,6 +57,20 @@ data "aws_iam_policy_document" "github_actions_deploy" {
   }
 
   statement {
+    actions = ["ecs:TagResource"]
+    resources = [
+      for s in local.ecs_services :
+      "arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:task-definition/${s}:*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "ecs:CreateAction"
+      values   = ["RegisterTaskDefinition"]
+    }
+  }
+
+  statement {
     actions = ["ecs:DescribeServices", "ecs:UpdateService"]
     resources = [
       for s in local.ecs_services :
