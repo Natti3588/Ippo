@@ -10,7 +10,7 @@ variable "domain_name" {
 }
 
 variable "github_repository" {
-  description = "CD を動かす GitHub のリポジトリ（オーナー/名前）"
+  description = "CD を動かす GitHub のリポジトリ（オーナー@ID/名前@ID）"
   type        = string
-  default     = "Natti3588/Ippo"
+  default     = "Natti3588@230983605/Ippo@1351284499"
 }
