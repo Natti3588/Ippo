@@ -34,3 +34,8 @@ variable "frontend_image_tag" {
   description = "frontend のイメージタグ。 gitのコミットID"
   type        = string
 }
+
+variable "alert_email" {
+  description = "アラームの通知を受け取るメールアドレス"
+  type        = string
+}
