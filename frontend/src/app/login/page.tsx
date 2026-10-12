@@ -87,7 +87,7 @@ export default function LoginPage() {
           disabled={isSubmitting}
           className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
         >
-          {isSubmitting ? "送信中…" : "ログイン"}
+          {isSubmitting ? "ログイン中…" : "ログイン"}
         </button>
       </form>
 
