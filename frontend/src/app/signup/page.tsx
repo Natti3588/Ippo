@@ -107,7 +107,7 @@ export default function SignupPage() {
           disabled={isSubmitting}
           className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
         >
-          {isSubmitting ? "送信中…" : "新規登録"}
+          {isSubmitting ? "登録中…" : "新規登録"}
         </button>
       </form>
 

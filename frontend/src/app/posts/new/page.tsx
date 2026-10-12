@@ -417,7 +417,7 @@ function NewPost() {
             disabled={isSubmitting}
             className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
           >
-            {isSubmitting ? "送信中…" : "投稿する"}
+            {isSubmitting ? "投稿中…" : "投稿する"}
           </button>
           <Link
             href={backHref}
