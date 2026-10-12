@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/problem";
 import { Counter } from "@/components/Counter";
 import { Markdown } from "@/components/Markdown";
+import { clearDraft, loadDraft, saveDraft } from "@/lib/draft";
 import { BOARD_HREF } from "@/lib/topics";
 
 type Tab = "write" | "preview";
@@ -45,6 +46,9 @@ function NewPost() {
     control,
     getValues,
     setFocus,
+    setValue,
+    subscribe,
+    reset,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<FormValues>({
     mode: "onBlur",
@@ -61,12 +65,92 @@ function NewPost() {
     maxLength: { value: 15000, message: "本文は15000文字以内にしてください" },
   });
 
+  const email = user?.email;
+
+  // 開いたとき、下書きがあれば入れ直す。
+  // setValue で入れるのは、入れた状態も「書きかけ」として扱い、
+  // 閉じようとしたときの確認を出すため。
+  const restored = useRef(false);
+  useEffect(() => {
+    if (!email || restored.current) return;
+    restored.current = true;
+    const draft = loadDraft(email);
+    if (!draft) return;
+    // 下書きにトピックが無ければ、?topic= で選んだものを残す
+    if (draft.topic) setValue("topic", draft.topic, { shouldDirty: true });
+    setValue("title", draft.title, { shouldDirty: true });
+    setValue("body", draft.body, { shouldDirty: true });
+  }, [email, setValue]);
+
+  // 打つのが止まって1秒たったら保存する。
+  // subscribe なら、値が変わっても画面は描き直されない。
+  // 投稿に成功したら保存をやめ、下書きを消す。保存をやめるときに
+  // 待っている分を書き出してから消すので、消した下書きが書き戻されない。
+  const [posted, setPosted] = useState(false);
+  useEffect(() => {
+    if (!email || posted) return;
+    const owner = email;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    function save() {
+      timer = undefined;
+      saveDraft(owner, getValues());
+    }
+    // 1秒たつ前に画面を離れたときも、待たずに残す
+    function flush() {
+      if (timer === undefined) return;
+      clearTimeout(timer);
+      save();
+    }
+
+    const unsubscribe = subscribe({
+      formState: { values: true },
+      callback: () => {
+        clearTimeout(timer);
+        timer = setTimeout(save, 1000);
+      },
+    });
+    window.addEventListener("pagehide", flush);
+    return () => {
+      unsubscribe();
+      window.removeEventListener("pagehide", flush);
+      flush();
+    };
+  }, [email, posted, subscribe, getValues]);
+
+  useEffect(() => {
+    if (posted && email) clearDraft(email);
+  }, [posted, email]);
+
+  // 「下書きを消す」は2回押しで消す。長い英文をうっかり失わないように、
+  // 1回目は文字を変えるだけにして、3秒たったら元に戻す。
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  useEffect(() => {
+    if (!confirmDiscard) return;
+    const t = setTimeout(() => setConfirmDiscard(false), 3000);
+    return () => clearTimeout(t);
+  }, [confirmDiscard]);
+
+  function onDiscard() {
+    if (!confirmDiscard) {
+      setConfirmDiscard(true);
+      return;
+    }
+    setConfirmDiscard(false);
+    if (email) clearDraft(email);
+    // defaultValues に戻す。?topic= で来ていれば、そのトピックは残る
+    reset();
+    setPreviewBody("");
+    setTab("write");
+  }
+
   async function onSubmit(values: FormValues) {
     setFailure(null);
     try {
       // トピックは本体ではなく URL に入る。
       // 選んだ slug から送信先を組み立てる。
       const post = await api.createPost(values.topic, values.title, values.body);
+      setPosted(true);
       // 201 が Post を返す。その id で詳細へ送る。
       // 一覧へ戻すと、いま書いたものが人気順のどこにあるか分からない。
       router.push(`/posts/${post.id}`);
@@ -341,6 +425,17 @@ function NewPost() {
           >
             やめる
           </Link>
+          {isDirty && (
+            <button
+              type="button"
+              onClick={onDiscard}
+              className={`ml-auto inline-flex min-h-11 items-center text-ui underline underline-offset-4 transition-colors ${
+                confirmDiscard ? "font-bold text-danger" : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {confirmDiscard ? "もう一度押すと消えます" : "下書きを消す"}
+            </button>
+          )}
         </div>
       </form>
     </main>
