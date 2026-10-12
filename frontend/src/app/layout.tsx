@@ -3,6 +3,7 @@ import { BIZ_UDPGothic, Literata } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { Footprints } from "@/components/Footprints";
 
 // 日本語のUI用。教育や行政で使われているユニバーサルデザイン書体。
 // 読み手が40〜60代なので、字形の見分けやすさを優先した。
@@ -30,8 +31,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className={`${ui.variable} ${read.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="relative min-h-full flex flex-col font-sans">
         <Header />
+        <Footprints />
         {children}
         <Footer />
       </body>
