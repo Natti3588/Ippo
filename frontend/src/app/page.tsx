@@ -3,177 +3,124 @@
 import Link from "next/link";
 import useSWR from "swr";
 import { api } from "@/lib/api";
-import { formatDate } from "@/lib/format";
-import { useAuth } from "@/lib/auth";
-import { Markdown } from "@/components/Markdown";
 import { BOARD_HREF } from "@/lib/topics";
 
+/*
+  ログインしているかどうかで中身を出し分けない。
+  出し分けると、/me の確認が終わるまで上の節が出せず、
+  出た瞬間に下の内容が押し下げられる。
+  ここに置くのは、通信を待たずに描ける使い方の説明だけにする。
+  通信を待つのは、いちばん下のトピック一覧だけ。
+*/
 export default function HomePage() {
-  const { user } = useAuth();
-
   // トピックは静的に書かない。増えたときに直し忘れる。
   const { data: topics } = useSWR("topics", () => api.topics());
 
-  // 先頭のトピックの最新1件。topics が取れるまでキーを null にして待たせる。
-  // SWR はキーが null のあいだ通信しない。
-  const first = topics?.[0];
-  const { data: latest } = useSWR(
-    first ? ["posts", first.slug, "newest"] : null,
-    () => api.posts(first!.slug, "newest"),
-  );
-  const post = latest?.items[0];
-
   return (
     <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
-      {/*
-        user が undefined のあいだは、どちらの顔も出さない。
-        先に片方を出してから消すと、画面がちらつく。Header.tsx と同じ扱い。
+      <section className="pt-14 pb-10">
+        <h1 className="mb-5 text-display font-bold text-ink">
+          はじめの Ippo は
+          <br />
+          今日でいい
+        </h1>
+        {/*
+          説明を2つに分ける。前半は「これが何か」なので、見出しと対等に読ませたい。
+          後半は始める前の条件なので、一段落とす。
 
-        この節は画面の上端にあるので、出るまでのあいだ下の内容が上に詰まる。
-        高さを先に確保する手もあるが、下の節も GET /topics を待っている以上、
-        最初の一瞬が空なのはここだけの話ではない。
-      */}
-      {user && (
-        <section className="pt-14 pb-10">
-          <h1 className="text-display font-bold text-ink wrap-anywhere">
-            おかえりなさい、{user.displayName}さん
-          </h1>
-        </section>
-      )}
-
-      {user === null && (
-        <section className="pt-14 pb-10">
-          <h1 className="mb-5 text-display font-bold text-ink">
-            はじめの Ippo は
-            <br />
-            今日でいい
-          </h1>
+          大きさ・太さ・色を3つとも落とすと、説明文が注釈に見える。
+          ここで落とすのは色だけにして、大きさは本文のままにしてある。
+        */}
+        <p className="mb-2 max-w-[30em] text-body text-ink">
+          「いつか英語を話したい」で止まっている人のための掲示板です。
+        </p>
+        <p className="mb-4 max-w-[26em] text-ui text-ink-soft">
+          英語が話せたら、選べるものが増えます。
+          <br />
+          その日までの勉強法や教材を、ここで教えあいます。
+        </p>
+        {/*
+          使い方。登録しなくてもできること（読む）と、
+          登録するとできること（いいね、書く）を分けて書く。
+          ログインしている人にも同じ文を出すので、頼む形ではなく説明の形にする。
+        */}
+        <p className="mb-8 max-w-[30em] text-ui text-ink-soft">
+          気になるトピックを開くと、ほかの人の投稿を読めます。
+          <br />
+          登録すると、役に立った投稿にいいねを付けたり、自分の勉強法や教材を紹介したりできます。
+        </p>
+        <div className="flex flex-wrap items-center gap-5">
           {/*
-            説明を2つに分ける。前半は「これが何か」なので、見出しと対等に読ませたい。
-            後半は始める前の条件なので、一段落とす。
-
-            大きさ・太さ・色を3つとも落とすと、説明文が注釈に見える。
-            ここで落とすのは色だけにして、大きさは本文のままにしてある。
+            新規登録へのボタンは置かない。ログインしている人も同じ画面を見るため。
+            登録の入口はヘッダーにある。ログインしていない人が「投稿する」を押すと、
+            投稿画面がログインへ案内する。
           */}
-          <p className="mb-2 max-w-[30em] text-body text-ink">
-            「いつか英語を話したい」で止まっている人のための掲示板です。
-          </p>
-          <p className="mb-8 max-w-[26em] text-ui text-ink-soft">
-            英語が話せたら、選べるものが増えます。
-            <br />
-            その日までの勉強法や教材を、ここで教えあいます。
-          </p>
-          <div className="flex flex-wrap items-center gap-5">
-            <Link
-              href="/signup"
-              className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
-            >
-              はじめる
-            </Link>
+          <Link
+            href={BOARD_HREF}
+            className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
+          >
+            掲示板を見る
+          </Link>
+          <Link
+            href="/posts/new"
+            className="inline-flex min-h-12 items-center gap-1.5 text-preview text-accent hover:text-ink transition-colors"
+          >
+            投稿する
             {/*
-              未ログインでも投稿を全部読める。
-              登録の前に中を見せられることが、このサービスの強み。
+              枠線のボタンにしない。塗りと線のボタンが並ぶ形にすると、
+              ひかえめな選択肢が主ボタンと同じ重さに見える。
+              山かっこはトピックの一覧と同じもので、この先があることを示す。
             */}
-            <Link
-              href={BOARD_HREF}
-              className="inline-flex min-h-12 items-center gap-1.5 text-preview text-accent hover:text-ink transition-colors"
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0"
+              aria-hidden="true"
             >
-              読むだけ見てみる
-              {/*
-                枠線のボタンにしない。塗りと線のボタンが並ぶ形にすると、
-                ひかえめな選択肢が主ボタンと同じ重さに見える。
-                山かっこはトピックの一覧と同じもので、この先があることを示す。
-              */}
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="shrink-0"
-                aria-hidden="true"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </Link>
-          </div>
-        </section>
-      )}
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </Link>
+        </div>
+      </section>
 
       {/*
-        投稿が0件のときは、この節ごと出さない。空の枠を見せない。
-
-        「きのう書かれたもの」とは書かない。出せるのは先頭のトピックの
-        最新1件であって、全体の最新ではない。どのトピックのものかを
-        明記すれば、書いてあることはすべて事実になる。
-      */}
-      {post && first && (
-        /*
-          上の3pxで始まり、下の罫線で閉じる。始まりの印だけ置くと、
-          どこで終わったのか分からないまま次の見出しが来る。
-          閉じたあとの間隔を広く取るのは、節の切れ目が
-          節の中の間隔（見出しと一覧のあいだ16px）より
-          はっきり広くないと、別の話が始まったと読めないため。
-        */
-        <section className="mb-12 border-b border-border pb-8">
-          <div className="border-t-3 border-ink pt-6">
-            <p className="mb-3 text-ui text-ink-soft">{first.name} の新しい投稿</p>
-
-            <Link
-              href={`/posts/${post.id}`}
-              className="mb-3 block font-read text-title font-semibold text-ink wrap-anywhere"
-            >
-              {post.title}
-            </Link>
-
-            <p className="mb-4 max-w-[32em] font-read text-body text-ink wrap-anywhere">
-              <Markdown plain>{post.bodyPreview}</Markdown>
-            </p>
-
-            <p className="text-ui text-ink-soft wrap-anywhere">
-              {post.authorName}　{formatDate(post.createdAt)}
-            </p>
-          </div>
-        </section>
-      )}
-
-      {/*
-        3つの理由は、登録していない人を口説くための文面である。
-        「登録しなくても、投稿はすべて読めます」を、登録した人に見せる意味がない。
+        3つの理由。ログインしている人にも出す。
+        出し分けると、上の節と同じく、確認が終わった瞬間に一覧が押し下げられる。
 
         見た目は箱に入れず、罫線だけで区切る。
       */}
-      {user === null && (
-        <section className="pb-10">
-          <div className="border-t border-border py-6">
-            <h2 className="mb-2 text-subtitle font-bold text-ink">うまく書けなくていい</h2>
-            <p className="max-w-[36em] text-ui text-ink-soft">
-              添削も採点もありません。
-              <br />
-              読んだ本や聞いた番組、続かなかった日のことを、思ったまま書いてください。
-            </p>
-          </div>
-          <div className="border-t border-border py-6">
-            <h2 className="mb-2 text-subtitle font-bold text-ink">読むだけでいい</h2>
-            <p className="max-w-[36em] text-ui text-ink-soft">
-              登録しなくても、投稿はすべて読めます。
-              <br />
-              同じところでつまずいた人も、ここに書いています。
-            </p>
-          </div>
-          <div className="border-t border-b border-border py-6">
-            <h2 className="mb-2 text-subtitle font-bold text-ink">お金をかけなくていい</h2>
-            <p className="max-w-[36em] text-ui text-ink-soft">
-              月額も登録料もありません。
-              <br />
-              無料の教材も、おすすめの教材も、実際に使った人が紹介しています。
-            </p>
-          </div>
-        </section>
-      )}
+      <section className="pb-10">
+        <div className="border-t border-border py-6">
+          <h2 className="mb-2 text-subtitle font-bold text-ink">うまく書けなくていい</h2>
+          <p className="max-w-[36em] text-ui text-ink-soft">
+            添削も採点もありません。
+            <br />
+            読んだ本や聞いた番組、続かなかった日のことを、思ったまま書いてください。
+          </p>
+        </div>
+        <div className="border-t border-border py-6">
+          <h2 className="mb-2 text-subtitle font-bold text-ink">読むだけでいい</h2>
+          <p className="max-w-[36em] text-ui text-ink-soft">
+            登録しなくても、投稿はすべて読めます。
+            <br />
+            同じところでつまずいた人も、ここに書いています。
+          </p>
+        </div>
+        <div className="border-t border-b border-border py-6">
+          <h2 className="mb-2 text-subtitle font-bold text-ink">お金をかけなくていい</h2>
+          <p className="max-w-[36em] text-ui text-ink-soft">
+            月額も登録料もありません。
+            <br />
+            無料の教材も、おすすめの教材も、実際に使った人が紹介しています。
+          </p>
+        </div>
+      </section>
 
       {/*
         見出しは名詞にする。矢印の付いた行が並んでいれば一覧だと分かるので、
