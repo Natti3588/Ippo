@@ -372,7 +372,7 @@ function NewPost() {
             <textarea
               id="body"
               rows={12}
-              placeholder="やっと1冊終わりました。選んだのは…"
+              placeholder="最近の英語の勉強で、うれしかったことや困ったことは…"
               aria-invalid={errors.body ? true : undefined}
               aria-describedby={errors.body ? "body-error" : undefined}
               {...bodyField}
