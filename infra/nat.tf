@@ -13,15 +13,22 @@ resource "aws_security_group" "nat" {
 }
 
 # ECS が外へ出る通信は HTTPS だけ。SSH は開けない。中の確認は SSM で行う。
-resource "aws_vpc_security_group_ingress_rule" "nat_from_app" {
-  count = length(aws_subnet.app)
+resource "aws_vpc_security_group_ingress_rule" "nat_from_frontend" {
+  security_group_id            = aws_security_group.nat.id
+  description                  = "HTTPS from Next.js tasks"
+  referenced_security_group_id = aws_security_group.frontend.id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+}
 
-  security_group_id = aws_security_group.nat.id
-  description       = "HTTPS from app subnet"
-  cidr_ipv4         = aws_subnet.app[count.index].cidr_block
-  ip_protocol       = "tcp"
-  from_port         = 443
-  to_port           = 443
+resource "aws_vpc_security_group_ingress_rule" "nat_from_backend" {
+  security_group_id            = aws_security_group.nat.id
+  description                  = "HTTPS from Go API tasks"
+  referenced_security_group_id = aws_security_group.backend.id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
 }
 
 # 中継する通信と、起動時の dnf・SSM エージェントが使う。
