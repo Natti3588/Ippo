@@ -6,6 +6,45 @@ import { api } from "@/lib/api";
 import { BOARD_HREF } from "@/lib/topics";
 
 /*
+  ホームの「使い方」。文はログインしているかどうかで変えない。
+  STEP 2 の文は、新規登録の画面の欄（メールアドレス・表示名・パスワード）に合わせてある。
+  説明は1文ずつに分け、文ごとに行を改める。
+*/
+const STEPS = [
+  {
+    title: "読む",
+    body: ["登録しなくても、すべての投稿を読めます。"],
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+  },
+  {
+    title: "登録する",
+    body: ["メールアドレスと表示名、パスワードを入れるだけ。", "お金はかかりません。"],
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="9" cy="8" r="4" />
+        <path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7" />
+        <path d="M19 8v6M16 11h6" />
+      </svg>
+    ),
+  },
+  {
+    title: "書く・いいねする",
+    body: ["うまく書けなくて大丈夫です。", "役に立った投稿には、いいねを付けられます。"],
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+    ),
+  },
+];
+
+/*
   ログインしているかどうかで中身を出し分けない。
   出し分けると、/me の確認が終わるまで上の節が出せず、
   出た瞬間に下の内容が押し下げられる。
@@ -34,20 +73,10 @@ export default function HomePage() {
         <p className="mb-2 max-w-[30em] text-body text-ink">
           「いつか英語を話したい」で止まっている人のための掲示板です。
         </p>
-        <p className="mb-4 max-w-[26em] text-ui text-ink-soft">
+        <p className="mb-8 max-w-[26em] text-ui text-ink-soft">
           英語が話せたら、選べるものが増えます。
           <br />
           その日までの勉強法や教材を、ここで教えあいます。
-        </p>
-        {/*
-          使い方。登録しなくてもできること（読む）と、
-          登録するとできること（いいね、書く）を分けて書く。
-          ログインしている人にも同じ文を出すので、頼む形ではなく説明の形にする。
-        */}
-        <p className="mb-8 max-w-[30em] text-ui text-ink-soft">
-          気になるトピックを開くと、ほかの人の投稿を読めます。
-          <br />
-          登録すると、役に立った投稿にいいねを付けたり、自分の勉強法や教材を紹介したりできます。
         </p>
         <div className="flex flex-wrap items-center gap-5">
           {/*
@@ -90,35 +119,50 @@ export default function HomePage() {
       </section>
 
       {/*
-        3つの理由。ログインしている人にも出す。
-        出し分けると、上の節と同じく、確認が終わった瞬間に一覧が押し下げられる。
+        使い方。実際に使う順に、読む → 登録する → 書く・いいねする と並べる。
+        以前の「3つの理由」（読むだけでいい・お金をかけなくていい・うまく書けなくていい）は、
+        それぞれのステップの説明に入れてある。
 
-        見た目は箱に入れず、罫線だけで区切る。
+        PC では横に3つ、スマホでは縦に並べ、点線でつなぐ。
+        点線は、PC の余白に描いている足あとの小道（Footprints.tsx）と同じ線にする。
       */}
       <section className="pb-10">
-        <div className="border-t border-border py-6">
-          <h2 className="mb-2 text-subtitle font-bold text-ink">うまく書けなくていい</h2>
-          <p className="max-w-[36em] text-ui text-ink-soft">
-            添削も採点もありません。
-            <br />
-            読んだ本や聞いた番組、続かなかった日のことを、思ったまま書いてください。
-          </p>
-        </div>
-        <div className="border-t border-border py-6">
-          <h2 className="mb-2 text-subtitle font-bold text-ink">読むだけでいい</h2>
-          <p className="max-w-[36em] text-ui text-ink-soft">
-            登録しなくても、投稿はすべて読めます。
-            <br />
-            同じところでつまずいた人も、ここに書いています。
-          </p>
-        </div>
-        <div className="border-t border-b border-border py-6">
-          <h2 className="mb-2 text-subtitle font-bold text-ink">お金をかけなくていい</h2>
-          <p className="max-w-[36em] text-ui text-ink-soft">
-            月額も登録料もありません。
-            <br />
-            無料の教材も、おすすめの教材も、実際に使った人が紹介しています。
-          </p>
+        <div className="border-t border-border pt-8">
+          <h2 className="mb-6 text-subtitle font-bold text-ink">使い方</h2>
+          <ol className="relative grid gap-6 md:grid-cols-3 md:gap-4">
+            {/*
+              アイコンの中心を通る点線。スマホでは左端を縦に、PC では上端を横に通す。
+              PC で左右の 1/6 を空けるのは、両端のアイコンの中心から始めて終えるため。
+            */}
+            <span
+              aria-hidden="true"
+              className="absolute top-5 bottom-10 left-[19px] border-l-2 border-dotted border-border-strong md:right-[16.67%] md:bottom-auto md:left-[16.67%] md:border-t-2 md:border-l-0"
+            />
+            {STEPS.map((step, i) => (
+              <li
+                key={step.title}
+                className="relative grid grid-cols-[40px_1fr] gap-3 md:flex md:flex-col md:items-center md:gap-0 md:px-2 md:text-center"
+              >
+                {/*
+                  地の色の輪で点線を切り、アイコンの裏を線が通って見えないようにする。
+                */}
+                <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent ring-[6px] ring-ground md:mb-3">
+                  {step.icon}
+                </span>
+                <div>
+                  <p className="text-ui font-bold tracking-wider text-accent">STEP {i + 1}</p>
+                  <h3 className="mb-1.5 text-preview font-bold text-ink">{step.title}</h3>
+                  <p className="text-ui text-ink-soft">
+                    {step.body.map((sentence) => (
+                      <span key={sentence} className="block">
+                        {sentence}
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
