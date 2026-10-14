@@ -104,3 +104,49 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_backend" {
   from_port                    = 3306
   to_port                      = 3306
 }
+
+resource "aws_security_group" "nat" {
+  name        = "ippo-nat-sg"
+  description = "NAT instance. Allow 443 from app subnets only"
+  vpc_id      = aws_vpc.main.id
+
+  tags = {
+    Name = "ippo-nat-sg"
+  }
+}
+
+# ECS が外へ出る通信は HTTPS だけ。SSH は開けない。中の確認は SSM で行う。
+resource "aws_vpc_security_group_ingress_rule" "nat_from_frontend" {
+  security_group_id            = aws_security_group.nat.id
+  description                  = "HTTPS from Next.js tasks"
+  referenced_security_group_id = aws_security_group.frontend.id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+}
+
+resource "aws_vpc_security_group_ingress_rule" "nat_from_backend" {
+  security_group_id            = aws_security_group.nat.id
+  description                  = "HTTPS from Go API tasks"
+  referenced_security_group_id = aws_security_group.backend.id
+  ip_protocol                  = "tcp"
+  from_port                    = 443
+  to_port                      = 443
+}
+
+# 中継する通信と、起動時の dnf・SSM エージェントが使う。
+resource "aws_vpc_security_group_egress_rule" "nat_https" {
+  security_group_id = aws_security_group.nat.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "nat_http" {
+  security_group_id = aws_security_group.nat.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+}
