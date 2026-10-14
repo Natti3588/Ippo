@@ -143,7 +143,7 @@ resource "aws_instance" "nat" {
   # 作るときは最新の AMI を使う。動かしている途中で新しい AMI が出ても、入れ替えない。
   # 入れ替えると NAT が止まり、その間 ECS が外へ出られなくなる。
   lifecycle {
-    ignore_changes = [ami]
+    ignore_changes = [ami, associate_public_ip_address]
   }
 
   tags = {

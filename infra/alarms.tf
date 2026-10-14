@@ -32,6 +32,10 @@ resource "aws_cloudwatch_metric_alarm" "healthy_hosts" {
 
   alarm_actions = [aws_sns_topic.alerts.arn]
   ok_actions    = [aws_sns_topic.alerts.arn]
+
+  lifecycle {
+    ignore_changes = [actions_enabled]
+  }
 }
 
 resource "aws_cloudwatch_metric_alarm" "target_5xx" {
@@ -52,4 +56,8 @@ resource "aws_cloudwatch_metric_alarm" "target_5xx" {
 
   alarm_actions = [aws_sns_topic.alerts.arn]
   ok_actions    = [aws_sns_topic.alerts.arn]
+
+  lifecycle {
+    ignore_changes = [actions_enabled]
+  }
 }
