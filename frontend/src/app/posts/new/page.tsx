@@ -12,6 +12,7 @@ import { ApiError } from "@/lib/problem";
 import { Counter } from "@/components/Counter";
 import { Markdown } from "@/components/Markdown";
 import { clearDraft, loadDraft, saveDraft } from "@/lib/draft";
+import { showToast } from "@/lib/toast";
 import { BOARD_HREF } from "@/lib/topics";
 
 type Tab = "write" | "preview";
@@ -151,6 +152,7 @@ function NewPost() {
       // 選んだ slug から送信先を組み立てる。
       const post = await api.createPost(values.topic, values.title, values.body);
       setPosted(true);
+      showToast("投稿に成功しました");
       // 201 が Post を返す。その id で詳細へ送る。
       // 一覧へ戻すと、いま書いたものが人気順のどこにあるか分からない。
       router.push(`/posts/${post.id}`);
