@@ -8,12 +8,12 @@ import { BOARD_HREF } from "@/lib/topics";
 /*
   ホームの「使い方」。文はログインしているかどうかで変えない。
   STEP 2 の文は、新規登録の画面の欄（メールアドレス・表示名・パスワード）に合わせてある。
-  説明は1文ずつに分け、文ごとに行を改める。
+  説明は行ごとに分けておく。PC の列は狭く、成り行きで折り返すと語の途中で切れる。
 */
 const STEPS = [
   {
     title: "読む",
-    body: ["登録しなくても、すべての投稿を読めます。"],
+    body: ["登録しなくても、", "すべての投稿を読めます。"],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
@@ -23,7 +23,7 @@ const STEPS = [
   },
   {
     title: "登録する",
-    body: ["メールアドレスと表示名、パスワードを入れるだけ。", "お金はかかりません。"],
+    body: ["メールアドレスと表示名、", "パスワードを入れるだけ。"],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <circle cx="9" cy="8" r="4" />
@@ -34,7 +34,7 @@ const STEPS = [
   },
   {
     title: "書く・いいねする",
-    body: ["うまく書けなくて大丈夫です。", "役に立った投稿には、いいねを付けられます。"],
+    body: ["うまく書けなくて大丈夫です。", "役に立った投稿には、", "いいねを付けられます。"],
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 20h9" />
@@ -120,7 +120,7 @@ export default function HomePage() {
 
       {/*
         使い方。実際に使う順に、読む → 登録する → 書く・いいねする と並べる。
-        以前の「3つの理由」（読むだけでいい・お金をかけなくていい・うまく書けなくていい）は、
+        以前の「3つの理由」のうち、読むだけでいい・うまく書けなくていいの2つは、
         それぞれのステップの説明に入れてある。
 
         PC では横に3つ、スマホでは縦に並べ、点線でつなぐ。
@@ -141,7 +141,7 @@ export default function HomePage() {
             {STEPS.map((step, i) => (
               <li
                 key={step.title}
-                className="relative grid grid-cols-[40px_1fr] gap-3 md:flex md:flex-col md:items-center md:gap-0 md:px-2 md:text-center"
+                className="relative grid grid-cols-[40px_1fr] gap-3 md:flex md:flex-col md:items-center md:gap-0 md:text-center"
               >
                 {/*
                   地の色の輪で点線を切り、アイコンの裏を線が通って見えないようにする。
@@ -153,9 +153,9 @@ export default function HomePage() {
                   <p className="text-ui font-bold tracking-wider text-accent">STEP {i + 1}</p>
                   <h3 className="mb-1.5 text-preview font-bold text-ink">{step.title}</h3>
                   <p className="text-ui text-ink-soft">
-                    {step.body.map((sentence) => (
-                      <span key={sentence} className="block">
-                        {sentence}
+                    {step.body.map((line) => (
+                      <span key={line} className="block">
+                        {line}
                       </span>
                     ))}
                   </p>
