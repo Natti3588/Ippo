@@ -249,7 +249,9 @@ function NewPost() {
 
       <h1 className="mb-2 text-heading font-bold text-ink">投稿する</h1>
       <p className="mb-7 max-w-[30em] text-ui text-ink-soft">
-        読んだ本、聞いた番組、続かなかった日のこと。うまく書けなくて大丈夫です。
+        英語学習についての疑問や体験、
+        <br />
+        ちょっとした気づきを共有してみましょう。
       </p>
 
       {failure && (
