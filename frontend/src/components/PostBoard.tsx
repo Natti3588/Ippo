@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { api, type PostSummary, type SortOrder } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
 import { useAuth } from "@/lib/auth";
+import { showToast } from "@/lib/toast";
 import { TopicNav } from "@/components/TopicNav";
 import { PostItem } from "@/components/PostItem";
 import { Pagination } from "@/components/Pagination";
@@ -109,6 +110,8 @@ export function PostBoard({ slug }: { slug?: string }) {
     setRemoving(true);
     try {
       await api.deletePost(confirming.id);
+      // 一覧から1件消えるだけだと、消えたのか、並びが変わって見えなくなったのか分からない
+      showToast("投稿を削除しました");
       // いいねは外部キーの ON DELETE CASCADE で一緒に消える。ここで消す必要はない。
       await mutate();
     } catch (err) {
