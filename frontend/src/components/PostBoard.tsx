@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { TopicNav } from "@/components/TopicNav";
 import { PostItem } from "@/components/PostItem";
 import { Pagination } from "@/components/Pagination";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 
 const SORTS: SortOrder[] = ["popular", "newest", "oldest"];
 
@@ -97,21 +98,25 @@ export function PostBoard({ slug }: { slug?: string }) {
 
   const [failure, setFailure] = useState<string | null>(null);
 
-  async function remove(target: PostSummary) {
-    // 自前のダイアログを作らずブラウザのものを使う。
-    // 見た目は揃わないが、取り消せない操作に確認を挟むほうが先。
-    if (!window.confirm(`「${target.title}」を削除します。取り消せません。`)) {
-      return;
-    }
+  // 削除するか確かめている投稿。null のときは確認のポップアップを閉じている。
+  const [confirming, setConfirming] = useState<PostSummary | null>(null);
+  const [removing, setRemoving] = useState(false);
+
+  async function remove() {
+    if (!confirming) return;
 
     setFailure(null);
+    setRemoving(true);
     try {
-      await api.deletePost(target.id);
+      await api.deletePost(confirming.id);
       // いいねは外部キーの ON DELETE CASCADE で一緒に消える。ここで消す必要はない。
       await mutate();
     } catch (err) {
       // 他人の投稿は 403、未ログインは 401 が返る。detail をそのまま出す。
       setFailure(err instanceof ApiError ? err.detail : "削除に失敗しました");
+    } finally {
+      setRemoving(false);
+      setConfirming(null);
     }
   }
 
@@ -152,13 +157,27 @@ export function PostBoard({ slug }: { slug?: string }) {
           showTopic={!slug}
           canLike={Boolean(user)}
           onToggleLike={() => toggleLike(post)}
-          onDelete={() => remove(post)}
+          onDelete={() => setConfirming(post)}
         />
       ))}
 
       {data && (
         <Pagination basePath={basePath} sort={sort} page={page} hasNext={data.hasNext} />
       )}
+
+      <ConfirmDialog
+        open={confirming !== null}
+        title="投稿を削除しますか？"
+        confirmLabel="削除する"
+        busyLabel="削除中…"
+        busy={removing}
+        onConfirm={remove}
+        onCancel={() => setConfirming(null)}
+      >
+        {/* タイトルは最大100文字で、英語の長い単語も入る。枠からはみ出さないよう、どこでも折り返す */}
+        <p className="wrap-anywhere">「{confirming?.title}」を削除します。</p>
+        <p>削除すると、元に戻せません。</p>
+      </ConfirmDialog>
     </main>
   );
 }
