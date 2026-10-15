@@ -9,6 +9,7 @@ resource "aws_ecs_task_definition" "backend" {
   cpu                      = 256
   memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_execution.arn
+  task_role_arn            = aws_iam_role.backend_task.arn
 
   runtime_platform {
     operating_system_family = "LINUX"
@@ -31,6 +32,8 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DB_PORT", value = tostring(aws_db_instance.db.port) },
         { name = "DB_NAME", value = aws_db_instance.db.db_name },
         { name = "DB_USER", value = aws_db_instance.db.username },
+        { name = "UPLOAD_BUCKET", value = aws_s3_bucket.uploads.bucket },
+        { name = "AWS_REGION", value = var.region },
       ]
 
       secrets = [
