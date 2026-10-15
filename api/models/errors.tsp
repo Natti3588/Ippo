@@ -51,3 +51,10 @@ model ConflictProblem {
   ...Body<ProblemDetails>;
   @header contentType: "application/problem+json";
 }
+
+@doc("いまは使えない")
+model ServiceUnavailableProblem {
+  ...Response<503>;
+  ...Body<ProblemDetails>;
+  @header contentType: "application/problem+json";
+}
