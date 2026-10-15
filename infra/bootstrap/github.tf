@@ -79,8 +79,11 @@ data "aws_iam_policy_document" "github_actions_deploy" {
   }
 
   statement {
-    actions   = ["iam:PassRole"]
-    resources = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ippo-ecs-execution"]
+    actions = ["iam:PassRole"]
+    resources = [
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ippo-ecs-execution",
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ippo-backend-task",
+    ]
 
     condition {
       test     = "StringEquals"
