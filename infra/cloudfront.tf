@@ -10,6 +10,17 @@ data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
   name = "Managed-AllViewerExceptHostHeader"
 }
 
+data "aws_cloudfront_response_headers_policy" "security_headers" {
+  name = "Managed-SecurityHeadersPolicy"
+}
+
+resource "aws_cloudfront_origin_access_control" "uploads" {
+  name                              = "ippo-uploads"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
 resource "aws_cloudfront_distribution" "main" {
   enabled         = true
   is_ipv6_enabled = true
@@ -27,6 +38,12 @@ resource "aws_cloudfront_distribution" "main" {
       origin_ssl_protocols   = ["TLSv1.2"]
       ip_address_type        = "ipv4"
     }
+  }
+
+  origin {
+    domain_name              = aws_s3_bucket.uploads.bucket_regional_domain_name
+    origin_id                = "uploads"
+    origin_access_control_id = aws_cloudfront_origin_access_control.uploads.id
   }
 
   ordered_cache_behavior {
@@ -48,6 +65,16 @@ resource "aws_cloudfront_distribution" "main" {
     cache_policy_id          = data.aws_cloudfront_cache_policy.caching_disabled.id
     origin_request_policy_id = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
     compress                 = true
+  }
+
+  ordered_cache_behavior {
+    path_pattern               = "/uploads/*"
+    target_origin_id           = "uploads"
+    allowed_methods            = ["GET", "HEAD"]
+    cached_methods             = ["GET", "HEAD"]
+    viewer_protocol_policy     = "redirect-to-https"
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_optimized.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security_headers.id
   }
 
   default_cache_behavior {
