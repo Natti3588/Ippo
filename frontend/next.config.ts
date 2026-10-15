@@ -17,6 +17,12 @@ export default function config(phase: string): NextConfig {
           source: "/api/:path*",
           destination: "http://localhost:8080/api/:path*",
         },
+        // 画像は S3 にあり、手元には無い。本番の CloudFront から取る。
+        // 送り先も本番と同じバケットなので、手元で入れた画像もそこにある。
+        {
+          source: "/uploads/:path*",
+          destination: "https://d18vvdkldxsijp.cloudfront.net/uploads/:path*",
+        },
       ];
     },
   };
