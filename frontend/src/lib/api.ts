@@ -53,6 +53,7 @@ export type PostPage = Json<"/topics/{slug}/posts", "get">;
 export type PostSummary = PostPage["items"][number];
 export type Post = Json<"/posts/{postId}", "get">;
 export type CurrentUser = Json<"/me", "get">;
+export type UploadTicket = Json<"/uploads", "post">;
 export type SortOrder = NonNullable<
   paths["/topics/{slug}/posts"]["get"]["parameters"]["query"]
 >["sort"];
@@ -127,4 +128,9 @@ export const api = {
 
   unlike: (postId: string) =>
     request<void>(`/posts/${encodeURIComponent(postId)}/like`, { method: "DELETE" }),
+
+  // --- 画像 ---
+
+  /** 画像を1枚送るための許可証をもらう。送る先は S3 で、ここでは送らない。 */
+  createUpload: () => request<UploadTicket>("/uploads", { method: "POST" }),
 };

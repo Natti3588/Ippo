@@ -156,6 +156,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["Uploads_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -290,6 +306,20 @@ export interface components {
         UpdateProfileRequest: {
             /** @description ユーザー情報変更に使われる名前 */
             displayName: string;
+        };
+        /** @description 画像を1枚送るための許可証 */
+        UploadTicket: {
+            /**
+             * Format: uri
+             * @description 画像を送る先。 S3 の URL
+             */
+            url: string;
+            /** @description 送るときにフォームへ一緒に入れる値。 署名と条件が入っている */
+            fields: {
+                [key: string]: string;
+            };
+            /** @description 送ったあとに本文へ書く画像のパス。 例: /uploads/<id>.jpg */
+            path: string;
         };
     };
     responses: never;
@@ -766,6 +796,44 @@ export interface operations {
             };
             /** @description 対象が存在しない */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Uploads_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadTicket"];
+                };
+            };
+            /** @description 認証が必要 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description いまは使えない */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

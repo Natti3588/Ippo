@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from "react";
 import { flushSync } from "react-dom";
 import { useForm, type FieldErrors } from "react-hook-form";
 import useSWR from "swr";
@@ -14,6 +21,7 @@ import { Markdown } from "@/components/Markdown";
 import { clearDraft, loadDraft, saveDraft } from "@/lib/draft";
 import { showToast } from "@/lib/toast";
 import { BOARD_HREF } from "@/lib/topics";
+import { ImageDecodeError, uploadImage } from "@/lib/upload";
 
 type Tab = "write" | "preview";
 
@@ -34,6 +42,9 @@ function NewPost() {
   const [previewBody, setPreviewBody] = useState("");
   const [previewHeight, setPreviewHeight] = useState<number>();
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ write: null, preview: null });
 
   // 来たときに ?topic= が付いていれば、そのトピックへ戻す。
@@ -192,6 +203,43 @@ function NewPost() {
     if (!errs.body) return;
     flushSync(() => setTab("write"));
     if (!errs.topic && !errs.title) setFocus("body");
+  }
+
+  // 本文のカーソルの位置に文字を入れる。選んでいた文字は置き換える。
+  // プレビュー中なら「書く」に戻す。入った場所が見えないと、入ったかどうか分からない。
+  function insertIntoBody(text: string) {
+    const el = bodyRef.current;
+    const body = getValues("body");
+    const start = el?.selectionStart ?? body.length;
+    const end = el?.selectionEnd ?? body.length;
+
+    setValue("body", body.slice(0, start) + text + body.slice(end), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    flushSync(() => setTab("write"));
+
+    const caret = start + text.length;
+    el?.focus();
+    el?.setSelectionRange(caret, caret);
+  }
+
+  async function onPickImage(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    // 空に戻しておかないと、同じファイルをもう一度選んだときに change が起きない
+    e.target.value = "";
+    if (!file) return;
+
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const path = await uploadImage(file);
+      insertIntoBody(`![](${path})`);
+    } catch (err) {
+      setUploadError(uploadErrorMessage(err));
+    } finally {
+      setUploading(false);
+    }
   }
 
   // 書きかけのまま閉じようとしたら止める。
@@ -405,9 +453,48 @@ function NewPost() {
             )}
           </div>
 
-          <p className="text-ui text-ink-soft">
-            {"## 見出し　- 箇条書き　**太字**　`表現`　[文字](URL)　> 引用　![説明](URL)"}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              aria-describedby={uploadError ? "upload-error" : undefined}
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-ippo border border-border-strong bg-surface px-4 text-ui text-ink hover:bg-accent-soft transition-colors disabled:opacity-60"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+              </svg>
+              {uploading ? "画像を送っています…" : "画像を入れる"}
+            </button>
+            {/* 押しても見えるのはブラウザのファイル選択だけ。input そのものは出さない */}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={onPickImage}
+            />
+            <p className="text-ui text-ink-soft">
+              {"## 見出し　- 箇条書き　**太字**　`表現`　[文字](URL)　> 引用　![説明](URL)"}
+            </p>
+          </div>
+          {uploadError && (
+            <p id="upload-error" role="alert" className="whitespace-pre-line text-ui text-danger">
+              {uploadError}
+            </p>
+          )}
           {errors.body && (
             <p id="body-error" className="text-ui text-danger">
               {errors.body.message}
@@ -418,7 +505,7 @@ function NewPost() {
         <div className="flex items-center gap-5 border-t border-border pt-5">
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || uploading}
             className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
           >
             {isSubmitting ? "投稿中…" : "投稿する"}
@@ -444,6 +531,13 @@ function NewPost() {
       </form>
     </main>
   );
+}
+
+function uploadErrorMessage(err: unknown): string {
+  if (err instanceof ImageDecodeError) return "この画像は読み込めませんでした";
+  // 401 と 503 は、Go が返す説明（「ログインが必要です」「いまは画像を使えません」）をそのまま出す
+  if (err instanceof ApiError) return err.detail;
+  return "画像を送れませんでした。\nもう一度お試しください";
 }
 
 export default function NewPostPage() {
