@@ -173,6 +173,18 @@ type UpdateProfileRequest struct {
 	DisplayName string `json:"displayName"`
 }
 
+// UploadTicket 画像を1枚送るための許可証
+type UploadTicket struct {
+	// Fields 送るときにフォームへ一緒に入れる値。 署名と条件が入っている
+	Fields map[string]string `json:"fields"`
+
+	// Path 送ったあとに本文へ書く画像のパス。 例: /uploads/<id>.jpg
+	Path string `json:"path"`
+
+	// Url 画像を送る先。 S3 の URL
+	Url string `json:"url"`
+}
+
 // ListPostsQueryPage defines model for ListPostsQuery.page.
 type ListPostsQueryPage = int32
 
@@ -250,6 +262,9 @@ type ServerInterface interface {
 
 	// (POST /topics/{slug}/posts)
 	TopicsCreatePost(w http.ResponseWriter, r *http.Request, slug string)
+
+	// (POST /uploads)
+	UploadsCreate(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -576,6 +591,20 @@ func (siw *ServerInterfaceWrapper) TopicsCreatePost(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// UploadsCreate operation middleware
+func (siw *ServerInterfaceWrapper) UploadsCreate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UploadsCreate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -709,6 +738,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics", wrapper.TopicsList)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics/{slug}/posts", wrapper.TopicsListPosts)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/topics/{slug}/posts", wrapper.TopicsCreatePost)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/uploads", wrapper.UploadsCreate)
 
 	return m
 }

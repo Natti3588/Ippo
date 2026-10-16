@@ -6,11 +6,12 @@ import "github.com/Natti3588/Ippo/backend/internal/api"
 type Server struct {
 	*BoardHandler
 	*AuthHandler
+	*UploadHandler
 }
 
 // Server がapi.ServerInterfaceを十どうしているかコンパイル時に確認
 var _ api.ServerInterface = (*Server)(nil)
 
-func NewServer(board *BoardHandler, auth *AuthHandler) *Server {
-	return &Server{BoardHandler: board, AuthHandler: auth}
+func NewServer(board *BoardHandler, auth *AuthHandler, upload *UploadHandler) *Server {
+	return &Server{BoardHandler: board, AuthHandler: auth, UploadHandler: upload}
 }

@@ -99,3 +99,11 @@ func toAPICurrentUser(u domain.User) api.CurrentUser {
 		DisplayName: u.DisplayName,
 	}
 }
+
+func toAPIUploadTicket(t domain.UploadTicket) api.UploadTicket {
+	return api.UploadTicket{
+		Fields: t.Fields,
+		Path:   t.Path,
+		Url:    t.URL,
+	}
+}

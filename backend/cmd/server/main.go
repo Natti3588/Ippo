@@ -15,6 +15,8 @@ import (
 	"github.com/Natti3588/Ippo/backend/internal/handler"
 	"github.com/Natti3588/Ippo/backend/internal/repository"
 	"github.com/Natti3588/Ippo/backend/internal/service"
+	"github.com/Natti3588/Ippo/backend/internal/storage"
+	"github.com/aws/aws-sdk-go-v2/config"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -72,6 +74,21 @@ func main() {
 	boardSvc := service.NewBoardService(boardRepo)
 	authSvc := service.NewAuthService(authRepo)
 
+	bucket := os.Getenv("UPLOAD_BUCKET")
+	var uploadSvc *service.UploadService
+	if bucket == "" {
+		logger.Warn("画像は使えない状態で起動する")
+		uploadSvc = service.NewUploadService(nil)
+	} else {
+		cfg, err := config.LoadDefaultConfig(context.Background())
+		if err != nil {
+			logger.Error("AWSの接続設定の読み込みに失敗しました", "error", err)
+			os.Exit(1)
+		}
+		s3Signer := storage.NewS3Signer(cfg, bucket)
+		uploadSvc = service.NewUploadService(s3Signer)
+	}
+
 	// Cookie の Secure は既定で有効にする。
 	// ローカルの http で試すときだけ COOKIE_INSECURE=true を明示する。
 	// 環境変数名を否定形にしているのは、書き忘れたときに壊れるのが
@@ -81,7 +98,8 @@ func main() {
 	boardHandler := handler.NewBoardHandler(boardSvc, logger)
 	authHandler := handler.NewAuthHandler(authSvc, logger, secureCookie)
 	authMiddleware := handler.NewAuthMiddleware(authSvc, logger)
-	h := handler.NewServer(boardHandler, authHandler)
+	uploadHandler := handler.NewUploadHandler(uploadSvc, logger)
+	h := handler.NewServer(boardHandler, authHandler, uploadHandler)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/healthz", handler.Health)
