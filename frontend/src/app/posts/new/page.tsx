@@ -2,28 +2,16 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type KeyboardEvent,
-} from "react";
-import { flushSync } from "react-dom";
-import { useForm, type FieldErrors } from "react-hook-form";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { FormProvider, useForm, type FieldErrors } from "react-hook-form";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/problem";
-import { Counter } from "@/components/Counter";
-import { Markdown } from "@/components/Markdown";
+import { PostEditor, type PostEditorHandle } from "@/components/PostEditor";
 import { clearDraft, loadDraft, saveDraft } from "@/lib/draft";
 import { showToast } from "@/lib/toast";
 import { BOARD_HREF } from "@/lib/topics";
-import { ImageDecodeError, uploadImage } from "@/lib/upload";
-
-type Tab = "write" | "preview";
 
 type FormValues = {
   topic: string;
@@ -38,31 +26,15 @@ function NewPost() {
 
   const { data: topics } = useSWR("topics", () => api.topics());
   const [failure, setFailure] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("write");
-  const [previewBody, setPreviewBody] = useState("");
-  const [previewHeight, setPreviewHeight] = useState<number>();
-  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
-  const fileRef = useRef<HTMLInputElement | null>(null);
+  const editorRef = useRef<PostEditorHandle>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ write: null, preview: null });
 
   // 来たときに ?topic= が付いていれば、そのトピックへ戻す。
   // 付いていなければ、すべての投稿の一覧へ。
   const fromTopic = params.get("topic");
   const backHref = fromTopic ? `/topics/${fromTopic}` : BOARD_HREF;
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    getValues,
-    setFocus,
-    setValue,
-    subscribe,
-    reset,
-    formState: { errors, isSubmitting, isDirty },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     mode: "onBlur",
     defaultValues: {
       // 掲示板から来たときは、そのトピックを選んだ状態にしておく
@@ -71,11 +43,16 @@ function NewPost() {
       body: "",
     },
   });
-
-  const bodyField = register("body", {
-    required: "本文を入力してください",
-    maxLength: { value: 15000, message: "本文は15000文字以内にしてください" },
-  });
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setFocus,
+    setValue,
+    subscribe,
+    reset,
+    formState: { errors, isSubmitting, isDirty },
+  } = form;
 
   const email = user?.email;
 
@@ -152,8 +129,7 @@ function NewPost() {
     if (email) clearDraft(email);
     // defaultValues に戻す。?topic= で来ていれば、そのトピックは残る
     reset();
-    setPreviewBody("");
-    setTab("write");
+    editorRef.current?.resetView();
   }
 
   async function onSubmit(values: FormValues) {
@@ -172,28 +148,6 @@ function NewPost() {
     }
   }
 
-  // プレビューを開いた瞬間にだけ本文を読む。
-  // useWatch で追うと、15,000文字の本文を1文字ごとに描き直すことになる。
-  function selectTab(next: Tab) {
-    // すでにプレビュー中なら textarea は隠れていて、高さが 0 と測れてしまう。
-    if (next === "preview" && tab === "write") {
-      setPreviewBody(getValues("body"));
-      // textarea は利用者が高さを変えられるので、rows から決めた値だと食い違う。
-      // 隠される前の、いま見えている高さをここで測って、プレビューに揃える。
-      setPreviewHeight(bodyRef.current?.offsetHeight);
-    }
-    setTab(next);
-  }
-
-  function onTabKeyDown(e: KeyboardEvent) {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    e.preventDefault();
-    // タブは2つだけなので、どちらの矢印でももう片方へ移る
-    const next: Tab = tab === "write" ? "preview" : "write";
-    selectTab(next);
-    tabRefs.current[next]?.focus();
-  }
-
   // 本文が空などで送信が止まったとき、プレビュー中なら書くタブへ戻す。
   // react-hook-form も最初のエラーへフォーカスを移そうとするが、
   // その時点では textarea が hidden のままなので効かない。
@@ -201,45 +155,8 @@ function NewPost() {
   // タイトルなど先に並ぶ項目にもエラーがあるときは、そちらへのフォーカスを奪わない。
   function onInvalid(errs: FieldErrors<FormValues>) {
     if (!errs.body) return;
-    flushSync(() => setTab("write"));
+    editorRef.current?.showWriteTab();
     if (!errs.topic && !errs.title) setFocus("body");
-  }
-
-  // 本文のカーソルの位置に文字を入れる。選んでいた文字は置き換える。
-  // プレビュー中なら「書く」に戻す。入った場所が見えないと、入ったかどうか分からない。
-  function insertIntoBody(text: string) {
-    const el = bodyRef.current;
-    const body = getValues("body");
-    const start = el?.selectionStart ?? body.length;
-    const end = el?.selectionEnd ?? body.length;
-
-    setValue("body", body.slice(0, start) + text + body.slice(end), {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
-    flushSync(() => setTab("write"));
-
-    const caret = start + text.length;
-    el?.focus();
-    el?.setSelectionRange(caret, caret);
-  }
-
-  async function onPickImage(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    // 空に戻しておかないと、同じファイルをもう一度選んだときに change が起きない
-    e.target.value = "";
-    if (!file) return;
-
-    setUploadError(null);
-    setUploading(true);
-    try {
-      const path = await uploadImage(file);
-      insertIntoBody(`![](${path})`);
-    } catch (err) {
-      setUploadError(uploadErrorMessage(err));
-    } finally {
-      setUploading(false);
-    }
   }
 
   // 書きかけのまま閉じようとしたら止める。
@@ -310,7 +227,9 @@ function NewPost() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="flex flex-col gap-5">
+      <FormProvider {...form}>
+      {/* handleSubmit は送信のときに呼ぶ。onInvalid が ref を読むので、描くときに渡すと lint が止める */}
+      <form onSubmit={(e) => handleSubmit(onSubmit, onInvalid)(e)} noValidate className="flex flex-col gap-5">
         {/*
           トピックの選択。掲示板の中にフォームがあったときは、
           画面の slug がそのまま投稿先だった。独立するとその前提が消える。
@@ -344,163 +263,7 @@ function NewPost() {
           )}
         </fieldset>
 
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-baseline justify-between gap-4">
-            <label htmlFor="title" className="text-ui font-bold text-ink">
-              タイトル
-            </label>
-            <Counter control={control} name="title" max={100} />
-          </div>
-          <input
-            id="title"
-            type="text"
-            autoComplete="off"
-            aria-invalid={errors.title ? true : undefined}
-            aria-describedby={errors.title ? "title-error" : undefined}
-            {...register("title", {
-              required: "タイトルを入力してください",
-              maxLength: { value: 100, message: "タイトルは100文字以内にしてください" },
-            })}
-            className={`w-full rounded-ippo border bg-surface p-3 text-preview text-ink ${
-              errors.title ? "border-2 border-danger" : "border-border-strong"
-            }`}
-          />
-          {errors.title && (
-            <p id="title-error" className="text-ui text-danger">
-              {errors.title.message}
-            </p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-baseline justify-between gap-4">
-            <label htmlFor="body" className="text-ui font-bold text-ink">
-              本文
-            </label>
-            <Counter control={control} name="body" max={15000} />
-          </div>
-          <div
-            role="tablist"
-            aria-label="本文の表示"
-            onKeyDown={onTabKeyDown}
-            className="flex gap-1 border-b border-border"
-          >
-            {(["write", "preview"] as const).map((t) => (
-              <button
-                key={t}
-                ref={(el) => {
-                  tabRefs.current[t] = el;
-                }}
-                type="button"
-                role="tab"
-                id={`body-tab-${t}`}
-                aria-selected={tab === t}
-                aria-controls={`body-panel-${t}`}
-                tabIndex={tab === t ? 0 : -1}
-                onClick={() => selectTab(t)}
-                className={`-mb-px flex min-h-11 items-center border-b-2 px-4 text-ui transition-colors ${
-                  tab === t
-                    ? "border-accent font-bold text-ink"
-                    : "border-transparent text-ink-soft hover:text-ink"
-                }`}
-              >
-                {t === "write" ? "書く" : "プレビュー"}
-              </button>
-            ))}
-          </div>
-
-          {/*
-            textarea は外さずに hidden で隠す。外すと、ブラウザが持っている
-            取り消し（Ctrl+Z）の履歴とカーソルの位置が消える。
-            textarea も register で繋ぐ。value / onChange は持たせない。
-            15,000文字まで書けるので、1文字ごとに再描画させない。
-          */}
-          <div
-            role="tabpanel"
-            id="body-panel-write"
-            aria-labelledby="body-tab-write"
-            hidden={tab !== "write"}
-          >
-            <textarea
-              id="body"
-              rows={12}
-              placeholder="最近の英語の勉強で、うれしかったことや困ったことは…"
-              aria-invalid={errors.body ? true : undefined}
-              aria-describedby={errors.body ? "body-error" : undefined}
-              {...bodyField}
-              ref={(el) => {
-                bodyField.ref(el);
-                bodyRef.current = el;
-              }}
-              className={`w-full resize-y rounded-ippo border bg-surface p-3.5 font-read text-body text-ink ${
-                errors.body ? "border-2 border-danger" : "border-border-strong"
-              }`}
-            />
-          </div>
-          <div
-            role="tabpanel"
-            id="body-panel-preview"
-            aria-labelledby="body-tab-preview"
-            hidden={tab !== "preview"}
-            tabIndex={0}
-            style={{ height: previewHeight }}
-            className="overflow-y-auto rounded-ippo border border-border-strong bg-surface p-3.5 font-read text-body text-ink wrap-anywhere"
-          >
-            {previewBody.trim() ? (
-              <Markdown>{previewBody}</Markdown>
-            ) : (
-              <p className="text-ui text-ink-soft">プレビューする本文がありません</p>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              aria-describedby={uploadError ? "upload-error" : undefined}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-ippo border border-border-strong bg-surface px-4 text-ui text-ink hover:bg-accent-soft transition-colors disabled:opacity-60"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
-              </svg>
-              {uploading ? "画像を送っています…" : "画像を入れる"}
-            </button>
-            {/* 押しても見えるのはブラウザのファイル選択だけ。input そのものは出さない */}
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={onPickImage}
-            />
-            <p className="text-ui text-ink-soft">
-              {"## 見出し　- 箇条書き　**太字**　`表現`　[文字](URL)　> 引用　![説明](URL)"}
-            </p>
-          </div>
-          {uploadError && (
-            <p id="upload-error" role="alert" className="whitespace-pre-line text-ui text-danger">
-              {uploadError}
-            </p>
-          )}
-          {errors.body && (
-            <p id="body-error" className="text-ui text-danger">
-              {errors.body.message}
-            </p>
-          )}
-        </div>
+        <PostEditor ref={editorRef} onUploadingChange={setUploading} />
 
         <div className="flex items-center gap-5 border-t border-border pt-5">
           <button
@@ -529,15 +292,9 @@ function NewPost() {
           )}
         </div>
       </form>
+      </FormProvider>
     </main>
   );
-}
-
-function uploadErrorMessage(err: unknown): string {
-  if (err instanceof ImageDecodeError) return "この画像は読み込めませんでした";
-  // 401 と 503 は、Go が返す説明（「ログインが必要です」「いまは画像を使えません」）をそのまま出す
-  if (err instanceof ApiError) return err.detail;
-  return "画像を送れませんでした。\nもう一度お試しください";
 }
 
 export default function NewPostPage() {
