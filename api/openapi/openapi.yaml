@@ -157,6 +157,52 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+    put:
+      operationId: Posts_update
+      description: 自分の投稿のタイトルと本文を書き換える。 いいねはそのまま残る
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+        '400':
+          description: 入力が不正
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '403':
+          description: 権限が無い
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostRequest'
     delete:
       operationId: Posts_remove
       description: 自分の投稿を削除する。 いいねも一緒に消える
@@ -445,6 +491,10 @@ components:
           type: string
           format: date-time
           description: 投稿日時（UTC）
+        updatedAt:
+          type: string
+          format: date-time
+          description: 最後に編集した日時（UTC）。 一度も編集していなければ無い
         topic:
           allOf:
             - $ref: '#/components/schemas/Topic'
@@ -577,6 +627,21 @@ components:
           type: string
           description: 表示名
       description: 投稿を分類するカテゴリ
+    UpdatePostRequest:
+      type: object
+      required:
+        - title
+        - body
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        body:
+          type: string
+          minLength: 1
+          maxLength: 15000
+      description: 投稿の編集。 決まりは作成と同じ
     UpdateProfileRequest:
       type: object
       required:

@@ -37,6 +37,16 @@ namespace Posts {
   @get
   op get(@path postId: string): Post | NotFoundProblem;
 
+  @doc("自分の投稿のタイトルと本文を書き換える。 いいねはそのまま残る")
+  @route("{postId}")
+  @put
+  op update(@path postId: string, @body request: UpdatePostRequest):
+    | Post
+    | BadRequestProblem
+    | UnauthorizedProblem
+    | ForbiddenProblem
+    | NotFoundProblem;
+
   @doc("自分の投稿を削除する。 いいねも一緒に消える")
   @route("{postId}")
   @delete

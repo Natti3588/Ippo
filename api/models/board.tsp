@@ -37,6 +37,9 @@ model Post {
   @doc("投稿日時（UTC）")
   createdAt: utcDateTime;
 
+  @doc("最後に編集した日時（UTC）。 一度も編集していなければ無い")
+  updatedAt?: utcDateTime;
+
   @doc("その投稿が属するトピック。 詳細ページから一覧へ戻るために使う")
   topic: Topic;
 }
@@ -85,6 +88,17 @@ model PostPage {
 
 @doc("投稿の作成リクエスト")
 model CreatePostRequest {
+  @minLength(1)
+  @maxLength(100)
+  title: string;
+
+  @minLength(1)
+  @maxLength(15000)
+  body: string;
+}
+
+@doc("投稿の編集。 決まりは作成と同じ")
+model UpdatePostRequest {
   @minLength(1)
   @maxLength(100)
   title: string;
