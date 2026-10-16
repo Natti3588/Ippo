@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -191,7 +192,7 @@ func TestCreatePostValidation(t *testing.T) {
 		{"絵文字101個のタイトルは弾く", strings.Repeat("👨", 101), "本文", titleDetail},
 	}
 
-	user := domain.User{Id: "user-id", DisplayName: "みどり"}
+	user := domain.User{Id: "user-id", DisplayName: "テスト太郎"}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -227,7 +228,7 @@ func TestCreatePostValidation(t *testing.T) {
 // リポジトリが返さない投稿者名とトピックを、サービスが補うことを確かめる。
 func TestCreatePostFillsAuthorAndTopic(t *testing.T) {
 	repo := &fakeCreatePostRepository{}
-	user := domain.User{Id: "user-id", DisplayName: "みどり"}
+	user := domain.User{Id: "user-id", DisplayName: "テスト太郎"}
 
 	svc := NewBoardService(repo)
 
@@ -236,13 +237,127 @@ func TestCreatePostFillsAuthorAndTopic(t *testing.T) {
 		t.Fatalf("CreatePost が失敗した: %v", err)
 	}
 
-	if post.AuthorName != "みどり" {
-		t.Errorf("AuthorName = %q, want %q", post.AuthorName, "みどり")
+	if post.AuthorName != "テスト太郎" {
+		t.Errorf("AuthorName = %q, want %q", post.AuthorName, "テスト太郎")
 	}
 	if post.Topic.Slug != "study-method" {
 		t.Errorf("Topic.Slug = %q, want %q", post.Topic.Slug, "study-method")
 	}
 	if post.Topic.Name != "効率的な勉強法" {
 		t.Errorf("Topic.Name = %q, want %q", post.Topic.Name, "効率的な勉強法")
+	}
+}
+
+// 編集の偽物。受け取った引数を残し、err が決まっていればそれを返す。
+type fakeUpdatePostRepository struct {
+	BoardRepository
+	err      error
+	called   bool
+	postID   string
+	authorID string
+	title    string
+	body     string
+}
+
+func (r *fakeUpdatePostRepository) UpdatePost(_ context.Context, postID, authorID, title, body string) (domain.Post, error) {
+	r.called = true
+	r.postID, r.authorID, r.title, r.body = postID, authorID, title, body
+	if r.err != nil {
+		return domain.Post{}, r.err
+	}
+	return domain.Post{Id: postID, Title: title, Body: body}, nil
+}
+
+// 編集も作成と同じ決まりで弾くことを確かめる。
+func TestUpdatePostValidation(t *testing.T) {
+	tests := []struct {
+		name       string
+		title      string
+		body       string
+		wantDetail string
+	}{
+		{"タイトルが空", "", "本文", titleDetail},
+		{"タイトルが1文字超過", strings.Repeat("あ", 101), "本文", titleDetail},
+		{"本文が空", "題", "", bodyDetail},
+		{"本文が1文字超過", "題", strings.Repeat("あ", 15001), bodyDetail},
+		// 文字数を rune で数えていれば、日本語でも100文字まで通る。
+		{"日本語100文字のタイトルは通る", strings.Repeat("あ", 100), "本文", ""},
+	}
+
+	user := domain.User{Id: "user-id", DisplayName: "テスト太郎"}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &fakeUpdatePostRepository{}
+
+			svc := NewBoardService(repo)
+
+			_, err := svc.UpdatePost(context.Background(), "post-id", user, tt.title, tt.body)
+
+			if tt.wantDetail == "" {
+				if err != nil {
+					t.Fatalf("成功するはずが失敗した: %v", err)
+				}
+				if !repo.called {
+					t.Error("入力が正しいのに UpdatePost を呼んでいない")
+				}
+				return
+			}
+
+			var invalid *domain.InvalidInputError
+			if !errors.As(err, &invalid) {
+				t.Fatalf("err = %v, want *domain.InvalidInputError", err)
+			}
+			if invalid.Detail != tt.wantDetail {
+				t.Errorf("Detail = %q, want %q", invalid.Detail, tt.wantDetail)
+			}
+			// 入力で弾いたら書き換えない。
+			if repo.called {
+				t.Error("検証で弾いたのに UpdatePost を呼んでいる")
+			}
+		})
+	}
+}
+
+// 他人の投稿だったことが、handler まで errors.Is で届くことを確かめる。
+func TestUpdatePostForbidden(t *testing.T) {
+	repo := &fakeUpdatePostRepository{err: fmt.Errorf("他人の投稿: %w", domain.ErrForbidden)}
+	user := domain.User{Id: "user-id", DisplayName: "テスト太郎"}
+
+	svc := NewBoardService(repo)
+
+	_, err := svc.UpdatePost(context.Background(), "post-id", user, "題", "本文")
+
+	if !errors.Is(err, domain.ErrForbidden) {
+		t.Fatalf("err = %v, want domain.ErrForbidden", err)
+	}
+}
+
+// 書いた人としてログイン中の利用者を渡し、タイトルと本文は手を加えずに渡すことを確かめる。
+func TestUpdatePostPassesInput(t *testing.T) {
+	repo := &fakeUpdatePostRepository{}
+	user := domain.User{Id: "user-id", DisplayName: "テスト太郎"}
+
+	svc := NewBoardService(repo)
+
+	post, err := svc.UpdatePost(context.Background(), "post-id", user, "直した題", "直した本文")
+	if err != nil {
+		t.Fatalf("UpdatePost が失敗した: %v", err)
+	}
+
+	if repo.postID != "post-id" {
+		t.Errorf("postID = %q, want %q", repo.postID, "post-id")
+	}
+	if repo.authorID != "user-id" {
+		t.Errorf("authorID = %q, want %q", repo.authorID, "user-id")
+	}
+	if repo.title != "直した題" {
+		t.Errorf("title = %q, want %q", repo.title, "直した題")
+	}
+	if repo.body != "直した本文" {
+		t.Errorf("body = %q, want %q", repo.body, "直した本文")
+	}
+	if post.Title != "直した題" {
+		t.Errorf("post.Title = %q, want %q", post.Title, "直した題")
 	}
 }

@@ -69,6 +69,11 @@ func (r *BoardRepository) GetPost(ctx context.Context, postID, viewerID string) 
 	if err != nil {
 		return domain.Post{}, fmt.Errorf("トピックIDの変換に失敗: %w", err)
 	}
+
+	var updatedAt *time.Time
+	if row.UpdatedAt.Valid {
+		updatedAt = &row.UpdatedAt.Time
+	}
 	return domain.Post{
 		Id:         parsed.String(),
 		AuthorID:   authorID.String(),
@@ -78,6 +83,7 @@ func (r *BoardRepository) GetPost(ctx context.Context, postID, viewerID string) 
 		LikeCount:  int32(row.LikeCount),
 		LikedByMe:  row.LikedByMe,
 		CreatedAt:  row.CreatedAt,
+		UpdatedAt:  updatedAt,
 		Topic:      domain.Topic{Id: topicID.String(), Slug: row.TopicSlug, Name: row.TopicName},
 	}, nil
 }
@@ -240,6 +246,47 @@ func (r *BoardRepository) DeleteLike(ctx context.Context, postID, authorID strin
 	}
 
 	return r.q.DeleteLike(ctx, sqlcgen.DeleteLikeParams{PostID: pID, AuthorID: aID})
+}
+
+// UpdatePost は投稿を編集する
+//
+// 他人の投稿には domain.ErrForbidden、存在しない投稿には domain.ErrNotFound を返す。
+func (r *BoardRepository) UpdatePost(ctx context.Context, postID, authorID, title, body string) (domain.Post, error) {
+	pID, err := toBinaryUUID(postID)
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("投稿IDが不正: %w", domain.ErrNotFound)
+	}
+
+	aID, err := toBinaryUUID(authorID)
+	if err != nil {
+		return domain.Post{}, fmt.Errorf("投稿者IDが不正: %w", err)
+	}
+
+	owner, err := r.q.GetPostAuthor(ctx, pID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Post{}, fmt.Errorf("投稿が存在しません: %w", domain.ErrNotFound)
+		}
+		return domain.Post{}, err
+	}
+
+	if !bytes.Equal(owner, aID) {
+		return domain.Post{}, fmt.Errorf("他人の投稿は編集できません: %w", domain.ErrForbidden)
+	}
+
+	updatedAt := time.Now().UTC().Truncate(time.Second)
+
+	_, err = r.q.UpdatePost(ctx, sqlcgen.UpdatePostParams{
+		Title:     title,
+		Body:      body,
+		UpdatedAt: sql.NullTime{Time: updatedAt, Valid: true},
+		ID:        pID,
+		AuthorID:  aID,
+	})
+	if err != nil {
+		return domain.Post{}, err
+	}
+	return r.GetPost(ctx, postID, authorID)
 }
 
 // DeletePost は投稿を削除する。

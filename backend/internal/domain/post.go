@@ -14,6 +14,7 @@ type Post struct {
 	LikeCount  int32
 	LikedByMe  bool
 	CreatedAt  time.Time
+	UpdatedAt  *time.Time
 	Topic      Topic
 }
 

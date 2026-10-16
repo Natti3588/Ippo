@@ -14,9 +14,10 @@ type BoardRepository interface {
 	GetPost(ctx context.Context, postID, viewerID string) (domain.Post, error)
 	ListPostsByTopic(ctx context.Context, topicID string, sort domain.SortOrder, viewerID string, limit, offset int32) ([]domain.PostSummary, error)
 	CreatePost(ctx context.Context, topicID, authorID, title, body string) (domain.Post, error)
+	DeletePost(ctx context.Context, postID, authorID string) error
+	UpdatePost(ctx context.Context, postID, authorID, title, body string) (domain.Post, error)
 	CreateLike(ctx context.Context, postID, authorID string) error
 	DeleteLike(ctx context.Context, postID, authorID string) error
-	DeletePost(ctx context.Context, postID, authorID string) error
 }
 
 // 長さは文字数で数える（DB の CHECK 制約が CHAR_LENGTH() のため）。
@@ -121,6 +122,14 @@ func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.
 	post.AuthorName = user.DisplayName
 	post.Topic = topic
 	return post, nil
+}
+
+func (s *BoardService) UpdatePost(ctx context.Context, postID string, user domain.User, title, body string) (domain.Post, error) {
+	if err := validatePost(title, body); err != nil {
+		return domain.Post{}, err
+	}
+
+	return s.repo.UpdatePost(ctx, postID, user.Id, title, body)
 }
 
 // Like は指定の投稿のいいねを追加する。
