@@ -85,19 +85,27 @@ func (s *BoardService) GetPost(ctx context.Context, postID, viewerID string) (do
 	return s.repo.GetPost(ctx, postID, viewerID)
 }
 
-// CreatePost は投稿を作成する。
-func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.User, title, body string) (domain.Post, error) {
+// validatePost は当行のタイトルと本文の文字数を検証し、
+// 既定の範囲外であれば domain.InvalidInputError を返す。
+func validatePost(title, body string) error {
 	if n := utf8.RuneCountInString(title); n < minPostTitleChars || n > maxPostTitleChars {
-		return domain.Post{}, &domain.InvalidInputError{
+		return &domain.InvalidInputError{
 			Detail: "タイトルは1文字以上100文字以内にしてください",
 		}
 	}
-
 	n := utf8.RuneCountInString(body)
 	if n < minPostBodyChars || n > maxPostBodyChars {
-		return domain.Post{}, &domain.InvalidInputError{
+		return &domain.InvalidInputError{
 			Detail: "本文は1文字以上15000文字以内にしてください",
 		}
+	}
+	return nil
+}
+
+// CreatePost は投稿を作成する。
+func (s *BoardService) CreatePost(ctx context.Context, slug string, user domain.User, title, body string) (domain.Post, error) {
+	if err := validatePost(title, body); err != nil {
+		return domain.Post{}, err
 	}
 
 	topic, err := s.repo.GetTopic(ctx, slug)
