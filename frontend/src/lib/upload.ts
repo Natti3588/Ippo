@@ -5,6 +5,10 @@ import { api } from "@/lib/api";
 const MAX_SIDE = 1600;
 const QUALITY = 0.85;
 
+// 電波の弱い所で送信が止まると、ボタンも「投稿する」も押せないまま戻らない。
+// 描き直した画像は数百KBなので、遅い回線でも数秒で終わる。60秒待って届かなければ失敗に倒す。
+const SEND_TIMEOUT_MS = 60_000;
+
 /** 選ばれたファイルを、画像として読めなかった。 */
 export class ImageDecodeError extends Error {}
 
@@ -68,11 +72,15 @@ export async function uploadImage(file: File): Promise<string> {
   form.append("file", jpeg);
 
   // Cookie は S3 に要らないので、credentials は付けない。
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(ticket.url, { method: "POST", body: form });
+    res = await fetch(ticket.url, { method: "POST", body: form, signal: controller.signal });
   } catch {
     throw new StorageError();
+  } finally {
+    clearTimeout(timer);
   }
   if (!res.ok) throw new StorageError();
 
