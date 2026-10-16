@@ -120,6 +120,12 @@ export const api = {
       body: JSON.stringify({ title, body }),
     }),
 
+  updatePost: (postId: string, title: string, body: string) =>
+    request<Post>(`/posts/${encodeURIComponent(postId)}`, {
+      method: "PUT",
+      body: JSON.stringify({ title, body }),
+    }),
+
   deletePost: (postId: string) =>
     request<void>(`/posts/${encodeURIComponent(postId)}`, { method: "DELETE" }),
 

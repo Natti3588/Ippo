@@ -94,7 +94,8 @@ export interface paths {
         };
         /** @description 投稿を1件取得する。 本文は全文を返す */
         get: operations["Posts_get"];
-        put?: never;
+        /** @description 自分の投稿のタイトルと本文を書き換える。 いいねはそのまま残る */
+        put: operations["Posts_update"];
         post?: never;
         /** @description 自分の投稿を削除する。 いいねも一緒に消える */
         delete: operations["Posts_remove"];
@@ -225,6 +226,11 @@ export interface components {
              * @description 投稿日時（UTC）
              */
             createdAt: string;
+            /**
+             * Format: date-time
+             * @description 最後に編集した日時（UTC）。 一度も編集していなければ無い
+             */
+            updatedAt?: string;
             /** @description その投稿が属するトピック。 詳細ページから一覧へ戻るために使う */
             topic: components["schemas"]["Topic"];
         };
@@ -301,6 +307,11 @@ export interface components {
             slug: string;
             /** @description 表示名 */
             name: string;
+        };
+        /** @description 投稿の編集。 決まりは作成と同じ */
+        UpdatePostRequest: {
+            title: string;
+            body: string;
         };
         /** @description ユーザー情報変更 */
         UpdateProfileRequest: {
@@ -560,6 +571,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Post"];
+                };
+            };
+            /** @description 対象が存在しない */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Posts_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePostRequest"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Post"];
+                };
+            };
+            /** @description 入力が不正 */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description 認証が必要 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description 権限が無い */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
             /** @description 対象が存在しない */

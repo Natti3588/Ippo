@@ -103,12 +103,14 @@ export default function PostDetailPage() {
           {post.title}
         </h1>
 
-        <div className="mb-7 flex items-center gap-3 border-b-3 border-ink pb-5">
+        <div className="mb-7 flex flex-wrap items-center gap-x-3 gap-y-1 border-b-3 border-ink pb-5">
           <span className="text-ui text-ink-soft wrap-anywhere">{post.authorName}</span>
           {/* time にすると、読み上げが日付だと分かる */}
           <time dateTime={post.createdAt} className="text-ui text-ink-soft">
             {formatDateTime(post.createdAt)}
           </time>
+          {/* 直したことを示す。いいねした人が見た内容と、今の内容が違うことがあるため */}
+          {post.updatedAt && <span className="text-ui text-ink-soft">編集済み</span>}
         </div>
 
         {/*
@@ -127,7 +129,13 @@ export default function PostDetailPage() {
           表示名は一意ではないので、同じ名前の人の投稿まで消せてしまう。
         */}
         {post.isMine && (
-          <div className="mt-10 border-t border-border pt-5">
+          <div className="mt-10 flex flex-wrap items-center gap-5 border-t border-border pt-5">
+            <Link
+              href={`/posts/${post.id}/edit`}
+              className="flex min-h-11 items-center py-2.5 text-ui text-accent underline underline-offset-4 hover:text-ink transition-colors"
+            >
+              編集する
+            </Link>
             <button
               type="button"
               onClick={() => setConfirming(true)}
