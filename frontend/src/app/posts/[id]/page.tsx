@@ -1,18 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import useSWR from "swr";
 import { api } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
 import { formatDateTime } from "@/lib/format";
 import { Markdown } from "@/components/Markdown";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { BOARD_HREF } from "@/lib/topics";
+import { showToast } from "@/lib/toast";
 
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
 
+  const router = useRouter();
+
   const { data: post, error } = useSWR(["post", id], () => api.post(id));
+
+  const [confirming, setConfirming] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+
+  async function remove() {
+    if (!post) return;
+
+    setFailure(null);
+    setRemoving(true);
+    try {
+      await api.deletePost(post.id);
+      showToast("投稿を削除しました");
+      // replace で移る。push だと、ブラウザの「戻る」で消えた投稿の画面に戻り、
+      // 「見つかりません」が出る。
+      router.replace(`/topics/${post.topic.slug}`);
+    } catch (err) {
+      // 他人の投稿は 403、未ログインは 401 が返る。detail をそのまま出す。
+      setFailure(err instanceof ApiError ? err.detail : "削除に失敗しました");
+      setRemoving(false);
+      setConfirming(false);
+    }
+  }
 
   if (error) {
     return (
@@ -63,6 +91,12 @@ export default function PostDetailPage() {
         </Link>
       </nav>
 
+      {failure && (
+        <div role="alert" className="mb-6 border-l-4 border-danger bg-surface p-3.5">
+          <p className="text-ui text-danger">{failure}</p>
+        </div>
+      )}
+
       <article>
         {/* text-pretty で、見出しの最後の行に1語だけ残るのを防ぐ */}
         <h1 className="mb-4 max-w-[22em] text-pretty font-read text-title font-semibold text-ink wrap-anywhere">
@@ -88,8 +122,38 @@ export default function PostDetailPage() {
           <Markdown>{post.body}</Markdown>
         </div>
 
-        {/* いいねと削除は段階2・3で足す */}
+        {/*
+          自分の投稿にだけ出す。authorName では比べない。
+          表示名は一意ではないので、同じ名前の人の投稿まで消せてしまう。
+        */}
+        {post.isMine && (
+          <div className="mt-10 border-t border-border pt-5">
+            <button
+              type="button"
+              onClick={() => setConfirming(true)}
+              className="flex min-h-11 items-center py-2.5 text-ui text-danger underline underline-offset-4 hover:bg-danger-soft transition-colors"
+            >
+              削除する
+            </button>
+          </div>
+        )}
+
+        {/* いいねは段階2で足す */}
       </article>
+
+      <ConfirmDialog
+        open={confirming}
+        title="投稿を削除しますか？"
+        confirmLabel="削除する"
+        busyLabel="削除中…"
+        busy={removing}
+        onConfirm={remove}
+        onCancel={() => setConfirming(false)}
+      >
+        {/* タイトルは最大100文字で、英語の長い単語も入る。枠からはみ出さないよう、どこでも折り返す */}
+        <p className="wrap-anywhere">「{post.title}」を削除します。</p>
+        <p>削除すると、元に戻せません。</p>
+      </ConfirmDialog>
     </main>
   );
 }
