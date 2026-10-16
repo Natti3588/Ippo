@@ -17,6 +17,9 @@ var (
 
 	// ErrInvalidInputは入力が要件を満たしていないことを表す
 	ErrInvalidInput = errors.New("invalid input")
+
+	// ErrUploadUnavailableは画像投稿ができないことを表す
+	ErrUploadUnavailable = errors.New("upload unavailable")
 )
 
 // InvalidInputError は入力の不備を、利用者に見せてよい説明つきで表す。
