@@ -7,6 +7,7 @@ package sqlcgen
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -77,6 +78,7 @@ SELECT
     WHERE ml.post_id = p.id AND ml.author_id = ?
   ) AS liked_by_me,
   p.created_at,
+  p.updated_at,
   t.id   AS topic_id,
   t.slug AS topic_slug,
   t.name AS topic_name
@@ -102,6 +104,7 @@ type GetPostByIdRow struct {
 	LikeCount  int64
 	LikedByMe  bool
 	CreatedAt  time.Time
+	UpdatedAt  sql.NullTime
 	TopicID    []byte
 	TopicSlug  string
 	TopicName  string
@@ -119,6 +122,7 @@ func (q *Queries) GetPostById(ctx context.Context, arg GetPostByIdParams) (GetPo
 		&i.LikeCount,
 		&i.LikedByMe,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.TopicID,
 		&i.TopicSlug,
 		&i.TopicName,
@@ -604,4 +608,31 @@ func (q *Queries) ListPostsByTopicPopular(ctx context.Context, arg ListPostsByTo
 		return nil, err
 	}
 	return items, nil
+}
+
+const updatePost = `-- name: UpdatePost :execrows
+UPDATE posts SET title = ?, body = ?, updated_at = ?
+WHERE id = ? AND author_id = ?
+`
+
+type UpdatePostParams struct {
+	Title     string
+	Body      string
+	UpdatedAt sql.NullTime
+	ID        []byte
+	AuthorID  []byte
+}
+
+func (q *Queries) UpdatePost(ctx context.Context, arg UpdatePostParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, updatePost,
+		arg.Title,
+		arg.Body,
+		arg.UpdatedAt,
+		arg.ID,
+		arg.AuthorID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

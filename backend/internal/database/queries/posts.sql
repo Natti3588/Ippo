@@ -153,6 +153,7 @@ SELECT
     WHERE ml.post_id = p.id AND ml.author_id = sqlc.arg(viewer_id)
   ) AS liked_by_me,
   p.created_at,
+  p.updated_at,
   t.id   AS topic_id,
   t.slug AS topic_slug,
   t.name AS topic_name
@@ -168,3 +169,7 @@ SELECT author_id FROM posts WHERE id = ?;
 
 -- name: DeletePost :execrows
 DELETE FROM posts WHERE id = ? AND author_id = ?;
+
+-- name: UpdatePost :execrows
+UPDATE posts SET title = ?, body = ?, updated_at = ?
+WHERE id = ? AND author_id = ?;

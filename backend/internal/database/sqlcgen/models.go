@@ -5,6 +5,7 @@
 package sqlcgen
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type Post struct {
 	Body      string
 	CreatedAt time.Time
 	Title     string
+	UpdatedAt sql.NullTime
 }
 
 type Session struct {
