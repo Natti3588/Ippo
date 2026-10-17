@@ -33,7 +33,7 @@ func (h *UploadHandler) UploadsCreate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "許可証の作成に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 

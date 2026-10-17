@@ -23,7 +23,7 @@ func NewBoardHandler(svc *service.BoardService, logger *slog.Logger) *BoardHandl
 func (h *BoardHandler) TopicsList(w http.ResponseWriter, r *http.Request) {
 	topics, err := h.svc.ListTopics(r.Context())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		h.logger.ErrorContext(r.Context(), "failed to list topics", "error", err)
 		return
 	}
@@ -67,14 +67,14 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "failed to list posts", "error", err, "slug", slug)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	items, err := toAPIPostSummaries(pageData.Items, viewerID)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -111,14 +111,14 @@ func (h *BoardHandler) PostsList(w http.ResponseWriter, r *http.Request, params 
 	pageData, err := h.svc.ListPosts(r.Context(), sort, viewerID, page)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to list posts", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	items, err := toAPIPostSummaries(pageData.Items, viewerID)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -142,14 +142,14 @@ func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId s
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "投稿の取得に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	apiPost, err := toAPIPost(post, viewerID)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "投稿の変換に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -185,14 +185,14 @@ func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, 
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "投稿の作成に失敗", "error", err, "slug", slug)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	apiPost, err := toAPIPost(post, user.Id)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "投稿の変換に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -216,7 +216,7 @@ func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId 
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "いいねの追加に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -232,7 +232,7 @@ func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postI
 
 	if err := h.svc.Unlike(r.Context(), postId, user.Id); err != nil {
 		h.logger.ErrorContext(r.Context(), "いいねの取り消しに失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -256,7 +256,7 @@ func (h *BoardHandler) PostsRemove(w http.ResponseWriter, r *http.Request, postI
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "投稿の削除に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -294,14 +294,14 @@ func (h *BoardHandler) PostsUpdate(w http.ResponseWriter, r *http.Request, postI
 		}
 
 		h.logger.ErrorContext(r.Context(), "投稿の編集に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	apiPost, err := toAPIPost(post, user.Id)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "投稿の変換に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 

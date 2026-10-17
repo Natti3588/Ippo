@@ -41,7 +41,7 @@ func (h *AuthHandler) AuthSignup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "サインアップに失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *AuthHandler) AuthLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "ログインに失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (h *AuthHandler) AuthLogout(w http.ResponseWriter, r *http.Request) {
 	if c, err := r.Cookie(sessionCookieName); err == nil && c.Value != "" {
 		if err := h.svc.Logout(r.Context(), c.Value); err != nil {
 			h.logger.ErrorContext(r.Context(), "ログアウトに失敗", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
+			writeInternalServerError(r.Context(), w, h.logger)
 			return
 		}
 	}
@@ -127,7 +127,7 @@ func (h *AuthHandler) MeUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		h.logger.ErrorContext(r.Context(), "表示名の変更に失敗", "error", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
