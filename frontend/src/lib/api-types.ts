@@ -219,7 +219,7 @@ export interface components {
             likeCount: number;
             /** @description 自分がいいねを押したかどうか。 未ログインなら false */
             likedByMe: boolean;
-            /** @description 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false */
+            /** @description 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false */
             isMine: boolean;
             /**
              * Format: date-time
@@ -260,7 +260,7 @@ export interface components {
             likeCount: number;
             /** @description 自分がいいねを押したかどうか。 未ログインなら false */
             likedByMe: boolean;
-            /** @description 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false */
+            /** @description 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false */
             isMine: boolean;
             /**
              * Format: date-time

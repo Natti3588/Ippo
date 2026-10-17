@@ -31,7 +31,7 @@ model Post {
   @doc("自分がいいねを押したかどうか。 未ログインなら false")
   likedByMe: boolean;
 
-  @doc("自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false")
+  @doc("自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false")
   isMine: boolean;
 
   @doc("投稿日時（UTC）")
@@ -67,7 +67,7 @@ model PostSummary {
   @doc("自分がいいねを押したかどうか。 未ログインなら false")
   likedByMe: boolean;
 
-  @doc("自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false")
+  @doc("自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false")
   isMine: boolean;
 
   @doc("投稿日時（UTC）")

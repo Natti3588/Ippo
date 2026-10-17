@@ -72,7 +72,7 @@ type Post struct {
 	CreatedAt time.Time          `json:"createdAt"`
 	Id        openapi_types.UUID `json:"id"`
 
-	// IsMine 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false
+	// IsMine 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false
 	IsMine bool `json:"isMine"`
 
 	// LikeCount いいねの数
@@ -112,7 +112,7 @@ type PostSummary struct {
 	CreatedAt time.Time          `json:"createdAt"`
 	Id        openapi_types.UUID `json:"id"`
 
-	// IsMine 自分の投稿かどうか。 true のときだけ削除できる。 未ログインなら false
+	// IsMine 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false
 	IsMine bool `json:"isMine"`
 
 	// LikeCount いいねの数
