@@ -27,6 +27,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -40,6 +46,12 @@ paths:
       responses:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /auth/signup:
     post:
       operationId: Auth_signup
@@ -59,6 +71,12 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
         '409':
           description: 既に存在する
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
           content:
             application/problem+json:
               schema:
@@ -86,6 +104,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     patch:
       operationId: Me_update
       parameters: []
@@ -104,6 +128,12 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
         '401':
           description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
           content:
             application/problem+json:
               schema:
@@ -134,6 +164,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /posts/{postId}:
     get:
       operationId: Posts_get
@@ -153,6 +189,12 @@ paths:
                 $ref: '#/components/schemas/Post'
         '404':
           description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
           content:
             application/problem+json:
               schema:
@@ -197,6 +239,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -233,6 +281,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /posts/{postId}/like:
     put:
       operationId: Posts_like
@@ -258,6 +312,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
     delete:
       operationId: Posts_unlike
       description: いいねを取り消す
@@ -276,6 +336,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /topics:
     get:
       operationId: Topics_list
@@ -290,6 +356,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Topic'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /topics/{slug}/posts:
     get:
       operationId: Topics_listPosts
@@ -317,6 +389,12 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
         '404':
           description: 対象が存在しない
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
           content:
             application/problem+json:
               schema:
@@ -355,6 +433,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
       requestBody:
         required: true
         content:
@@ -374,6 +458,12 @@ paths:
                 $ref: '#/components/schemas/UploadTicket'
         '401':
           description: 認証が必要
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          description: サーバーで問題が起きた
           content:
             application/problem+json:
               schema:

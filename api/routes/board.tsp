@@ -6,7 +6,7 @@ namespace Ippo;
 namespace Topics {
   @doc("トピックの一覧を取得する")
   @get
-  op list(): Topic[];
+  op list(): Topic[] | InternalServerErrorProblem;
 
   @doc("トピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目")
   @route("{slug}/posts")
@@ -14,7 +14,8 @@ namespace Topics {
   op listPosts(@path slug: string, ...ListPostsQuery):
     | PostPage
     | BadRequestProblem
-    | NotFoundProblem;
+    | NotFoundProblem
+    | InternalServerErrorProblem;
 
   @doc("トピックに投稿する")
   @route("{slug}/posts")
@@ -23,19 +24,26 @@ namespace Topics {
     | (CreatedResponse & Body<Post>)
     | BadRequestProblem
     | UnauthorizedProblem
-    | NotFoundProblem;
+    | NotFoundProblem
+    | InternalServerErrorProblem;
 }
 
 @route("/posts")
 namespace Posts {
   @doc("すべてのトピックの投稿を、指定された並び順で10件ずつ取得する。 既定は人気順の1ページ目")
   @get
-  op list(...ListPostsQuery): PostPage | BadRequestProblem;
+  op list(...ListPostsQuery):
+    | PostPage
+    | BadRequestProblem
+    | InternalServerErrorProblem;
 
   @doc("投稿を1件取得する。 本文は全文を返す")
   @route("{postId}")
   @get
-  op get(@path postId: string): Post | NotFoundProblem;
+  op get(@path postId: string):
+    | Post
+    | NotFoundProblem
+    | InternalServerErrorProblem;
 
   @doc("自分の投稿のタイトルと本文を書き換える。 いいねはそのまま残る")
   @route("{postId}")
@@ -45,7 +53,8 @@ namespace Posts {
     | BadRequestProblem
     | UnauthorizedProblem
     | ForbiddenProblem
-    | NotFoundProblem;
+    | NotFoundProblem
+    | InternalServerErrorProblem;
 
   @doc("自分の投稿を削除する。 いいねも一緒に消える")
   @route("{postId}")
@@ -54,7 +63,8 @@ namespace Posts {
     | NoContentResponse
     | UnauthorizedProblem
     | ForbiddenProblem
-    | NotFoundProblem;
+    | NotFoundProblem
+    | InternalServerErrorProblem;
 
   @doc("投稿にいいねをする")
   @route("{postId}/like")
@@ -62,10 +72,14 @@ namespace Posts {
   op like(@path postId: string):
     | NoContentResponse
     | UnauthorizedProblem
-    | NotFoundProblem;
+    | NotFoundProblem
+    | InternalServerErrorProblem;
 
   @doc("いいねを取り消す")
   @route("{postId}/like")
   @delete
-  op unlike(@path postId: string): NoContentResponse | UnauthorizedProblem;
+  op unlike(@path postId: string):
+    | NoContentResponse
+    | UnauthorizedProblem
+    | InternalServerErrorProblem;
 }

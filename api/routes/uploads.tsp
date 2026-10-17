@@ -7,5 +7,6 @@ namespace Uploads {
   @post op create():
     | UploadTicket
     | UnauthorizedProblem
-    | ServiceUnavailableProblem;
+    | ServiceUnavailableProblem
+    | InternalServerErrorProblem;
 }

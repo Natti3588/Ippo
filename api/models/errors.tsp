@@ -58,3 +58,10 @@ model ServiceUnavailableProblem {
   ...Body<ProblemDetails>;
   @header contentType: "application/problem+json";
 }
+
+@doc("サーバーで問題が起きた")
+model InternalServerErrorProblem {
+  ...Response<500>;
+  ...Body<ProblemDetails>;
+  @header contentType: "application/problem+json";
+}

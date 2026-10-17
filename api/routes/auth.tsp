@@ -9,26 +9,29 @@ namespace Auth {
   op signup(@body request: SignUpRequest):
     | (CreatedResponse & Body<CurrentUser>)
     | BadRequestProblem
-    | ConflictProblem;
+    | ConflictProblem
+    | InternalServerErrorProblem;
 
   @route("login")
   @post
   op login(@body request: LoginRequest):
     | CurrentUser
     | BadRequestProblem
-    | UnauthorizedProblem;
+    | UnauthorizedProblem
+    | InternalServerErrorProblem;
 
   @route("logout")
   @post
-  op logout(): NoContentResponse;
+  op logout(): NoContentResponse | InternalServerErrorProblem;
 }
 
 @route("/me")
 namespace Me {
-  @get op get(): CurrentUser | UnauthorizedProblem;
+  @get op get(): CurrentUser | UnauthorizedProblem | InternalServerErrorProblem;
 
   @patch op update(@body request: UpdateProfileRequest):
     | CurrentUser
     | BadRequestProblem
-    | UnauthorizedProblem;
+    | UnauthorizedProblem
+    | InternalServerErrorProblem;
 }
