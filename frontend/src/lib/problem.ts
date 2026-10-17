@@ -24,8 +24,9 @@ export class ApiError extends Error {
 /**
  * レスポンスから ApiError を作る。
  *
- * 500 は契約に書いていないので本文が無い。Problem Details として読めなければ、
- * ここで汎用の文言に倒す。画面側で毎回「detail が空かもしれない」を
+ * Problem Details として読めなければ、ここで汎用の文言に倒す。
+ * バックエンドが応答できず、ALB や CloudFront が HTML（502・503・504）を
+ * 返したときがこれに当たる。画面側で毎回「detail が空かもしれない」を
  * 考えずに済ませたい。
  */
 export async function toApiError(res: Response): Promise<ApiError> {
