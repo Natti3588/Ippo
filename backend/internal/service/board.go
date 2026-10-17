@@ -86,7 +86,7 @@ func (s *BoardService) GetPost(ctx context.Context, postID, viewerID string) (do
 	return s.repo.GetPost(ctx, postID, viewerID)
 }
 
-// validatePost は当行のタイトルと本文の文字数を検証し、
+// validatePost は投稿のタイトルと本文の文字数を検証し、
 // 既定の範囲外であれば domain.InvalidInputError を返す。
 func validatePost(title, body string) error {
 	if n := utf8.RuneCountInString(title); n < minPostTitleChars || n > maxPostTitleChars {
