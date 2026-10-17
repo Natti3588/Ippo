@@ -19,12 +19,24 @@ export default function EditPostPage() {
   // 詳細の画面と同じキー。詳細から来たときは、取り直さずにすぐ出せる。
   const { data: post, error } = useSWR(["post", id], () => api.post(id));
 
+  // フォームに渡す投稿。開けると決まったら、そのあとは変えない。
+  // SWR はタブに戻るたびに投稿とログインを取り直す。その1回が通信の失敗で落ちても、
+  // フォームを外して書きかけを消さないため。保存のときの失敗は、フォームの上部に出る。
+  const [opened, setOpened] = useState<Post | null>(null);
+  if (opened === null && post !== undefined && user && post.isMine) {
+    setOpened(post);
+  }
+
   // 自分の投稿でなければ、詳細へ戻す。ボタンは出していないが、URL を直接開けるため。
-  // 本当の確かめはサーバー（403）。ここは画面の案内だけ。
-  const notMine = user === null || (post !== undefined && !post.isMine);
+  // 本当の確かめはサーバー（403）。ここは画面の案内だけで、開いたあとは見ない。
+  const notMine = opened === null && (user === null || (post !== undefined && !post.isMine));
   useEffect(() => {
     if (notMine) router.replace(`/posts/${id}`);
   }, [notMine, id, router]);
+
+  // 初期値は読み込めてから決まるので、フォームは中の部品に分ける。
+  // 分けないと、useForm の defaultValues が空のまま固まる。
+  if (opened) return <EditForm post={opened} />;
 
   if (error) {
     return (
@@ -45,11 +57,7 @@ export default function EditPostPage() {
   }
 
   // 読み込み中と、確かめている最中は何も出さない
-  if (!post || !user || notMine) return null;
-
-  // 初期値は読み込めてから決まるので、フォームは中の部品に分ける。
-  // 分けないと、useForm の defaultValues が空のまま固まる。
-  return <EditForm post={post} />;
+  return null;
 }
 
 function EditForm({ post }: { post: Post }) {
