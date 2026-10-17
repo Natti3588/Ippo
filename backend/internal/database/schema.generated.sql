@@ -1,4 +1,4 @@
--- このファイルは生成物である。手で編集しないこと。
+]633;E;head -n 16 backend/internal/database/schema.generated.sql;9be75e97-857b-4f1d-95c0-1c1cd040d6f2]633;C-- このファイルは生成物である。手で編集しないこと。
 --
 -- 各テーブルの「現在の」定義を一覧できるようにするためだけに置いている。
 -- スキーマの正本はあくまで migrations/ の連番ファイルであり、
@@ -35,6 +35,7 @@ CREATE TABLE `posts` (
   `title` varchar(100) NOT NULL,
   `body` text NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_posts_topic` (`topic_id`),
   KEY `fk_posts_author` (`author_id`),
