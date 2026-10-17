@@ -86,6 +86,9 @@ type Post struct {
 
 	// Topic その投稿が属するトピック。 詳細ページから一覧へ戻るために使う
 	Topic Topic `json:"topic"`
+
+	// UpdatedAt 最後に編集した日時（UTC）。 一度も編集していなければ無い
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
 // PostPage 投稿一覧の1ページ分。 1ページは10件で固定
@@ -167,6 +170,12 @@ type Topic struct {
 	Slug string `json:"slug"`
 }
 
+// UpdatePostRequest 投稿の編集。 決まりは作成と同じ
+type UpdatePostRequest struct {
+	Body  string `json:"body"`
+	Title string `json:"title"`
+}
+
 // UpdateProfileRequest ユーザー情報変更
 type UpdateProfileRequest struct {
 	// DisplayName ユーザー情報変更に使われる名前
@@ -218,6 +227,9 @@ type AuthSignupJSONRequestBody = SignUpRequest
 // MeUpdateJSONRequestBody defines body for MeUpdate for application/json ContentType.
 type MeUpdateJSONRequestBody = UpdateProfileRequest
 
+// PostsUpdateJSONRequestBody defines body for PostsUpdate for application/json ContentType.
+type PostsUpdateJSONRequestBody = UpdatePostRequest
+
 // TopicsCreatePostJSONRequestBody defines body for TopicsCreatePost for application/json ContentType.
 type TopicsCreatePostJSONRequestBody = CreatePostRequest
 
@@ -247,6 +259,9 @@ type ServerInterface interface {
 
 	// (GET /posts/{postId})
 	PostsGet(w http.ResponseWriter, r *http.Request, postId string)
+
+	// (PUT /posts/{postId})
+	PostsUpdate(w http.ResponseWriter, r *http.Request, postId string)
 
 	// (DELETE /posts/{postId}/like)
 	PostsUnlike(w http.ResponseWriter, r *http.Request, postId string)
@@ -435,6 +450,32 @@ func (siw *ServerInterfaceWrapper) PostsGet(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostsGet(w, r, postId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PostsUpdate operation middleware
+func (siw *ServerInterfaceWrapper) PostsUpdate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "postId" -------------
+	var postId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostsUpdate(w, r, postId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -733,6 +774,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts", wrapper.PostsList)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsRemove)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsGet)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsUpdate)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsUnlike)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/posts/{postId}/like", wrapper.PostsLike)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/topics", wrapper.TopicsList)

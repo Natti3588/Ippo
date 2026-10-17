@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Natti3588/Ippo/backend/internal/api"
 	"github.com/Natti3588/Ippo/backend/internal/domain"
@@ -48,6 +49,11 @@ func toAPIPost(p domain.Post, viewerID string) (api.Post, error) {
 		return api.Post{}, fmt.Errorf("投稿ID: %qの解析に失敗: %w", p.Id, err)
 	}
 
+	var updatedAt *time.Time
+	if p.UpdatedAt != nil {
+		utc := p.UpdatedAt.UTC()
+		updatedAt = &utc
+	}
 	return api.Post{
 		Id:         id,
 		Title:      p.Title,
@@ -57,6 +63,7 @@ func toAPIPost(p domain.Post, viewerID string) (api.Post, error) {
 		LikedByMe:  p.LikedByMe,
 		IsMine:     viewerID != "" && p.AuthorID == viewerID,
 		CreatedAt:  p.CreatedAt.UTC(),
+		UpdatedAt:  updatedAt,
 		Topic:      api.Topic{Slug: p.Topic.Slug, Name: p.Topic.Name},
 	}, nil
 }

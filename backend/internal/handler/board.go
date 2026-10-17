@@ -262,3 +262,51 @@ func (h *BoardHandler) PostsRemove(w http.ResponseWriter, r *http.Request, postI
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *BoardHandler) PostsUpdate(w http.ResponseWriter, r *http.Request, postId string) {
+	user, ok := userFrom(r.Context())
+	if !ok {
+		writeProblem(r.Context(), w, h.logger, http.StatusUnauthorized, "ログインが必要です")
+		return
+	}
+
+	var req api.PostsUpdateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.InfoContext(r.Context(), "リクエストを解釈できません", "error", err, "op", "updatePost")
+		writeProblem(r.Context(), w, h.logger, http.StatusBadRequest, "リクエストの形式が不正です")
+		return
+	}
+
+	post, err := h.svc.UpdatePost(r.Context(), postId, user, req.Title, req.Body)
+	if err != nil {
+		if e, ok := errors.AsType[*domain.InvalidInputError](err); ok {
+			h.logger.InfoContext(r.Context(), "入力が不正", "error", err, "op", "updatePost")
+			writeProblem(r.Context(), w, h.logger, http.StatusBadRequest, e.Detail)
+			return
+		}
+		if errors.Is(err, domain.ErrForbidden) {
+			writeProblem(r.Context(), w, h.logger, http.StatusForbidden, "自分の投稿だけ編集できます")
+			return
+		}
+		if errors.Is(err, domain.ErrNotFound) {
+			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "投稿が見つかりません")
+			return
+		}
+
+		h.logger.ErrorContext(r.Context(), "投稿の編集に失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	apiPost, err := toAPIPost(post, user.Id)
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "投稿の変換に失敗", "error", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(apiPost); err != nil {
+		h.logger.ErrorContext(r.Context(), "レスポンスの書き込みに失敗", "error", err)
+	}
+}
