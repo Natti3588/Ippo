@@ -69,6 +69,9 @@ function NewPost() {
     if (draft.topic) setValue("topic", draft.topic, { shouldDirty: true });
     setValue("title", draft.title, { shouldDirty: true });
     setValue("body", draft.body, { shouldDirty: true });
+    // 日をまたいで開くと、何を書いていたか覚えていないことがある。
+    // 入っている文が前に書いた下書きだと、開いてすぐ分かるようにする。
+    showToast("下書きを復元しました");
   }, [email, setValue]);
 
   // 打つのが止まって1秒たったら保存する。
