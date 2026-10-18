@@ -251,6 +251,8 @@ export interface components {
             bodyPreview: string;
             /** @description 本文が200文字を超えて切り詰められたかどうか */
             truncated: boolean;
+            /** @description 本文に画像（![説明](URL) の形）があるかどうか。 先頭200文字より後ろにある画像も含む */
+            hasImage: boolean;
             /** @description 投稿者の名前 */
             authorName: string;
             /**

@@ -58,6 +58,9 @@ model PostSummary {
   @doc("本文が200文字を超えて切り詰められたかどうか")
   truncated: boolean;
 
+  @doc("本文に画像（![説明](URL) の形）があるかどうか。 先頭200文字より後ろにある画像も含む")
+  hasImage: boolean;
+
   @doc("投稿者の名前")
   authorName: string;
 

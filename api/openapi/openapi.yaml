@@ -612,6 +612,7 @@ components:
         - title
         - bodyPreview
         - truncated
+        - hasImage
         - authorName
         - likeCount
         - likedByMe
@@ -631,6 +632,9 @@ components:
         truncated:
           type: boolean
           description: 本文が200文字を超えて切り詰められたかどうか
+        hasImage:
+          type: boolean
+          description: 本文に画像（![説明](URL) の形）があるかどうか。 先頭200文字より後ろにある画像も含む
         authorName:
           type: string
           description: 投稿者の名前
