@@ -113,7 +113,7 @@ func main() {
 	})
 
 	// アクセスログは ServeMux の外側に巻く。
-	root := handler.AccessLog(logger)(router)
+	root := handler.AccessLog(logger)(handler.Recover(logger)(router))
 	root = handler.RequestID(root)
 
 	// ボディの上限はアクセスログより内側でよい。
