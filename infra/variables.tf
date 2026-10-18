@@ -39,3 +39,9 @@ variable "alert_email" {
   description = "アラームの通知を受け取るメールアドレス"
   type        = string
 }
+
+variable "power_schedule_enabled" {
+  description = "リソースの自動起動・停止機能を有効にするか"
+  type        = bool
+  default     = true
+}
