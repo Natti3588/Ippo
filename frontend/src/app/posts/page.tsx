@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PostBoard } from "@/components/PostBoard";
-
-export const metadata: Metadata = {
-  title: "すべての投稿 — Ippo",
-};
 
 /**
  * すべてのトピックの投稿一覧。
