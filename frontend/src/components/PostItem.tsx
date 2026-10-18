@@ -89,6 +89,32 @@ export function PostItem({
           </Link>
         )}
 
+        {/*
+          プレビューでは画像を外しているので、画像があることを文字で知らせる。
+          hasImage はサーバーが本文全体を見て決める。bodyPreview からは推測しない。
+          先頭200文字より後ろの画像を見落とす。
+        */}
+        {post.hasImage && (
+          <span className="flex items-center gap-1.5 text-ui text-ink-soft">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="9" cy="9" r="2" />
+              <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
+            </svg>
+            画像あり
+          </span>
+        )}
+
         <div className="grow" />
 
         <span className="text-ui text-ink-soft wrap-anywhere">{post.authorName}</span>
