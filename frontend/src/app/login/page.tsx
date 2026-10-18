@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -8,6 +7,8 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { ApiError } from "@/lib/problem";
 import { Field } from "@/components/Field";
+import { AuthSwitchLink } from "@/components/AuthSwitchLink";
+import { safeNextPath } from "@/lib/next-path";
 
 type FormValues = {
   email: string;
@@ -37,7 +38,9 @@ export default function LoginPage() {
       const user = await api.login(values.email, values.password);
       // 返ってきた利用者をそのまま入れる。GET /me は呼び直さない
       setUser(user);
-      router.push("/");
+      // ?next= があれば、ログインを求められた元のページへ戻す。
+      // 描くときではなく送るときに読むので、useSearchParams（と Suspense）は要らない。
+      router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
     } catch (err) {
       // detail はバックエンドが利用者向けに書いた日本語。そのまま出す
       setFailure(err instanceof ApiError ? err.detail : "通信に失敗しました");
@@ -93,9 +96,7 @@ export default function LoginPage() {
 
       <p className="mt-6 text-ui text-ink-soft">
         はじめての方は{" "}
-        <Link href="/signup" className="font-bold text-accent underline underline-offset-4 hover:text-ink transition-colors">
-          新規登録
-        </Link>
+        <AuthSwitchLink href="/signup">新規登録</AuthSwitchLink>
       </p>
     </main>
   );
