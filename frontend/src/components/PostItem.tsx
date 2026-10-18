@@ -8,15 +8,13 @@ import { Markdown } from "@/components/Markdown";
 export function PostItem({
   post,
   showTopic = false,
-  canLike,
   onToggleLike,
   onDelete,
 }: {
   post: PostSummary;
   /** 「すべて」の一覧のときだけ true。どのトピックの投稿かを示す */
   showTopic?: boolean;
-  /** 未ログインのときは押せない。数だけ見せる */
-  canLike: boolean;
+  /** 未ログインでも押せる。ログインを促すかどうかは呼ぶ側が決める */
   onToggleLike: () => void;
   onDelete: () => void;
 }) {
@@ -125,12 +123,11 @@ export function PostItem({
         <button
           type="button"
           onClick={onToggleLike}
-          disabled={!canLike}
           className={`flex min-h-11 items-center gap-2 rounded-ippo border px-3.5 py-2 text-ui tabular-nums transition-colors ${
             post.likedByMe
-              ? "border-accent bg-accent-soft font-bold text-accent enabled:hover:border-accent-strong"
-              : "border-border-strong text-ink-soft enabled:hover:border-accent enabled:hover:text-accent"
-          } disabled:cursor-default`}
+              ? "border-accent bg-accent-soft font-bold text-accent hover:border-accent-strong"
+              : "border-border-strong text-ink-soft hover:border-accent hover:text-accent"
+          }`}
           aria-pressed={post.likedByMe}
           aria-label={post.likedByMe ? "いいねを取り消す" : "いいねする"}
         >

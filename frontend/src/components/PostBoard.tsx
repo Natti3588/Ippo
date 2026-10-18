@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import { api, type PostSummary, type SortOrder } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
@@ -11,6 +11,7 @@ import { TopicNav } from "@/components/TopicNav";
 import { PostItem } from "@/components/PostItem";
 import { Pagination } from "@/components/Pagination";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { LoginRequiredDialog } from "@/components/LoginRequiredDialog";
 
 const SORTS: SortOrder[] = ["popular", "newest", "oldest"];
 
@@ -56,6 +57,24 @@ export function PostBoard({ slug }: { slug?: string }) {
     : "すべての投稿";
 
   const basePath = slug ? `/topics/${slug}` : "/posts";
+
+  // ログインのあとに、並び順とページも含めて同じ場所へ戻すための道
+  const pathname = usePathname();
+  const query = params.toString();
+  const here = query ? `${pathname}?${query}` : pathname;
+
+  // ログインしていない人がいいねを押したときに開く
+  const [askingLogin, setAskingLogin] = useState(false);
+
+  // user が undefined の間（まだ確かめている最中）は何もしない。
+  // ログインしている人に、ログインを促すポップアップを見せてしまう。
+  function onLike(target: PostSummary) {
+    if (user) {
+      toggleLike(target);
+    } else if (user === null) {
+      setAskingLogin(true);
+    }
+  }
 
   async function toggleLike(target: PostSummary) {
     if (!data) return;
@@ -158,8 +177,7 @@ export function PostBoard({ slug }: { slug?: string }) {
           key={post.id}
           post={post}
           showTopic={!slug}
-          canLike={Boolean(user)}
-          onToggleLike={() => toggleLike(post)}
+          onToggleLike={() => onLike(post)}
           onDelete={() => setConfirming(post)}
         />
       ))}
@@ -181,6 +199,15 @@ export function PostBoard({ slug }: { slug?: string }) {
         <p className="wrap-anywhere">「{confirming?.title}」を削除します。</p>
         <p>削除すると、元に戻せません。</p>
       </ConfirmDialog>
+
+      <LoginRequiredDialog
+        open={askingLogin}
+        title="いいねするにはログインが必要です"
+        next={here}
+        onClose={() => setAskingLogin(false)}
+      >
+        <p>ログインすると、役に立った投稿にいいねを付けられます。</p>
+      </LoginRequiredDialog>
     </main>
   );
 }
