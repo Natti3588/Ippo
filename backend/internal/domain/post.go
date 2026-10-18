@@ -26,6 +26,7 @@ type PostSummary struct {
 	Title       string
 	BodyPreview string
 	Truncated   bool
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int32
 	LikedByMe   bool

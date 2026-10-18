@@ -52,6 +52,7 @@ type summaryRow struct {
 	TopicName   string
 	BodyPreview string
 	BodyLength  int64
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -75,6 +76,7 @@ func toDomainPostSummary(r summaryRow) (domain.PostSummary, error) {
 		Title:       r.Title,
 		BodyPreview: r.BodyPreview,
 		Truncated:   r.BodyLength > int64(utf8.RuneCountInString(r.BodyPreview)),
+		HasImage:    r.HasImage,
 		AuthorName:  r.AuthorName,
 		LikeCount:   int32(r.LikeCount),
 		LikedByMe:   r.LikedByMe,
@@ -93,6 +95,7 @@ func postsFromAllPopular(rows []sqlcgen.ListPostsByPopularRow) ([]domain.PostSum
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
+			HasImage:    r.HasImage,
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
 			LikedByMe:   r.LikedByMe,
@@ -117,6 +120,7 @@ func postsFromAllNewest(rows []sqlcgen.ListPostsByNewestRow) ([]domain.PostSumma
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
+			HasImage:    r.HasImage,
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
 			LikedByMe:   r.LikedByMe,
@@ -141,6 +145,7 @@ func postsFromAllOldest(rows []sqlcgen.ListPostsByOldestRow) ([]domain.PostSumma
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
+			HasImage:    r.HasImage,
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
 			LikedByMe:   r.LikedByMe,
@@ -163,6 +168,7 @@ func postsFromPopular(rows []sqlcgen.ListPostsByTopicPopularRow) ([]domain.PostS
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
+			HasImage:    r.HasImage,
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
 			LikedByMe:   r.LikedByMe,
@@ -185,6 +191,7 @@ func postsFromNewest(rows []sqlcgen.ListPostsByTopicNewestRow) ([]domain.PostSum
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
+			HasImage:    r.HasImage,
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
 			LikedByMe:   r.LikedByMe,
@@ -207,6 +214,7 @@ func postsFromOldest(rows []sqlcgen.ListPostsByTopicOldestRow) ([]domain.PostSum
 			Title:       r.Title,
 			BodyPreview: r.BodyPreview,
 			BodyLength:  int64(r.BodyLength),
+			HasImage:    r.HasImage,
 			AuthorName:  r.AuthorName,
 			LikeCount:   r.LikeCount,
 			LikedByMe:   r.LikedByMe,

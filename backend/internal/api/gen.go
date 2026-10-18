@@ -109,8 +109,11 @@ type PostSummary struct {
 	BodyPreview string `json:"bodyPreview"`
 
 	// CreatedAt 投稿日時（UTC）
-	CreatedAt time.Time          `json:"createdAt"`
-	Id        openapi_types.UUID `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+
+	// HasImage 本文に画像（![説明](URL) の形）があるかどうか。 先頭200文字より後ろにある画像も含む
+	HasImage bool               `json:"hasImage"`
+	Id       openapi_types.UUID `json:"id"`
 
 	// IsMine 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false
 	IsMine bool `json:"isMine"`

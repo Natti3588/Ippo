@@ -137,6 +137,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -167,6 +168,7 @@ type ListPostsByNewestRow struct {
 	Title       string
 	BodyPreview string
 	BodyLength  int32
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -190,6 +192,7 @@ func (q *Queries) ListPostsByNewest(ctx context.Context, arg ListPostsByNewestPa
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
+			&i.HasImage,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.LikedByMe,
@@ -217,6 +220,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -247,6 +251,7 @@ type ListPostsByOldestRow struct {
 	Title       string
 	BodyPreview string
 	BodyLength  int32
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -270,6 +275,7 @@ func (q *Queries) ListPostsByOldest(ctx context.Context, arg ListPostsByOldestPa
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
+			&i.HasImage,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.LikedByMe,
@@ -297,6 +303,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -327,6 +334,7 @@ type ListPostsByPopularRow struct {
 	Title       string
 	BodyPreview string
 	BodyLength  int32
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -350,6 +358,7 @@ func (q *Queries) ListPostsByPopular(ctx context.Context, arg ListPostsByPopular
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
+			&i.HasImage,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.LikedByMe,
@@ -377,6 +386,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -406,6 +416,7 @@ type ListPostsByTopicNewestRow struct {
 	Title       string
 	BodyPreview string
 	BodyLength  int32
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -432,6 +443,7 @@ func (q *Queries) ListPostsByTopicNewest(ctx context.Context, arg ListPostsByTop
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
+			&i.HasImage,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.LikedByMe,
@@ -457,6 +469,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -486,6 +499,7 @@ type ListPostsByTopicOldestRow struct {
 	Title       string
 	BodyPreview string
 	BodyLength  int32
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -512,6 +526,7 @@ func (q *Queries) ListPostsByTopicOldest(ctx context.Context, arg ListPostsByTop
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
+			&i.HasImage,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.LikedByMe,
@@ -537,6 +552,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -566,6 +582,7 @@ type ListPostsByTopicPopularRow struct {
 	Title       string
 	BodyPreview string
 	BodyLength  int32
+	HasImage    bool
 	AuthorName  string
 	LikeCount   int64
 	LikedByMe   bool
@@ -592,6 +609,7 @@ func (q *Queries) ListPostsByTopicPopular(ctx context.Context, arg ListPostsByTo
 			&i.Title,
 			&i.BodyPreview,
 			&i.BodyLength,
+			&i.HasImage,
 			&i.AuthorName,
 			&i.LikeCount,
 			&i.LikedByMe,

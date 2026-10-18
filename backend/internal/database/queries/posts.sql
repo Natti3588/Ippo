@@ -5,6 +5,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -29,6 +30,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -53,6 +55,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -77,6 +80,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -99,6 +103,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (
@@ -121,6 +126,7 @@ SELECT
   p.title,
   LEFT(p.body, 200)   AS body_preview,
   CHAR_LENGTH(p.body) AS body_length,
+  (p.body REGEXP '!\\[[^\\]]*\\]\\([^)]+\\)') = 1 AS has_image,
   u.display_name AS author_name,
   COUNT(l.post_id) AS like_count,
   EXISTS (

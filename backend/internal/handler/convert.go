@@ -91,6 +91,7 @@ func toAPIPostSummary(p domain.PostSummary, viewerID string) (api.PostSummary, e
 		Title:       p.Title,
 		BodyPreview: p.BodyPreview,
 		Truncated:   p.Truncated,
+		HasImage:    p.HasImage,
 		AuthorName:  p.AuthorName,
 		LikeCount:   p.LikeCount,
 		LikedByMe:   p.LikedByMe,
