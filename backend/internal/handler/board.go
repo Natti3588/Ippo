@@ -24,14 +24,14 @@ func (h *BoardHandler) TopicsList(w http.ResponseWriter, r *http.Request) {
 	topics, err := h.svc.ListTopics(r.Context())
 	if err != nil {
 		writeInternalServerError(r.Context(), w, h.logger)
-		h.logger.ErrorContext(r.Context(), "failed to list topics", "error", err)
+		h.logger.ErrorContext(r.Context(), "トピック一覧の取得に失敗", "error", err)
 		return
 	}
 	apiTopics := toAPITopics(topics)
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(apiTopics); err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to encode response", "error", err)
+		h.logger.ErrorContext(r.Context(), "レスポンスの書き込みに失敗", "error", err)
 		return
 	}
 }
@@ -66,21 +66,21 @@ func (h *BoardHandler) TopicsListPosts(w http.ResponseWriter, r *http.Request, s
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "トピックが見つかりません")
 			return
 		}
-		h.logger.ErrorContext(r.Context(), "failed to list posts", "error", err, "slug", slug)
+		h.logger.ErrorContext(r.Context(), "投稿一覧の取得に失敗", "error", err, "slug", slug)
 		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	items, err := toAPIPostSummaries(pageData.Items, viewerID)
 	if err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
+		h.logger.ErrorContext(r.Context(), "投稿要約の変換に失敗", "error", err)
 		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(api.PostPage{Items: items, HasNext: pageData.HasNext}); err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to encode response", "error", err)
+		h.logger.ErrorContext(r.Context(), "レスポンスの書き込みに失敗", "error", err)
 	}
 }
 
@@ -110,21 +110,21 @@ func (h *BoardHandler) PostsList(w http.ResponseWriter, r *http.Request, params 
 
 	pageData, err := h.svc.ListPosts(r.Context(), sort, viewerID, page)
 	if err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to list posts", "error", err)
+		h.logger.ErrorContext(r.Context(), "投稿一覧の取得に失敗", "error", err)
 		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	items, err := toAPIPostSummaries(pageData.Items, viewerID)
 	if err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to convert posts", "error", err)
+		h.logger.ErrorContext(r.Context(), "投稿要約の変換に失敗", "error", err)
 		writeInternalServerError(r.Context(), w, h.logger)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(api.PostPage{Items: items, HasNext: pageData.HasNext}); err != nil {
-		h.logger.ErrorContext(r.Context(), "failed to encode response", "error", err)
+		h.logger.ErrorContext(r.Context(), "レスポンスの書き込みに失敗", "error", err)
 	}
 }
 
