@@ -143,7 +143,7 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 
 		// keep-alive で居座る接続を切る。
-		IdleTimeout: 60 * time.Second,
+		IdleTimeout: 70 * time.Second,
 	}
 
 	// SIGTERM（ECS がタスクを止めるときに送る）と Ctrl+C を受け取る。
