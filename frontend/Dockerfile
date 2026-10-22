@@ -12,6 +12,7 @@ RUN npm run build
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production
+ENV KEEP_ALIVE_TIMEOUT=70000
 ENV PORT=3000
 RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app
 
