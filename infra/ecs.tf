@@ -18,9 +18,10 @@ resource "aws_ecs_task_definition" "backend" {
 
   container_definitions = jsonencode([
     {
-      name      = "backend"
-      image     = "${data.aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}"
-      essential = true
+      name                   = "backend"
+      image                  = "${data.aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}"
+      essential              = true
+      readonlyRootFilesystem = true
 
       linuxParameters = {
         capabilities = {
@@ -111,9 +112,10 @@ resource "aws_ecs_task_definition" "frontend" {
 
   container_definitions = jsonencode([
     {
-      name      = "frontend"
-      image     = "${data.aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}"
-      essential = true
+      name                   = "frontend"
+      image                  = "${data.aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}"
+      essential              = true
+      readonlyRootFilesystem = true
 
       linuxParameters = {
         capabilities = {
