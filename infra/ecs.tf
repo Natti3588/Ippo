@@ -22,6 +22,12 @@ resource "aws_ecs_task_definition" "backend" {
       image     = "${data.aws_ecr_repository.backend.repository_url}:${var.backend_image_tag}"
       essential = true
 
+      linuxParameters = {
+        capabilities = {
+          drop = ["ALL"]
+        }
+      }
+
       portMappings = [{
         containerPort = 8080,
         protocol      = "tcp"
@@ -108,6 +114,12 @@ resource "aws_ecs_task_definition" "frontend" {
       name      = "frontend"
       image     = "${data.aws_ecr_repository.frontend.repository_url}:${var.frontend_image_tag}"
       essential = true
+
+      linuxParameters = {
+        capabilities = {
+          drop = ["ALL"]
+        }
+      }
 
       portMappings = [{
         containerPort = 3000,
