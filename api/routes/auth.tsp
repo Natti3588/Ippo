@@ -4,6 +4,11 @@ namespace Ippo;
 
 @route("/auth")
 namespace Auth {
+  @summary("ユーザーを新規登録する")
+  @doc("""
+    登録に成功するとセッションを作り、 Cookie を発行する。
+    メールアドレスが登録済みなら 409 を返す
+    """)
   @route("signup")
   @post
   op signup(@body request: SignUpRequest):
@@ -12,6 +17,11 @@ namespace Auth {
     | ConflictProblem
     | InternalServerErrorProblem;
 
+  @summary("ログインする")
+  @doc("""
+    ログインに成功するとセッションを作り、 Cookie を発行する。
+    メールアドレスかパスワードが違うときは 401 を返す
+    """)
   @route("login")
   @post
   op login(@body request: LoginRequest):
@@ -20,6 +30,11 @@ namespace Auth {
     | UnauthorizedProblem
     | InternalServerErrorProblem;
 
+  @summary("ログアウトする")
+  @doc("""
+    セッションを削除する。
+    ログインしていなくても 204 を返す
+    """)
   @route("logout")
   @post
   op logout(): NoContentResponse | InternalServerErrorProblem;
@@ -27,9 +42,13 @@ namespace Auth {
 
 @route("/me")
 namespace Me {
-  @get op get(): CurrentUser | UnauthorizedProblem | InternalServerErrorProblem;
+  @summary("ログイン中のユーザーを取得する")
+  @get
+  op get(): CurrentUser | UnauthorizedProblem | InternalServerErrorProblem;
 
-  @patch op update(@body request: UpdateProfileRequest):
+  @summary("ユーザーの表示名を変更する")
+  @patch
+  op update(@body request: UpdateProfileRequest):
     | CurrentUser
     | BadRequestProblem
     | UnauthorizedProblem

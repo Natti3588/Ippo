@@ -238,19 +238,19 @@ type TopicsCreatePostJSONRequestBody = CreatePostRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-
+	// AuthLogin ログインする
 	// (POST /auth/login)
 	AuthLogin(w http.ResponseWriter, r *http.Request)
-
+	// AuthLogout ログアウトする
 	// (POST /auth/logout)
 	AuthLogout(w http.ResponseWriter, r *http.Request)
-
+	// AuthSignup ユーザーを新規登録する
 	// (POST /auth/signup)
 	AuthSignup(w http.ResponseWriter, r *http.Request)
-
+	// MeGet ログイン中のユーザーを取得する
 	// (GET /me)
 	MeGet(w http.ResponseWriter, r *http.Request)
-
+	// MeUpdate ユーザーの表示名を変更する
 	// (PATCH /me)
 	MeUpdate(w http.ResponseWriter, r *http.Request)
 
@@ -280,7 +280,7 @@ type ServerInterface interface {
 
 	// (POST /topics/{slug}/posts)
 	TopicsCreatePost(w http.ResponseWriter, r *http.Request, slug string)
-
+	// UploadsCreate アップロードの許可証を発行する
 	// (POST /uploads)
 	UploadsCreate(w http.ResponseWriter, r *http.Request)
 }

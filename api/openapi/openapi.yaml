@@ -7,6 +7,10 @@ paths:
   /auth/login:
     post:
       operationId: Auth_login
+      summary: ログインする
+      description: |-
+        ログインに成功するとセッションを作り、 Cookie を発行する。
+        メールアドレスかパスワードが違うときは 401 を返す
       parameters: []
       responses:
         '200':
@@ -42,6 +46,10 @@ paths:
   /auth/logout:
     post:
       operationId: Auth_logout
+      summary: ログアウトする
+      description: |-
+        セッションを削除する。
+        ログインしていなくても 204 を返す
       parameters: []
       responses:
         '204':
@@ -55,6 +63,10 @@ paths:
   /auth/signup:
     post:
       operationId: Auth_signup
+      summary: ユーザーを新規登録する
+      description: |-
+        登録に成功するとセッションを作り、 Cookie を発行する。
+        メールアドレスが登録済みなら 409 を返す
       parameters: []
       responses:
         '201':
@@ -90,6 +102,7 @@ paths:
   /me:
     get:
       operationId: Me_get
+      summary: ログイン中のユーザーを取得する
       parameters: []
       responses:
         '200':
@@ -112,6 +125,7 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
     patch:
       operationId: Me_update
+      summary: ユーザーの表示名を変更する
       parameters: []
       responses:
         '200':
@@ -448,6 +462,11 @@ paths:
   /uploads:
     post:
       operationId: Uploads_create
+      summary: アップロードの許可証を発行する
+      description: |-
+        ユーザーが S3 へ直接アップロードするための署名付き POST の情報を返す。
+        ファイルはこの API を通らない。
+        アップロード先を使えないときは 503 を返す
       parameters: []
       responses:
         '200':

@@ -13,6 +13,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * ログインする
+         * @description ログインに成功するとセッションを作り、 Cookie を発行する。
+         *     メールアドレスかパスワードが違うときは 401 を返す
+         */
         post: operations["Auth_login"];
         delete?: never;
         options?: never;
@@ -29,6 +34,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * ログアウトする
+         * @description セッションを削除する。
+         *     ログインしていなくても 204 を返す
+         */
         post: operations["Auth_logout"];
         delete?: never;
         options?: never;
@@ -45,6 +55,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * ユーザーを新規登録する
+         * @description 登録に成功するとセッションを作り、 Cookie を発行する。
+         *     メールアドレスが登録済みなら 409 を返す
+         */
         post: operations["Auth_signup"];
         delete?: never;
         options?: never;
@@ -59,12 +74,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** ログイン中のユーザーを取得する */
         get: operations["Me_get"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
+        /** ユーザーの表示名を変更する */
         patch: operations["Me_update"];
         trace?: never;
     };
@@ -166,6 +183,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * アップロードの許可証を発行する
+         * @description ユーザーが S3 へ直接アップロードするための署名付き POST の情報を返す。
+         *     ファイルはこの API を通らない。
+         *     アップロード先を使えないときは 503 を返す
+         */
         post: operations["Uploads_create"];
         delete?: never;
         options?: never;
