@@ -11,6 +11,7 @@ namespace Uploads {
     アップロード先を使えないときは 503 を返す
     """)
   @post
+  @useAuth(SessionAuth)
   op create():
     | UploadTicket
     | UnauthorizedProblem

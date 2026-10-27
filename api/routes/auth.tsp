@@ -37,6 +37,7 @@ namespace Auth {
     """)
   @route("logout")
   @post
+  @useAuth(NoAuth | SessionAuth)
   op logout(): NoContentResponse | InternalServerErrorProblem;
 }
 
@@ -44,10 +45,12 @@ namespace Auth {
 namespace Me {
   @summary("ログイン中のユーザーを取得する")
   @get
+  @useAuth(SessionAuth)
   op get(): CurrentUser | UnauthorizedProblem | InternalServerErrorProblem;
 
   @summary("ユーザーの表示名を変更する")
   @patch
+  @useAuth(SessionAuth)
   op update(@body request: UpdateProfileRequest):
     | CurrentUser
     | BadRequestProblem

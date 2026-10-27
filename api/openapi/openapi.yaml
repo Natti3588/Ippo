@@ -60,6 +60,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - {}
+        - SessionAuth: []
   /auth/signup:
     post:
       operationId: Auth_signup
@@ -123,6 +126,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - SessionAuth: []
     patch:
       operationId: Me_update
       summary: ユーザーの表示名を変更する
@@ -158,6 +163,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdateProfileRequest'
+      security:
+        - SessionAuth: []
   /posts:
     get:
       operationId: Posts_list
@@ -184,6 +191,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - {}
+        - SessionAuth: []
   /posts/{postId}:
     get:
       operationId: Posts_get
@@ -213,6 +223,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - {}
+        - SessionAuth: []
     put:
       operationId: Posts_update
       description: 自分の投稿のタイトルと本文を書き換える。 いいねはそのまま残る
@@ -265,6 +278,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UpdatePostRequest'
+      security:
+        - SessionAuth: []
     delete:
       operationId: Posts_remove
       description: 自分の投稿を削除する。 いいねも一緒に消える
@@ -301,6 +316,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - SessionAuth: []
   /posts/{postId}/like:
     put:
       operationId: Posts_like
@@ -332,6 +349,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - SessionAuth: []
     delete:
       operationId: Posts_unlike
       description: いいねを取り消す
@@ -356,6 +375,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - SessionAuth: []
   /topics:
     get:
       operationId: Topics_list
@@ -413,6 +434,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - {}
+        - SessionAuth: []
     post:
       operationId: Topics_createPost
       description: トピックに投稿する
@@ -459,6 +483,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreatePostRequest'
+      security:
+        - SessionAuth: []
   /uploads:
     post:
       operationId: Uploads_create
@@ -493,6 +519,8 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+      security:
+        - SessionAuth: []
 components:
   parameters:
     ListPostsQuery.page:
@@ -788,3 +816,9 @@ components:
           type: string
           description: '送ったあとに本文へ書く画像のパス。 例: /uploads/<id>.jpg'
       description: 画像を1枚送るための許可証
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: ippo_session
+      description: ログインで発行するセッションの Cookie

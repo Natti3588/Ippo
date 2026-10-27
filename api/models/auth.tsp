@@ -1,4 +1,9 @@
+using Http;
+
 namespace Ippo;
+
+@doc("ログインで発行するセッションの Cookie")
+model SessionAuth is ApiKeyAuth<ApiKeyLocation.cookie, "ippo_session">;
 
 @doc("サインアップリクエスト")
 model SignUpRequest {
