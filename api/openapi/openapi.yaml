@@ -203,7 +203,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
       responses:
         '200':
           description: The request has succeeded.
@@ -234,7 +234,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
       responses:
         '200':
           description: The request has succeeded.
@@ -288,7 +288,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
       responses:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
@@ -327,7 +327,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
       responses:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
@@ -359,7 +359,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
       responses:
         '204':
           description: There is no content to send for this request, but the headers may be useful.
@@ -603,8 +603,7 @@ components:
         - topic
       properties:
         id:
-          type: string
-          format: uuid
+          $ref: '#/components/schemas/uuid'
         title:
           type: string
           description: タイトル
@@ -668,8 +667,7 @@ components:
         - topic
       properties:
         id:
-          type: string
-          format: uuid
+          $ref: '#/components/schemas/uuid'
         title:
           type: string
           description: タイトル。 100文字に制限しているため、一覧でも全文を返す
@@ -816,6 +814,9 @@ components:
           type: string
           description: '送ったあとに本文へ書く画像のパス。 例: /uploads/<id>.jpg'
       description: 画像を1枚送るための許可証
+    uuid:
+      type: string
+      format: uuid
   securitySchemes:
     SessionAuth:
       type: apiKey

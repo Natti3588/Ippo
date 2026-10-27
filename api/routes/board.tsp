@@ -44,7 +44,7 @@ namespace Posts {
   @route("{postId}")
   @get
   @useAuth(NoAuth | SessionAuth)
-  op get(@path postId: string):
+  op get(@path postId: uuid):
     | Post
     | NotFoundProblem
     | InternalServerErrorProblem;
@@ -53,7 +53,7 @@ namespace Posts {
   @route("{postId}")
   @put
   @useAuth(SessionAuth)
-  op update(@path postId: string, @body request: UpdatePostRequest):
+  op update(@path postId: uuid, @body request: UpdatePostRequest):
     | Post
     | BadRequestProblem
     | UnauthorizedProblem
@@ -65,7 +65,7 @@ namespace Posts {
   @route("{postId}")
   @delete
   @useAuth(SessionAuth)
-  op remove(@path postId: string):
+  op remove(@path postId: uuid):
     | NoContentResponse
     | UnauthorizedProblem
     | ForbiddenProblem
@@ -76,7 +76,7 @@ namespace Posts {
   @route("{postId}/like")
   @put
   @useAuth(SessionAuth)
-  op like(@path postId: string):
+  op like(@path postId: uuid):
     | NoContentResponse
     | UnauthorizedProblem
     | NotFoundProblem
@@ -86,7 +86,7 @@ namespace Posts {
   @route("{postId}/like")
   @delete
   @useAuth(SessionAuth)
-  op unlike(@path postId: string):
+  op unlike(@path postId: uuid):
     | NoContentResponse
     | UnauthorizedProblem
     | InternalServerErrorProblem;

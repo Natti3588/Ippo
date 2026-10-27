@@ -2,6 +2,9 @@ using Http;
 
 namespace Ippo;
 
+@format("uuid")
+scalar uuid extends string;
+
 @doc("投稿を分類するカテゴリ")
 model Topic {
   @doc("URLに使う識別子")
@@ -13,8 +16,7 @@ model Topic {
 
 @doc("トピックに書き込む投稿")
 model Post {
-  @format("uuid")
-  id: string;
+  id: uuid;
 
   @doc("タイトル")
   title: string;
@@ -46,8 +48,7 @@ model Post {
 
 @doc("一覧に並べる投稿。 本文は先頭200文字までしか含まない")
 model PostSummary {
-  @format("uuid")
-  id: string;
+  id: uuid;
 
   @doc("タイトル。 100文字に制限しているため、一覧でも全文を返す")
   title: string;
