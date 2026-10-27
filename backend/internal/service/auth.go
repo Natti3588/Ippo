@@ -21,9 +21,10 @@ import (
 // sessions の行を削除すれば即座に失効させられるため、長めでも取り返しがつく。
 const SessionLifetime = 7 * 24 * time.Hour
 
-// パスワードの長さはバイトで数える。bcrypt が見るのが 72 バイトだからである。
+// パスワードの下限は文字数、上限はバイトで数える。
+// 72 バイトの理由は bcrypt のハッシュ・比較の上限が 72 バイトだから。
 const (
-	minPasswordBytes = 8
+	minPasswordChars = 8
 	maxPasswordBytes = 72
 )
 
@@ -112,7 +113,7 @@ func (s *AuthService) issueSession(ctx context.Context, userID string) (Session,
 }
 
 func (s *AuthService) SignUp(ctx context.Context, email, password, displayName string) (domain.User, Session, error) {
-	if len(password) < minPasswordBytes || len(password) > maxPasswordBytes {
+	if utf8.RuneCountInString(password) < minPasswordChars || len(password) > maxPasswordBytes {
 		return domain.User{}, Session{}, &domain.InvalidInputError{
 			Detail: "パスワードは8文字以上72バイト以内にしてください",
 		}

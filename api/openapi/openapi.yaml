@@ -713,7 +713,9 @@ components:
           type: string
           minLength: 8
           maxLength: 72
-          description: サインアップに使うパスワード
+          description: |-
+            サインアップに使うパスワード。
+            8文字以上。 上限は文字数ではなく UTF-8 で 72 バイト
         displayName:
           type: string
           minLength: 1

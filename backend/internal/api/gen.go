@@ -157,7 +157,8 @@ type SignUpRequest struct {
 	// Email サインアップに使うメールアドレス
 	Email openapi_types.Email `json:"email"`
 
-	// Password サインアップに使うパスワード
+	// Password サインアップに使うパスワード。
+	// 8文字以上。 上限は文字数ではなく UTF-8 で 72 バイト
 	Password string `json:"password"`
 }
 

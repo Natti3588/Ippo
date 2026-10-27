@@ -92,12 +92,15 @@ export default function SignupPage() {
           autoComplete="new-password"
           registration={register("password", {
             required: "パスワードを入力してください",
-            minLength: { value: 8, message: "パスワードは8文字以上にしてください" },
-            // bcrypt が72バイトで切ってしまうので、文字数ではなくバイト数で見る。
-            // 日本語や絵文字が混ざると、8文字でも72バイトを超える。
-            validate: (v) =>
-              new TextEncoder().encode(v).length <= 72 ||
-              "パスワードが長すぎます。短くしてください",
+            validate: {
+              minChars: (v) =>
+                [...v].length >= 8 || "パスワードは8文字以上にしてください",
+              // bcrypt が72バイトで切ってしまうので、文字数ではなくバイト数で見る。
+              // 日本語や絵文字が混ざると、8文字でも72バイトを超える。
+              maxBytes: (v) =>
+                new TextEncoder().encode(v).length <= 72 ||
+                "パスワードが長すぎます。短くしてください",
+            },
           })}
           error={errors.password?.message}
           hint="8文字以上"

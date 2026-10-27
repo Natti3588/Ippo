@@ -316,7 +316,10 @@ export interface components {
              * @description サインアップに使うメールアドレス
              */
             email: string;
-            /** @description サインアップに使うパスワード */
+            /**
+             * @description サインアップに使うパスワード。
+             *     8文字以上。 上限は文字数ではなく UTF-8 で 72 バイト
+             */
             password: string;
             /** @description サインアップに使う名前 */
             displayName: string;

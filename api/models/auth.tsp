@@ -6,7 +6,10 @@ model SignUpRequest {
   @format("email")
   email: string;
 
-  @doc("サインアップに使うパスワード")
+  @doc("""
+    サインアップに使うパスワード。
+    8文字以上。 上限は文字数ではなく UTF-8 で 72 バイト
+    """)
   @minLength(8)
   @maxLength(72)
   password: string;
