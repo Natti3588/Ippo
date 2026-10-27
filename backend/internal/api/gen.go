@@ -69,8 +69,8 @@ type Post struct {
 	Body string `json:"body"`
 
 	// CreatedAt 投稿日時（UTC）
-	CreatedAt time.Time          `json:"createdAt"`
-	Id        openapi_types.UUID `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	Id        Uuid      `json:"id"`
 
 	// IsMine 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false
 	IsMine bool `json:"isMine"`
@@ -112,8 +112,8 @@ type PostSummary struct {
 	CreatedAt time.Time `json:"createdAt"`
 
 	// HasImage 本文に画像（![説明](URL) の形）があるかどうか。 先頭200文字より後ろにある画像も含む
-	HasImage bool               `json:"hasImage"`
-	Id       openapi_types.UUID `json:"id"`
+	HasImage bool `json:"hasImage"`
+	Id       Uuid `json:"id"`
 
 	// IsMine 自分の投稿かどうか。 true のときだけ編集と削除ができる。 未ログインなら false
 	IsMine bool `json:"isMine"`
@@ -198,6 +198,9 @@ type UploadTicket struct {
 	Url string `json:"url"`
 }
 
+// Uuid defines model for uuid.
+type Uuid = openapi_types.UUID
+
 // ListPostsQueryPage defines model for ListPostsQuery.page.
 type ListPostsQueryPage = int32
 
@@ -259,19 +262,19 @@ type ServerInterface interface {
 	PostsList(w http.ResponseWriter, r *http.Request, params PostsListParams)
 
 	// (DELETE /posts/{postId})
-	PostsRemove(w http.ResponseWriter, r *http.Request, postId string)
+	PostsRemove(w http.ResponseWriter, r *http.Request, postId Uuid)
 
 	// (GET /posts/{postId})
-	PostsGet(w http.ResponseWriter, r *http.Request, postId string)
+	PostsGet(w http.ResponseWriter, r *http.Request, postId Uuid)
 
 	// (PUT /posts/{postId})
-	PostsUpdate(w http.ResponseWriter, r *http.Request, postId string)
+	PostsUpdate(w http.ResponseWriter, r *http.Request, postId Uuid)
 
 	// (DELETE /posts/{postId}/like)
-	PostsUnlike(w http.ResponseWriter, r *http.Request, postId string)
+	PostsUnlike(w http.ResponseWriter, r *http.Request, postId Uuid)
 
 	// (PUT /posts/{postId}/like)
-	PostsLike(w http.ResponseWriter, r *http.Request, postId string)
+	PostsLike(w http.ResponseWriter, r *http.Request, postId Uuid)
 
 	// (GET /topics)
 	TopicsList(w http.ResponseWriter, r *http.Request)
@@ -418,9 +421,9 @@ func (siw *ServerInterfaceWrapper) PostsRemove(w http.ResponseWriter, r *http.Re
 	_ = err
 
 	// ------------- Path parameter "postId" -------------
-	var postId string
+	var postId Uuid
 
-	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
 		return
@@ -444,9 +447,9 @@ func (siw *ServerInterfaceWrapper) PostsGet(w http.ResponseWriter, r *http.Reque
 	_ = err
 
 	// ------------- Path parameter "postId" -------------
-	var postId string
+	var postId Uuid
 
-	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
 		return
@@ -470,9 +473,9 @@ func (siw *ServerInterfaceWrapper) PostsUpdate(w http.ResponseWriter, r *http.Re
 	_ = err
 
 	// ------------- Path parameter "postId" -------------
-	var postId string
+	var postId Uuid
 
-	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
 		return
@@ -496,9 +499,9 @@ func (siw *ServerInterfaceWrapper) PostsUnlike(w http.ResponseWriter, r *http.Re
 	_ = err
 
 	// ------------- Path parameter "postId" -------------
-	var postId string
+	var postId Uuid
 
-	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
 		return
@@ -522,9 +525,9 @@ func (siw *ServerInterfaceWrapper) PostsLike(w http.ResponseWriter, r *http.Requ
 	_ = err
 
 	// ------------- Path parameter "postId" -------------
-	var postId string
+	var postId Uuid
 
-	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "postId", r.PathValue("postId"), &postId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "postId", Err: err})
 		return

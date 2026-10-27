@@ -128,14 +128,14 @@ func (h *BoardHandler) PostsList(w http.ResponseWriter, r *http.Request, params 
 	}
 }
 
-func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId string) {
+func (h *BoardHandler) PostsGet(w http.ResponseWriter, r *http.Request, postId api.Uuid) {
 	// 未ログインでも読める。その場合 likedByMe と isMine は false になる。
 	var viewerID string
 	if user, ok := userFrom(r.Context()); ok {
 		viewerID = user.Id
 	}
 
-	post, err := h.svc.GetPost(r.Context(), postId, viewerID)
+	post, err := h.svc.GetPost(r.Context(), postId.String(), viewerID)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "投稿が見つかりません")
@@ -203,14 +203,14 @@ func (h *BoardHandler) TopicsCreatePost(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId string) {
+func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId api.Uuid) {
 	user, ok := userFrom(r.Context())
 	if !ok {
 		writeProblem(r.Context(), w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
-	if err := h.svc.Like(r.Context(), postId, user.Id); err != nil {
+	if err := h.svc.Like(r.Context(), postId.String(), user.Id); err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			writeProblem(r.Context(), w, h.logger, http.StatusNotFound, "投稿が見つかりません")
 			return
@@ -223,14 +223,14 @@ func (h *BoardHandler) PostsLike(w http.ResponseWriter, r *http.Request, postId 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postId string) {
+func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postId api.Uuid) {
 	user, ok := userFrom(r.Context())
 	if !ok {
 		writeProblem(r.Context(), w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
-	if err := h.svc.Unlike(r.Context(), postId, user.Id); err != nil {
+	if err := h.svc.Unlike(r.Context(), postId.String(), user.Id); err != nil {
 		h.logger.ErrorContext(r.Context(), "いいねの取り消しに失敗", "error", err)
 		writeInternalServerError(r.Context(), w, h.logger)
 		return
@@ -239,14 +239,14 @@ func (h *BoardHandler) PostsUnlike(w http.ResponseWriter, r *http.Request, postI
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *BoardHandler) PostsRemove(w http.ResponseWriter, r *http.Request, postId string) {
+func (h *BoardHandler) PostsRemove(w http.ResponseWriter, r *http.Request, postId api.Uuid) {
 	user, ok := userFrom(r.Context())
 	if !ok {
 		writeProblem(r.Context(), w, h.logger, http.StatusUnauthorized, "ログインが必要です")
 		return
 	}
 
-	if err := h.svc.DeletePost(r.Context(), postId, user.Id); err != nil {
+	if err := h.svc.DeletePost(r.Context(), postId.String(), user.Id); err != nil {
 		if errors.Is(err, domain.ErrForbidden) {
 			writeProblem(r.Context(), w, h.logger, http.StatusForbidden, "自分の投稿だけ削除できます")
 			return
@@ -263,7 +263,7 @@ func (h *BoardHandler) PostsRemove(w http.ResponseWriter, r *http.Request, postI
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *BoardHandler) PostsUpdate(w http.ResponseWriter, r *http.Request, postId string) {
+func (h *BoardHandler) PostsUpdate(w http.ResponseWriter, r *http.Request, postId api.Uuid) {
 	user, ok := userFrom(r.Context())
 	if !ok {
 		writeProblem(r.Context(), w, h.logger, http.StatusUnauthorized, "ログインが必要です")
@@ -277,7 +277,7 @@ func (h *BoardHandler) PostsUpdate(w http.ResponseWriter, r *http.Request, postI
 		return
 	}
 
-	post, err := h.svc.UpdatePost(r.Context(), postId, user, req.Title, req.Body)
+	post, err := h.svc.UpdatePost(r.Context(), postId.String(), user, req.Title, req.Body)
 	if err != nil {
 		if e, ok := errors.AsType[*domain.InvalidInputError](err); ok {
 			h.logger.InfoContext(r.Context(), "入力が不正", "error", err, "op", "updatePost")
