@@ -17,51 +17,30 @@ model ProblemDetails {
   detail: string;
 }
 
-@doc("入力が不正")
-model BadRequestProblem {
-  ...BadRequestResponse;
+@doc("RFC 9457 の Problem Details を本文に持つエラーの応答")
+model Problem<Status extends int32> {
+  ...Response<Status>;
   ...Body<ProblemDetails>;
   @header contentType: "application/problem+json";
 }
+
+@doc("入力が不正")
+model BadRequestProblem is Problem<400>;
 
 @doc("認証が必要")
-model UnauthorizedProblem {
-  ...UnauthorizedResponse;
-  ...Body<ProblemDetails>;
-  @header contentType: "application/problem+json";
-}
+model UnauthorizedProblem is Problem<401>;
 
 @doc("対象が存在しない")
-model NotFoundProblem {
-  ...NotFoundResponse;
-  ...Body<ProblemDetails>;
-  @header contentType: "application/problem+json";
-}
+model NotFoundProblem is Problem<404>;
 
 @doc("権限が無い")
-model ForbiddenProblem {
-  ...ForbiddenResponse;
-  ...Body<ProblemDetails>;
-  @header contentType: "application/problem+json";
-}
+model ForbiddenProblem is Problem<403>;
 
 @doc("既に存在する")
-model ConflictProblem {
-  ...ConflictResponse;
-  ...Body<ProblemDetails>;
-  @header contentType: "application/problem+json";
-}
+model ConflictProblem is Problem<409>;
 
 @doc("いまは使えない")
-model ServiceUnavailableProblem {
-  ...Response<503>;
-  ...Body<ProblemDetails>;
-  @header contentType: "application/problem+json";
-}
+model ServiceUnavailableProblem is Problem<503>;
 
 @doc("サーバーで問題が起きた")
-model InternalServerErrorProblem {
-  ...Response<500>;
-  ...Body<ProblemDetails>;
-  @header contentType: "application/problem+json";
-}
+model InternalServerErrorProblem is Problem<500>;
