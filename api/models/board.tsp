@@ -101,15 +101,7 @@ model CreatePostRequest {
 }
 
 @doc("投稿の編集。 決まりは作成と同じ")
-model UpdatePostRequest {
-  @minLength(1)
-  @maxLength(100)
-  title: string;
-
-  @minLength(1)
-  @maxLength(15000)
-  body: string;
-}
+model UpdatePostRequest is CreatePostRequest;
 
 @doc("ソート順")
 enum SortOrder {
