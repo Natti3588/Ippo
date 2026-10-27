@@ -43,10 +43,15 @@ export default function PostDetailPage() {
   }
 
   if (error) {
+    const message = !(error instanceof ApiError)
+      ? "読み込みに失敗しました"
+      : error.status === 400
+        ? "投稿が見つかりません"
+        : error.detail;
     return (
       <main className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
         <p role="alert" className="text-preview text-danger">
-          {error instanceof ApiError ? error.detail : "読み込みに失敗しました"}
+          {message}
         </p>
         <p className="mt-5">
           <Link

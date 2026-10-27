@@ -227,8 +227,7 @@ export interface components {
         };
         /** @description トピックに書き込む投稿 */
         Post: {
-            /** Format: uuid */
-            id: string;
+            id: components["schemas"]["uuid"];
             /** @description タイトル */
             title: string;
             /** @description 本文 */
@@ -266,8 +265,7 @@ export interface components {
         };
         /** @description 一覧に並べる投稿。 本文は先頭200文字までしか含まない */
         PostSummary: {
-            /** Format: uuid */
-            id: string;
+            id: components["schemas"]["uuid"];
             /** @description タイトル。 100文字に制限しているため、一覧でも全文を返す */
             title: string;
             /** @description 本文の先頭200文字。 truncated が true なら続きがある */
@@ -360,6 +358,8 @@ export interface components {
             /** @description 送ったあとに本文へ書く画像のパス。 例: /uploads/<id>.jpg */
             path: string;
         };
+        /** Format: uuid */
+        uuid: string;
     };
     responses: never;
     parameters: {
@@ -640,7 +640,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                postId: string;
+                postId: components["schemas"]["uuid"];
             };
             cookie?: never;
         };
@@ -680,7 +680,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                postId: string;
+                postId: components["schemas"]["uuid"];
             };
             cookie?: never;
         };
@@ -751,7 +751,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                postId: string;
+                postId: components["schemas"]["uuid"];
             };
             cookie?: never;
         };
@@ -807,7 +807,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                postId: string;
+                postId: components["schemas"]["uuid"];
             };
             cookie?: never;
         };
@@ -854,7 +854,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                postId: string;
+                postId: components["schemas"]["uuid"];
             };
             cookie?: never;
         };
