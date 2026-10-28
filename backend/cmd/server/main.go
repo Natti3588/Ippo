@@ -25,9 +25,10 @@ import (
 const shutdownTimeout = 20 * time.Second
 
 func main() {
-	logger := slog.New(handler.NewLogHandler(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	jsonHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
-	})))
+	})
+	logger := slog.New(handler.NewLogHandler(jsonHandler))
 
 	// ローカルの Docker-Compose は DATABASE_URL
 	// ECSでは DB_* の5つの環境変数から組み立てる
