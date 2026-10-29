@@ -19,12 +19,6 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-variable "dev_allow_cidrs" {
-  description = "開発中にALBへ直接つなぐ CIDR。 完成したら空にする"
-  type        = list(string)
-  default     = []
-}
-
 variable "backend_image_tag" {
   description = "backend のイメージタグ。 gitのコミットID"
   type        = string

@@ -20,19 +20,6 @@ resource "aws_vpc_security_group_ingress_rule" "alb_from_cloudfront" {
   to_port           = 443
 }
 
-# 開発中だけ。CloudFront を作る前は、これが無いと動作を確かめられない。
-# var.dev_allow_cidrs を空にすると、このルールは消える。
-resource "aws_vpc_security_group_ingress_rule" "alb_from_dev" {
-  for_each = toset(var.dev_allow_cidrs)
-
-  security_group_id = aws_security_group.alb.id
-  description       = "Direct access during development"
-  cidr_ipv4         = each.value
-  ip_protocol       = "tcp"
-  from_port         = 443
-  to_port           = 443
-}
-
 resource "aws_vpc_security_group_egress_rule" "alb_all" {
   security_group_id = aws_security_group.alb.id
   cidr_ipv4         = "0.0.0.0/0"
