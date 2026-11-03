@@ -113,7 +113,7 @@ resource "aws_lambda_function_event_invoke_config" "power" {
 
 resource "aws_scheduler_schedule" "power" {
   for_each = {
-    start = "cron(30 8 * * ? *)"
+    start = "cron(30 15 * * ? *)"
     stop  = "cron(0 21 * * ? *)"
   }
 
