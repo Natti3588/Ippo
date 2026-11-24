@@ -85,6 +85,40 @@ export interface paths {
         patch: operations["Me_update"];
         trace?: never;
     };
+    "/me/study": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description 今日の学習記録の有無と、連続学習日数と最長連続学習日数を取得する */
+        get: operations["Study_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/study/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description 今日の学習記録を付ける。 すでに付けていても成功し、同じ値を返す */
+        put: operations["Study_recordToday"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/posts": {
         parameters: {
             query?: never;
@@ -327,6 +361,21 @@ export interface components {
          * @enum {string}
          */
         SortOrder: "popular" | "newest" | "oldest";
+        /** @description 学習の記録の状態 */
+        StudySummary: {
+            /** @description 今日の学習記録があるかどうか */
+            studiedToday: boolean;
+            /**
+             * Format: int32
+             * @description 連続学習日数。 今日まだ学習記録がなくても、昨日が学習日なら数は残る
+             */
+            currentStreak: number;
+            /**
+             * Format: int32
+             * @description 最長連続学習日数
+             */
+            longestStreak: number;
+        };
         /** @description 投稿を分類するカテゴリ */
         Topic: {
             /** @description URLに使う識別子 */
@@ -570,6 +619,82 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description 認証が必要 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description サーバーで問題が起きた */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Study_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudySummary"];
+                };
+            };
+            /** @description 認証が必要 */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description サーバーで問題が起きた */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Study_recordToday: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudySummary"];
                 };
             };
             /** @description 認証が必要 */
