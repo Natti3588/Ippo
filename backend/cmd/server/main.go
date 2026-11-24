@@ -70,9 +70,11 @@ func main() {
 	logger.Info("database connected")
 
 	boardRepo := repository.NewBoardRepository(db)
+	studyRepo := repository.NewStudyRepository(db)
 	authRepo := repository.NewAuthRepository(db)
 
 	boardSvc := service.NewBoardService(boardRepo)
+	studySvc := service.NewStudyService(studyRepo, time.Now)
 	authSvc := service.NewAuthService(authRepo)
 
 	bucket := os.Getenv("UPLOAD_BUCKET")
@@ -98,9 +100,10 @@ func main() {
 
 	boardHandler := handler.NewBoardHandler(boardSvc, logger)
 	authHandler := handler.NewAuthHandler(authSvc, logger, secureCookie)
+	studyHandler := handler.NewStudyHandler(studySvc, logger)
 	authMiddleware := handler.NewAuthMiddleware(authSvc, logger)
 	uploadHandler := handler.NewUploadHandler(uploadSvc, logger)
-	h := handler.NewServer(boardHandler, authHandler, uploadHandler)
+	h := handler.NewServer(boardHandler, authHandler, uploadHandler, studyHandler)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/healthz", handler.Health)
