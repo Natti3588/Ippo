@@ -1,37 +1,20 @@
 import type { ReactNode } from "react";
 
-/**
- * 全画面共通のフッター。
- *
- * "use client" を付けない。状態もイベントも持たないので、
- * サーバー側で HTML になったあと、ブラウザへ JavaScript を送る必要がない。
- * このアプリで layout 以外にサーバーコンポーネントなのは、ここだけ。
- */
+// 状態を持たないので "use client" を付けない
 export function Footer() {
   return (
-    // mt-auto で下へ寄せる。body が flex flex-col なので、
-    // 内容が短い画面（ログインなど）でも余白を吸って画面の底に着く。
-    //
-    // bg-ground-deep で面の色を変える。本文の区切り線やページ送りと同じ
-    // border-t 1本だけでは、どこからフッターか分からない。地より一段濃い
-    // 色の帯にして、ページの外側だと分かるようにする。#ebe9dd と背景の差は
-    // surface（白）と背景の差と同じ 1.10:1。
-    <footer className="mt-auto border-t border-border bg-ground-deep">
-      <div className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
-        <p className="text-subtitle font-bold text-ink">Ippo</p>
-        <p className="mt-2 max-w-[35em] text-ui text-ink-soft">
+    <footer className="mt-auto border-t border-border bg-surface">
+      <div className="mx-auto w-full max-w-6xl px-4 py-10">
+        <p className="text-xl font-bold text-primary">Ippo</p>
+        <p className="mt-2 max-w-[35em] text-sm text-secondary">
           英語を始めようと考えている人や英語を始めた人が
           <br />
           読んだ本や効率的な勉強法・モチベーションの維持のやり方・おすすめの教材などを共有していく掲示板です。
         </p>
 
-        {/*
-          ここから下は利用者向けではない。採用選考で見る人が
-          リポジトリへ行けるようにするためのもの。
-          だから小さく、罫線の下に置く。
-        */}
+        {/* ここから下は選考で見る人向け。小さく、罫線の下に置く */}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-border pt-5">
-          <p className="text-ui text-ink-soft">© 2026 Ippo</p>
+          <p className="text-sm text-secondary">© 2026 Ippo</p>
 
           <div className="flex items-center gap-1">
             <External href="https://github.com/Natti3588" label="GitHub">
@@ -40,11 +23,7 @@ export function Footer() {
               </svg>
             </External>
 
-            {/*
-              X のロゴは文字そのものなので、隣に X と書くと二重になる。
-              GitHub のマークは猫で読めないため、あちらには文字を残す。
-              読み上げには aria-label が残るので、どちらも名前は伝わる。
-            */}
+            {/* X のロゴは文字そのものなので、横に X と書かない */}
             <External href="https://x.com/Sameta_umi" label="X" showLabel={false}>
               <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
                 <path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z" />
@@ -57,12 +36,6 @@ export function Footer() {
   );
 }
 
-/**
- * 外部サイトへのリンク。
- *
- * aria-label に「新しいタブで開きます」を入れている。
- * 別のタブが開くことを、押す前に知らせないと、戻れなくなったと感じる人がいる。
- */
 function External({
   href,
   label,
@@ -78,10 +51,9 @@ function External({
     <a
       href={href}
       target="_blank"
-      // noopener が無いと、開いた先から window.opener 経由でこのページを操作できる。
       rel="noopener noreferrer"
       aria-label={`${label}（新しいタブで開きます）`}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-ippo px-2.5 text-ui text-ink-soft hover:text-ink transition-colors"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-md px-2.5 text-sm text-secondary hover:text-primary transition-colors"
     >
       {children}
       {showLabel && label}

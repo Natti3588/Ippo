@@ -15,21 +15,14 @@ export function Toast() {
   }, [toast]);
 
   return (
-    /*
-      role="status" の箱は、知らせが無いときも置いておく。
-      箱ごと後から足すと、読み上げソフトが中身の変化に気づかないことがある。
-
-      ヘッダー（高さ 56px）のすぐ下に出す。投稿して詳細へ移ったあと、目が行くのは
-      上のタイトルなので、その近くに置く。下に出すと、iPhone の Safari では
-      画面の下にあるアドレスバーの近くに重なる。ヘッダーに重ねると、ヘッダーのボタンが押せなくなる。
-      「〇〇にもどる」のリンクに重なるので、pointer-events-none でクリックを下へ通す。
-    */
+    // 箱は知らせが無いときも置く。後から足すと、読み上げソフトが変化に気づかないことがある。
+    // ヘッダー（高さ 64px）のすぐ下に出し、下のリンクを押せるようにクリックを通す
     <div
       role="status"
-      className="pointer-events-none fixed inset-x-0 top-[68px] z-50 flex justify-center px-4"
+      className="pointer-events-none fixed inset-x-0 top-20 z-50 flex justify-center px-4"
     >
       {toast && (
-        <div className="flex items-center gap-2.5 rounded-ippo border border-accent bg-surface px-4 py-3 text-ui font-bold text-ink shadow-lg">
+        <div className="flex items-center gap-2.5 rounded-md border border-border bg-surface px-4 py-3 text-sm font-bold text-primary shadow-lg">
           <svg
             width="18"
             height="18"
