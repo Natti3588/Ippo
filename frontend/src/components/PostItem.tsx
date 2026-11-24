@@ -12,132 +12,72 @@ export function PostItem({
   onDelete,
 }: {
   post: PostSummary;
-  /** 「すべて」の一覧のときだけ true。どのトピックの投稿かを示す */
+  // 「すべて」の一覧のときだけ true。どのトピックの投稿かを出す
   showTopic?: boolean;
-  /** 未ログインでも押せる。ログインを促すかどうかは呼ぶ側が決める */
+  // 未ログインでも押せる。ログインを促すかは呼ぶ側が決める
   onToggleLike: () => void;
   onDelete: () => void;
 }) {
   return (
-    <article className="border-t border-border py-6">
-      {/*
-        「すべて」の一覧でだけ、どのトピックの投稿かを出す。
-        押すとそのトピックの一覧へ移るので、リンクのまま。
-
-        枠と背景は付けない。付けると上に並ぶトピック選択のチップ
-        （TopicNav の chipClass）と同じ形になり、「選んでいるトピック」と
-        「この投稿のトピック」の区別がつかなくなる。文字だけのリンクにして、
-        選ぶための部品ではなく投稿に付いた札だと分かるようにする。
-        高さ 28px（min-h-7）で、押せる大きさの基準 24px は満たす。
-      */}
-      {showTopic && (
-        <Link
-          href={`/topics/${post.topic.slug}`}
-          className="mb-1.5 inline-flex min-h-7 items-center text-ui text-ink-soft underline-offset-4 hover:text-ink hover:underline transition-colors"
-        >
-          {post.topic.name}
-        </Link>
+    <article className="flex flex-col gap-2 border-t border-border py-5 first:border-t-0 first:pt-0 last:pb-0">
+      {(showTopic || post.isMine) && (
+        <div className="flex items-center gap-3 text-sm">
+          {showTopic && (
+            <Link href={`/topics/${post.topic.slug}`} className="text-secondary hover:underline">
+              {post.topic.name}
+            </Link>
+          )}
+          {/* 自分の投稿は色だけでなく文字でも示す */}
+          {post.isMine && <span className="font-bold text-accent">あなたの投稿</span>}
+        </div>
       )}
 
-      {/*
-        自分の投稿かどうかを文字でも示す。枠の色だけで示すと、
-        色の見分けがつきにくい人に伝わらない。
-      */}
-      {post.isMine && (
-        <p className="mb-2 text-ui font-bold text-accent">あなたの投稿</p>
-      )}
-
-      {/* 投稿のタイトルと本文にだけ英語向けの書体を当てる */}
       <Link
         href={`/posts/${post.id}`}
-        className="mb-3 block font-read text-subtitle font-semibold text-ink wrap-anywhere"
+        className="text-lg font-bold text-primary wrap-anywhere hover:underline"
       >
         {post.title}
       </Link>
 
-      <p className="mb-3 max-w-[34em] font-read text-preview text-ink-soft wrap-anywhere">
+      <p className="text-secondary wrap-anywhere">
         <Markdown plain>{post.bodyPreview}</Markdown>
       </p>
 
-      <div className="flex flex-wrap items-center gap-4">
-        {/*
-          自分の投稿にだけ出す。authorName では比べない。
-          表示名は一意ではないので、同じ名前の人の投稿まで消せてしまう。
-        */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-secondary">
+        {/* truncated はサーバーが決める。プレビューの長さからは推測しない */}
+        {post.truncated && (
+          <Link href={`/posts/${post.id}`} className="font-bold text-primary underline underline-offset-4">
+            続きを読む
+          </Link>
+        )}
+        {/* プレビューでは画像を外しているので、画像があることを文字で知らせる */}
+        {post.hasImage && <span>画像あり</span>}
         {post.isMine && (
-          <button
-            type="button"
-            onClick={onDelete}
-            className="flex min-h-11 items-center py-2.5 text-ui text-danger underline underline-offset-4 hover:bg-danger-soft transition-colors"
-          >
+          <button type="button" onClick={onDelete} className="text-error underline underline-offset-4">
             削除する
           </button>
         )}
 
-        {/*
-          「続きを読む」を出すかどうかは truncated で決める。
-          bodyPreview の長さから推測しない。文字の数え方がサーバーと違う。
-        */}
-        {post.truncated && (
-          <Link
-            href={`/posts/${post.id}`}
-            className="flex min-h-11 items-center text-ui font-bold text-accent underline underline-offset-4 hover:text-ink transition-colors"
-          >
-            続きを読む
-          </Link>
-        )}
-
-        {/*
-          プレビューでは画像を外しているので、画像があることを文字で知らせる。
-          hasImage はサーバーが本文全体を見て決める。bodyPreview からは推測しない。
-          先頭200文字より後ろの画像を見落とす。
-        */}
-        {post.hasImage && (
-          <span className="flex items-center gap-1.5 text-ui text-ink-soft">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="9" cy="9" r="2" />
-              <path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21" />
-            </svg>
-            画像あり
-          </span>
-        )}
-
         <div className="grow" />
 
-        <span className="text-ui text-ink-soft wrap-anywhere">{post.authorName}</span>
-        <span className="text-ui text-ink-soft">
-          {formatDate(post.createdAt)}
-        </span>
+        <span className="wrap-anywhere">{post.authorName}</span>
+        <span>{formatDate(post.createdAt)}</span>
 
         <button
           type="button"
           onClick={onToggleLike}
-          className={`flex min-h-11 items-center gap-2 rounded-ippo border px-3.5 py-2 text-ui tabular-nums transition-colors ${
-            post.likedByMe
-              ? "border-accent bg-accent-soft font-bold text-accent hover:border-accent-strong"
-              : "border-border-strong text-ink-soft hover:border-accent hover:text-accent"
-          }`}
           aria-pressed={post.likedByMe}
           aria-label={post.likedByMe ? "いいねを取り消す" : "いいねする"}
+          className={`flex min-h-9 items-center gap-1.5 rounded-full border px-3 tabular-nums transition-colors ${
+            post.likedByMe
+              ? "border-accent bg-accent-muted font-bold text-primary"
+              : "border-border hover:border-strong hover:text-primary"
+          }`}
         >
-          {/*
-            色だけで区別しない。押していればハートを塗り、押していなければ
-            線だけにする。色の見分けがつきにくい人にも伝わるようにする。
-          */}
+          {/* 押したかどうかは塗りでも示す */}
           <svg
-            width="18"
-            height="18"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill={post.likedByMe ? "currentColor" : "none"}
             stroke="currentColor"

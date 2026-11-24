@@ -35,22 +35,22 @@ function textOf(node: HastNode): string {
 // 詳細画面ではタイトルが h1 なので、本文の見出しは1段下げる。
 const components: Components = {
   h1: ({ children }) => (
-    <h2 className="mt-6 mb-2 text-subtitle font-bold first:mt-0">{children}</h2>
+    <h2 className="mt-6 mb-2 text-xl font-bold first:mt-0">{children}</h2>
   ),
   h2: ({ children }) => (
-    <h3 className="mt-6 mb-2 text-body font-bold first:mt-0">{children}</h3>
+    <h3 className="mt-6 mb-2 text-lg font-bold first:mt-0">{children}</h3>
   ),
   h3: ({ children }) => (
-    <h4 className="mt-6 mb-2 text-body font-bold first:mt-0">{children}</h4>
+    <h4 className="mt-6 mb-2 text-lg font-bold first:mt-0">{children}</h4>
   ),
   h4: ({ children }) => (
-    <h4 className="mt-6 mb-2 text-body font-bold first:mt-0">{children}</h4>
+    <h4 className="mt-6 mb-2 text-lg font-bold first:mt-0">{children}</h4>
   ),
   h5: ({ children }) => (
-    <h4 className="mt-6 mb-2 text-body font-bold first:mt-0">{children}</h4>
+    <h4 className="mt-6 mb-2 text-lg font-bold first:mt-0">{children}</h4>
   ),
   h6: ({ children }) => (
-    <h4 className="mt-6 mb-2 text-body font-bold first:mt-0">{children}</h4>
+    <h4 className="mt-6 mb-2 text-lg font-bold first:mt-0">{children}</h4>
   ),
   p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
   ul: ({ children }) => (
@@ -60,7 +60,7 @@ const components: Components = {
     <ol className="mb-4 list-decimal pl-6 last:mb-0">{children}</ol>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="mb-4 border-l-4 border-border pl-4 text-ink-soft last:mb-0">
+    <blockquote className="mb-4 border-l-4 border-border pl-4 text-secondary last:mb-0">
       {children}
     </blockquote>
   ),
@@ -74,7 +74,7 @@ const components: Components = {
     </p>
   ),
   code: ({ children }) => (
-    <code className="rounded border border-border bg-surface px-1.5 font-mono">{children}</code>
+    <code className="rounded-sm border border-border bg-muted px-1.5 font-mono">{children}</code>
   ),
   strong: ({ children }) => <strong className="font-bold">{children}</strong>,
   // 外のサイトへ出るので、元のタブを残す。
@@ -84,7 +84,7 @@ const components: Components = {
       href={href}
       target="_blank"
       rel="noopener noreferrer nofollow ugc"
-      className="text-accent underline underline-offset-4 hover:text-ink transition-colors"
+      className="text-primary underline underline-offset-4"
     >
       {children}
     </a>
@@ -98,7 +98,7 @@ const components: Components = {
       alt={alt ?? ""}
       referrerPolicy="no-referrer"
       loading="lazy"
-      className="max-w-full h-auto rounded-ippo"
+      className="max-w-full h-auto rounded-md"
     />
   ),
 };

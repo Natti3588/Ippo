@@ -39,8 +39,7 @@ export default function SignupPage() {
       const user = await api.signup(values.email, values.password, values.displayName);
       // 返ってきた利用者をそのまま入れる。GET /me は呼び直さない
       setUser(user);
-      // ?next= があれば、ログインを求められた元のページへ戻す。
-      // 描くときではなく送るときに読むので、useSearchParams（と Suspense）は要らない。
+      // ?next= があれば、ログインを求められた元のページへ戻す
       router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
     } catch (err) {
       // detail はバックエンドが利用者向けに書いた日本語。そのまま出す
@@ -50,18 +49,15 @@ export default function SignupPage() {
 
   return (
     <main className="mx-auto w-full max-w-[380px] px-4 py-10 md:px-5">
-      <h1 className="mb-6 text-heading font-bold text-ink">新規登録</h1>
+      <h1 className="mb-6 text-2xl font-bold text-primary">新規登録</h1>
 
-      {/* 画面全体の失敗はフォームの前にまとめて出す。
-          role="alert" を付けてあるので、出た瞬間に読み上げられる */}
+      {/* 画面全体の失敗はフォームの前に出す。role="alert" で出た瞬間に読み上げる */}
       {failure && (
-        <div role="alert" className="mb-6 border-l-4 border-danger bg-surface p-3.5">
-          <p className="text-ui text-danger">{failure}</p>
+        <div role="alert" className="mb-6 border-l-4 border-error bg-surface p-3.5">
+          <p className="text-sm text-error">{failure}</p>
         </div>
       )}
 
-      {/* preventDefault と値集めは handleSubmit がやる。
-          エラーがあれば、最初の欄に焦点が移る */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
         <Field
           id="email"
@@ -95,8 +91,7 @@ export default function SignupPage() {
             validate: {
               minChars: (v) =>
                 [...v].length >= 8 || "パスワードは8文字以上にしてください",
-              // bcrypt が72バイトで切ってしまうので、文字数ではなくバイト数で見る。
-              // 日本語や絵文字が混ざると、8文字でも72バイトを超える。
+              // bcrypt は 72 バイトで切るので、文字数ではなくバイト数で見る
               maxBytes: (v) =>
                 new TextEncoder().encode(v).length <= 72 ||
                 "パスワードが長すぎます。短くしてください",
@@ -111,13 +106,13 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
+          className="min-h-12 w-full rounded-md bg-accent p-3 text-base font-bold text-on-accent disabled:opacity-60 enabled:hover:opacity-90 transition-colors"
         >
           {isSubmitting ? "登録中…" : "新規登録"}
         </button>
       </form>
 
-      <p className="mt-6 text-ui text-ink-soft">
+      <p className="mt-6 text-sm text-secondary">
         すでに登録した方は{" "}
         <AuthSwitchLink href="/login">ログイン</AuthSwitchLink>
       </p>

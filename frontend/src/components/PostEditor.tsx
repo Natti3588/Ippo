@@ -17,27 +17,21 @@ import { ImageDecodeError, uploadImage } from "@/lib/upload";
 
 type Tab = "write" | "preview";
 
-/** 投稿の作成と編集で共通の項目。 */
+// 投稿の作成と編集で共通の項目
 export type PostFields = {
   title: string;
   body: string;
 };
 
-/** 親（作成・編集のページ）から、タブを動かすための窓口。 */
+// 親のページからタブを動かすための窓口
 export type PostEditorHandle = {
-  /** 「書く」タブに戻す。送信が止まったとき、隠れた本文へフォーカスを移す前に呼ぶ。 */
+  // 「書く」タブに戻す。送信が止まったとき、隠れた本文へフォーカスを移す前に呼ぶ
   showWriteTab: () => void;
-  /** タブとプレビューを最初の状態に戻す。下書きを消したときに呼ぶ。 */
+  // タブとプレビューを最初の状態に戻す。下書きを消したときに呼ぶ
   resetView: () => void;
 };
 
-/**
- * タイトルと本文の入力欄。作成と編集の両方で使う。
- *
- * 2つのページで同じ部品を使うのは、検証やプレビュー、画像の入れ方が
- * 片方だけ古いまま残るのを防ぐため。
- * react-hook-form の FormProvider の内側に置くこと。
- */
+// タイトルと本文の入力欄。作成と編集の両方で使い、FormProvider の内側に置く
 export function PostEditor({
   ref,
   onUploadingChange,
@@ -81,14 +75,11 @@ export function PostEditor({
     onUploadingChange?.(next);
   }
 
-  // プレビューを開いた瞬間にだけ本文を読む。
-  // useWatch で追うと、15,000文字の本文を1文字ごとに描き直すことになる。
+  // プレビューを開いた瞬間にだけ本文を読む。1 文字ごとに描き直さないため
   function selectTab(next: Tab) {
-    // すでにプレビュー中なら textarea は隠れていて、高さが 0 と測れてしまう。
     if (next === "preview" && tab === "write") {
       setPreviewBody(getValues("body"));
-      // textarea は利用者が高さを変えられるので、rows から決めた値だと食い違う。
-      // 隠される前の、いま見えている高さをここで測って、プレビューに揃える。
+      // 隠れる前の textarea の高さに、プレビューの高さをそろえる
       setPreviewHeight(bodyRef.current?.offsetHeight);
     }
     setTab(next);
@@ -103,8 +94,7 @@ export function PostEditor({
     tabRefs.current[next]?.focus();
   }
 
-  // 本文のカーソルの位置に文字を入れる。選んでいた文字は置き換える。
-  // プレビュー中なら「書く」に戻す。入った場所が見えないと、入ったかどうか分からない。
+  // 本文のカーソルの位置に文字を入れる。入った場所が見えるよう「書く」に戻す
   function insertIntoBody(text: string) {
     const el = bodyRef.current;
     const body = getValues("body");
@@ -144,7 +134,7 @@ export function PostEditor({
     <>
       <div className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between gap-4">
-          <label htmlFor="title" className="text-ui font-bold text-ink">
+          <label htmlFor="title" className="text-sm font-bold text-primary">
             タイトル
           </label>
           <Counter control={control} name="title" max={100} />
@@ -159,12 +149,12 @@ export function PostEditor({
             required: "タイトルを入力してください",
             maxLength: { value: 100, message: "タイトルは100文字以内にしてください" },
           })}
-          className={`w-full rounded-ippo border bg-surface p-3 text-preview text-ink ${
-            errors.title ? "border-2 border-danger" : "border-border-strong"
+          className={`w-full rounded-md border bg-surface p-3 text-base text-primary ${
+            errors.title ? "border-2 border-error" : "border-strong"
           }`}
         />
         {errors.title && (
-          <p id="title-error" className="text-ui text-danger">
+          <p id="title-error" className="text-sm text-error">
             {errors.title.message}
           </p>
         )}
@@ -172,7 +162,7 @@ export function PostEditor({
 
       <div className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between gap-4">
-          <label htmlFor="body" className="text-ui font-bold text-ink">
+          <label htmlFor="body" className="text-sm font-bold text-primary">
             本文
           </label>
           <Counter control={control} name="body" max={15000} />
@@ -196,10 +186,10 @@ export function PostEditor({
               aria-controls={`body-panel-${t}`}
               tabIndex={tab === t ? 0 : -1}
               onClick={() => selectTab(t)}
-              className={`-mb-px flex min-h-11 items-center border-b-2 px-4 text-ui transition-colors ${
+              className={`-mb-px flex min-h-11 items-center border-b-2 px-4 text-sm transition-colors ${
                 tab === t
-                  ? "border-accent font-bold text-ink"
-                  : "border-transparent text-ink-soft hover:text-ink"
+                  ? "border-accent font-bold text-primary"
+                  : "border-transparent text-secondary hover:text-primary"
               }`}
             >
               {t === "write" ? "書く" : "プレビュー"}
@@ -207,12 +197,7 @@ export function PostEditor({
           ))}
         </div>
 
-        {/*
-          textarea は外さずに hidden で隠す。外すと、ブラウザが持っている
-          取り消し（Ctrl+Z）の履歴とカーソルの位置が消える。
-          textarea も register で繋ぐ。value / onChange は持たせない。
-          15,000文字まで書けるので、1文字ごとに再描画させない。
-        */}
+        {/* 外さずに hidden で隠す。外すと取り消し（Ctrl+Z）の履歴とカーソルの位置が消える */}
         <div
           role="tabpanel"
           id="body-panel-write"
@@ -230,8 +215,8 @@ export function PostEditor({
               bodyField.ref(el);
               bodyRef.current = el;
             }}
-            className={`w-full resize-y rounded-ippo border bg-surface p-3.5 font-read text-body text-ink ${
-              errors.body ? "border-2 border-danger" : "border-border-strong"
+            className={`w-full resize-y rounded-md border bg-surface p-3.5 text-base text-primary ${
+              errors.body ? "border-2 border-error" : "border-strong"
             }`}
           />
         </div>
@@ -242,12 +227,12 @@ export function PostEditor({
           hidden={tab !== "preview"}
           tabIndex={0}
           style={{ height: previewHeight }}
-          className="overflow-y-auto rounded-ippo border border-border-strong bg-surface p-3.5 font-read text-body text-ink wrap-anywhere"
+          className="overflow-y-auto rounded-md border border-strong bg-surface p-3.5 text-base text-primary wrap-anywhere"
         >
           {previewBody.trim() ? (
             <Markdown>{previewBody}</Markdown>
           ) : (
-            <p className="text-ui text-ink-soft">プレビューする本文がありません</p>
+            <p className="text-sm text-secondary">プレビューする本文がありません</p>
           )}
         </div>
 
@@ -257,7 +242,7 @@ export function PostEditor({
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
             aria-describedby={uploadError ? "upload-error" : undefined}
-            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-ippo border border-border-strong bg-surface px-4 text-ui text-ink hover:bg-accent-soft transition-colors disabled:opacity-60"
+            className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border border-strong bg-surface px-4 text-sm text-primary hover:bg-muted transition-colors disabled:opacity-60"
           >
             <svg
               width="18"
@@ -284,17 +269,17 @@ export function PostEditor({
             hidden
             onChange={onPickImage}
           />
-          <p className="text-ui text-ink-soft">
+          <p className="text-sm text-secondary">
             {"## 見出し　- 箇条書き　**太字**　`表現`　[文字](URL)　> 引用　![説明](URL)"}
           </p>
         </div>
         {uploadError && (
-          <p id="upload-error" role="alert" className="whitespace-pre-line text-ui text-danger">
+          <p id="upload-error" role="alert" className="whitespace-pre-line text-sm text-error">
             {uploadError}
           </p>
         )}
         {errors.body && (
-          <p id="body-error" className="text-ui text-danger">
+          <p id="body-error" className="text-sm text-error">
             {errors.body.message}
           </p>
         )}

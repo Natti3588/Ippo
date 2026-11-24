@@ -32,6 +32,12 @@ type Session struct {
 	CreatedAt time.Time
 }
 
+type StudyRecord struct {
+	UserID    []byte
+	StudiedOn time.Time
+	CreatedAt time.Time
+}
+
 type Topic struct {
 	ID           []byte
 	Slug         string

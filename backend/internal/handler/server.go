@@ -7,11 +7,12 @@ type Server struct {
 	*BoardHandler
 	*AuthHandler
 	*UploadHandler
+	*StudyHandler
 }
 
 // Server がapi.ServerInterfaceを十どうしているかコンパイル時に確認
 var _ api.ServerInterface = (*Server)(nil)
 
-func NewServer(board *BoardHandler, auth *AuthHandler, upload *UploadHandler) *Server {
-	return &Server{BoardHandler: board, AuthHandler: auth, UploadHandler: upload}
+func NewServer(board *BoardHandler, auth *AuthHandler, upload *UploadHandler, study *StudyHandler) *Server {
+	return &Server{BoardHandler: board, AuthHandler: auth, UploadHandler: upload, StudyHandler: study}
 }

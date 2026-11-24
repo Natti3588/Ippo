@@ -56,9 +56,7 @@ function NewPost() {
 
   const email = user?.email;
 
-  // 開いたとき、下書きがあれば入れ直す。
-  // setValue で入れるのは、入れた状態も「書きかけ」として扱い、
-  // 閉じようとしたときの確認を出すため。
+  // 開いたとき、下書きがあれば入れ直す。書きかけとして扱い、閉じるときに確かめる
   const restored = useRef(false);
   useEffect(() => {
     if (!email || restored.current) return;
@@ -69,15 +67,10 @@ function NewPost() {
     if (draft.topic) setValue("topic", draft.topic, { shouldDirty: true });
     setValue("title", draft.title, { shouldDirty: true });
     setValue("body", draft.body, { shouldDirty: true });
-    // 日をまたいで開くと、何を書いていたか覚えていないことがある。
-    // 入っている文が前に書いた下書きだと、開いてすぐ分かるようにする。
     showToast("下書きを復元しました");
   }, [email, setValue]);
 
-  // 打つのが止まって1秒たったら保存する。
-  // subscribe なら、値が変わっても画面は描き直されない。
-  // 投稿に成功したら保存をやめ、下書きを消す。保存をやめるときに
-  // 待っている分を書き出してから消すので、消した下書きが書き戻されない。
+  // 打つのが止まって 1 秒たったら下書きを保存する。subscribe なら画面は描き直されない
   const [posted, setPosted] = useState(false);
   useEffect(() => {
     if (!email || posted) return;
@@ -114,8 +107,7 @@ function NewPost() {
     if (posted && email) clearDraft(email);
   }, [posted, email]);
 
-  // 「下書きを消す」は2回押しで消す。長い英文をうっかり失わないように、
-  // 1回目は文字を変えるだけにして、3秒たったら元に戻す。
+  // 「下書きを消す」は 2 回押しで消す。1 回目から 3 秒たったら元に戻す
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   useEffect(() => {
     if (!confirmDiscard) return;
@@ -138,32 +130,24 @@ function NewPost() {
   async function onSubmit(values: FormValues) {
     setFailure(null);
     try {
-      // トピックは本体ではなく URL に入る。
-      // 選んだ slug から送信先を組み立てる。
       const post = await api.createPost(values.topic, values.title, values.body);
       setPosted(true);
       showToast("投稿に成功しました");
-      // 201 が Post を返す。その id で詳細へ送る。
-      // 一覧へ戻すと、いま書いたものが人気順のどこにあるか分からない。
+      // 一覧ではなく、いま書いた投稿の詳細へ送る
       router.push(`/posts/${post.id}`);
     } catch (err) {
       setFailure(err instanceof ApiError ? err.detail : "通信に失敗しました");
     }
   }
 
-  // 本文が空などで送信が止まったとき、プレビュー中なら書くタブへ戻す。
-  // react-hook-form も最初のエラーへフォーカスを移そうとするが、
-  // その時点では textarea が hidden のままなので効かない。
-  // flushSync で描き直しを済ませてから、こちらでフォーカスを移す。
-  // タイトルなど先に並ぶ項目にもエラーがあるときは、そちらへのフォーカスを奪わない。
+  // 本文のエラーで止まったら、プレビュー中でも書くタブへ戻してから本文にフォーカスを移す
   function onInvalid(errs: FieldErrors<FormValues>) {
     if (!errs.body) return;
     editorRef.current?.showWriteTab();
     if (!errs.topic && !errs.title) setFocus("body");
   }
 
-  // 書きかけのまま閉じようとしたら止める。
-  // 送信中は止めない（これから消えるのが正しいため）。
+  // 書きかけのまま閉じようとしたら止める。送信中は止めない
   useEffect(() => {
     if (!isDirty || isSubmitting) return;
 
@@ -174,15 +158,14 @@ function NewPost() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [isDirty, isSubmitting]);
 
-  // 未ログインでは書けない。ヘッダーにも「投稿する」を出していないが、
-  // URL を直接開けるので、この経路は必ず通る。
+  // URL を直接開けるので、未ログインの場合も扱う
   if (user === null) {
     return (
-      <main className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
-        <p className="mb-5 text-preview text-ink">投稿するにはログインが必要です。</p>
+      <main className="mx-auto w-full max-w-3xl px-4 py-10 md:px-5">
+        <p className="mb-5 text-base text-primary">投稿するにはログインが必要です。</p>
         <Link
           href="/login"
-          className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface hover:bg-accent-strong active:bg-accent-deep transition-colors"
+          className="inline-flex min-h-12 items-center rounded-md bg-accent px-6 py-3 text-base font-bold text-on-accent hover:opacity-90 transition-colors"
         >
           ログイン
         </Link>
@@ -194,11 +177,11 @@ function NewPost() {
   if (!user) return null;
 
   return (
-    <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
+    <main className="mx-auto w-full max-w-3xl px-4 pb-14 md:px-5">
       <nav className="py-4">
         <Link
           href={backHref}
-          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft hover:text-ink transition-colors"
+          className="inline-flex min-h-11 items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
         >
           <svg
             width="16"
@@ -217,38 +200,32 @@ function NewPost() {
         </Link>
       </nav>
 
-      <h1 className="mb-2 text-heading font-bold text-ink">投稿する</h1>
-      <p className="mb-7 max-w-[30em] text-ui text-ink-soft">
+      <h1 className="mb-2 text-2xl font-bold text-primary">投稿する</h1>
+      <p className="mb-7 max-w-[30em] text-sm text-secondary">
         英語学習についての疑問や体験、
         <br />
         ちょっとした気づきを共有してみましょう。
       </p>
 
       {failure && (
-        <div role="alert" className="mb-6 border-l-4 border-danger bg-surface p-3.5">
-          <p className="text-ui text-danger">{failure}</p>
+        <div role="alert" className="mb-6 border-l-4 border-error bg-surface p-3.5">
+          <p className="text-sm text-error">{failure}</p>
         </div>
       )}
 
       <FormProvider {...form}>
       {/* handleSubmit は送信のときに呼ぶ。onInvalid が ref を読むので、描くときに渡すと lint が止める */}
       <form onSubmit={(e) => handleSubmit(onSubmit, onInvalid)(e)} noValidate className="flex flex-col gap-5">
-        {/*
-          トピックの選択。掲示板の中にフォームがあったときは、
-          画面の slug がそのまま投稿先だった。独立するとその前提が消える。
-        */}
         <fieldset className="m-0 border-0 p-0">
-          <legend className="mb-3 p-0 text-ui font-bold text-ink">
+          <legend className="mb-3 p-0 text-sm font-bold text-primary">
             どのトピックに書きますか
           </legend>
 
           <div className="flex flex-col gap-2">
             {topics?.map((t) => (
-              // label で input を包むと、行のどこを押しても選べる。
-              // 文字だけが当たり判定になるのを避ける。
               <label
                 key={t.slug}
-                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-ippo border border-border-strong bg-surface px-3.5 py-2.5 has-checked:border-2 has-checked:border-accent has-checked:bg-accent-soft hover:bg-accent-soft hover:border-accent transition-colors"
+                className="flex min-h-12 cursor-pointer items-center gap-3 rounded-md border border-strong bg-surface px-3.5 py-2.5 has-checked:border-2 has-checked:border-accent has-checked:bg-muted hover:bg-muted hover:border-accent transition-colors"
               >
                 <input
                   type="radio"
@@ -256,13 +233,13 @@ function NewPost() {
                   {...register("topic", { required: "トピックを選んでください" })}
                   className="h-5 w-5 accent-accent"
                 />
-                <span className="text-preview text-ink">{t.name}</span>
+                <span className="text-base text-primary">{t.name}</span>
               </label>
             ))}
           </div>
 
           {errors.topic && (
-            <p className="mt-2 text-ui text-danger">{errors.topic.message}</p>
+            <p className="mt-2 text-sm text-error">{errors.topic.message}</p>
           )}
         </fieldset>
 
@@ -272,13 +249,13 @@ function NewPost() {
           <button
             type="submit"
             disabled={isSubmitting || uploading}
-            className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
+            className="inline-flex min-h-12 items-center rounded-md bg-accent px-6 py-3 text-base font-bold text-on-accent disabled:opacity-60 enabled:hover:opacity-90 transition-colors"
           >
             {isSubmitting ? "投稿中…" : "投稿する"}
           </button>
           <Link
             href={backHref}
-            className="inline-flex min-h-11 items-center text-ui text-ink-soft underline underline-offset-4 hover:text-ink transition-colors"
+            className="inline-flex min-h-11 items-center text-sm text-secondary underline underline-offset-4 hover:text-primary transition-colors"
           >
             やめる
           </Link>
@@ -286,8 +263,8 @@ function NewPost() {
             <button
               type="button"
               onClick={onDiscard}
-              className={`ml-auto inline-flex min-h-11 items-center text-ui underline underline-offset-4 transition-colors ${
-                confirmDiscard ? "font-bold text-danger" : "text-ink-soft hover:text-ink"
+              className={`ml-auto inline-flex min-h-11 items-center text-sm underline underline-offset-4 transition-colors ${
+                confirmDiscard ? "font-bold text-error" : "text-secondary hover:text-primary"
               }`}
             >
               {confirmDiscard ? "もう一度押すと消えます" : "下書きを消す"}

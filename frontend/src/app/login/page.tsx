@@ -38,8 +38,7 @@ export default function LoginPage() {
       const user = await api.login(values.email, values.password);
       // 返ってきた利用者をそのまま入れる。GET /me は呼び直さない
       setUser(user);
-      // ?next= があれば、ログインを求められた元のページへ戻す。
-      // 描くときではなく送るときに読むので、useSearchParams（と Suspense）は要らない。
+      // ?next= があれば、ログインを求められた元のページへ戻す
       router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
     } catch (err) {
       // detail はバックエンドが利用者向けに書いた日本語。そのまま出す
@@ -49,18 +48,15 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto w-full max-w-[380px] px-4 py-10 md:px-5">
-      <h1 className="mb-6 text-heading font-bold text-ink">ログイン</h1>
+      <h1 className="mb-6 text-2xl font-bold text-primary">ログイン</h1>
 
-      {/* 画面全体の失敗はフォームの前にまとめて出す。
-          role="alert" を付けてあるので、出た瞬間に読み上げられる */}
+      {/* 画面全体の失敗はフォームの前に出す。role="alert" で出た瞬間に読み上げる */}
       {failure && (
-        <div role="alert" className="mb-6 border-l-4 border-danger bg-surface p-3.5">
-          <p className="text-ui text-danger">{failure}</p>
+        <div role="alert" className="mb-6 border-l-4 border-error bg-surface p-3.5">
+          <p className="text-sm text-error">{failure}</p>
         </div>
       )}
 
-      {/* preventDefault と値集めは handleSubmit がやる。
-          エラーがあれば、最初の欄に焦点が移る */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-5">
         <Field
           id="email"
@@ -83,18 +79,17 @@ export default function LoginPage() {
           error={errors.password?.message}
         />
 
-        {/* disabled にするのは送信中だけ。
-            入力の途中で押せなくすると、なぜ押せないのか分からない */}
+        {/* 押せなくするのは送信中だけ。入力の途中だと、なぜ押せないのか分からない */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-12 w-full rounded-ippo bg-accent p-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
+          className="min-h-12 w-full rounded-md bg-accent p-3 text-base font-bold text-on-accent disabled:opacity-60 enabled:hover:opacity-90 transition-colors"
         >
           {isSubmitting ? "ログイン中…" : "ログイン"}
         </button>
       </form>
 
-      <p className="mt-6 text-ui text-ink-soft">
+      <p className="mt-6 text-sm text-secondary">
         はじめての方は{" "}
         <AuthSwitchLink href="/signup">新規登録</AuthSwitchLink>
       </p>
