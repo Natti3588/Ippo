@@ -1,115 +1,68 @@
-@import "tailwindcss";
+/* この行は Tailwind の読み込みより上に置く。下にあると、効く順が逆になる */
+@layer reset, theme, base, astryx-base, astryx-theme, components, utilities;
 
-:root {
-  color-scheme: light;
+@import "@astryxdesign/theme-stone/fonts.css";
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@astryxdesign/core/reset.css";
+@import "@astryxdesign/core/astryx.css";
+@import "@astryxdesign/theme-stone/theme.css";
+@import "@astryxdesign/core/tailwind-theme.css";
+@import "tailwindcss/utilities.css" layer(utilities);
 
-  --ground: #f5f4ec;
-  --ground-deep: #ebe9dd;
-  --surface: #ffffff;
-  --ink: #232619;
-  --ink-soft: #5f6552;
-  --ink-faint: #8a8e7a;
-  --accent: #4f6b2b;
-  --accent-soft: #e8eedb;
-  --border: #bcbba5;
-  --border-strong: #8a8e7a;
-  --danger: #9b3d24;
-  --accent-strong: #435a23;
-  --accent-deep: #36481c;
-  --danger-soft: #f6e8e3;
+/*
+  まだ作り直していない画面のための仮の対応。古い色の名前を stone の色につなぐ。
+  全画面を作り直したら消す。
+*/
+@theme reference inline {
+  --color-ground: var(--color-background-body);
+  --color-ground-deep: var(--color-background-muted);
+  --color-ink: var(--color-text-primary);
+  --color-ink-soft: var(--color-text-secondary);
+  --color-ink-faint: var(--color-text-secondary);
+  --color-accent-soft: var(--color-accent-muted);
+  --color-accent-strong: var(--color-accent);
+  --color-accent-deep: var(--color-accent);
+  --color-danger: var(--color-text-error);
+  --color-danger-soft: var(--color-error-muted);
+  --font-read: var(--font-family-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-
-    --ground: #14170e;
-    --ground-deep: #0e100a;
-    --surface: #1c2015;
-    --ink: #e8eadf;
-    --ink-soft: #a6ab96;
-    --ink-faint: #7d8271;
-    --accent: #a3c46b;
-    --accent-soft: #222a16;
-    --border: #4a5137;
-    --border-strong: #6c7553;
-    --danger: #e08a6e;
-    --accent-strong: #b2d07c;
-    --accent-deep: #c2dc92;
-    --danger-soft: #2f1d16;
-  }
-}
-
+/* 古い文字の大きさと角の丸み。これも全画面を作り直したら消す */
 @theme inline {
-  --color-ground: var(--ground);
-  --color-ground-deep: var(--ground-deep);
-  --color-surface: var(--surface);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-ink-faint: var(--ink-faint);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-  --color-danger: var(--danger);
-  --color-accent-strong: var(--accent-strong);
-  --color-accent-deep: var(--accent-deep);
-  --color-danger-soft: var(--danger-soft);
-
-  --font-sans: var(--font-ui);
-  --font-read: var(--font-read);
-
-  /*
-    文字の大きさはここだけで決める。コンポーネントに px を直接書かない。
-    全体の縮尺を変えるときは、この7行を書き換えれば済む。
-
-    読み手が40〜60代なので、いちばん小さいものでも 15px で止めてある。
-    補助テキスト（日付・文字数）も 15px で、大きさではなく色で区別する。
-  */
-  --text-display: 28px;      /* ホームの見出し */
+  --text-display: 28px;
   --text-display--line-height: 1.4;
-  --text-title: 24px;        /* 投稿詳細のタイトル */
+  --text-title: 24px;
   --text-title--line-height: 1.35;
-  --text-heading: 22px;      /* 画面の見出し（ログイン・新規登録・投稿） */
+  --text-heading: 22px;
   --text-heading--line-height: 1.45;
-  --text-subtitle: 18px;     /* 一覧の投稿タイトル */
+  --text-subtitle: 18px;
   --text-subtitle--line-height: 1.55;
-  --text-body: 17px;         /* 投稿の本文（詳細） */
+  --text-body: 17px;
   --text-body--line-height: 1.95;
-  --text-preview: 16px;      /* 一覧の本文プレビュー */
+  --text-preview: 16px;
   --text-preview--line-height: 1.85;
-  --text-ui: 15px;           /* ボタン・入力・ラベル・補助。これ以上小さくしない */
+  --text-ui: 15px;
   --text-ui--line-height: 1.6;
 
   --radius-ippo: 10px;
 }
 
 body {
-  background: var(--ground);
-  color: var(--ink);
-  /* 二本指の拡大は残す。消すのはダブルタップの待ち時間だけ */
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  /* ダブルタップの拡大の待ち時間だけを消す。二本指の拡大は残す */
   touch-action: manipulation;
 }
 
-/*
-  Tailwind v4 の preflight は button を cursor: default にする（v3 は pointer だった）。
-  このアプリは a と button を同じ見た目で並べているので、そのままだと
-  「押せるのに矢印が出るもの」と「手のひらが出るもの」が混ざる。
-
-  :not(:disabled) にしているのは、送信中のボタンに手のひらを出さないため。
-  押せないものに押せる合図を出さない。
-
-  @layer base に入れているのは、個別に cursor-* を指定したいときに
-  ユーティリティ側が勝てるようにするため。
-*/
+/* Tailwind 4 は button の手のひらの形を外すので戻す。押せないボタンには出さない */
 @layer base {
   button:not(:disabled) {
     cursor: pointer;
   }
 }
 
-/* 押せるものには輪郭を出す。outline を消して終わりにしない */
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--color-accent);
   outline-offset: 2px;
 }
