@@ -10,44 +10,6 @@
 @import "@astryxdesign/core/tailwind-theme.css";
 @import "tailwindcss/utilities.css" layer(utilities);
 
-/*
-  まだ作り直していない画面のための仮の対応。古い色の名前を stone の色につなぐ。
-  全画面を作り直したら消す。
-*/
-@theme reference inline {
-  --color-ground: var(--color-background-body);
-  --color-ground-deep: var(--color-background-muted);
-  --color-ink: var(--color-text-primary);
-  --color-ink-soft: var(--color-text-secondary);
-  --color-ink-faint: var(--color-text-secondary);
-  --color-accent-soft: var(--color-accent-muted);
-  --color-accent-strong: var(--color-accent);
-  --color-accent-deep: var(--color-accent);
-  --color-danger: var(--color-text-error);
-  --color-danger-soft: var(--color-error-muted);
-  --font-read: var(--font-family-body);
-}
-
-/* 古い文字の大きさと角の丸み。これも全画面を作り直したら消す */
-@theme inline {
-  --text-display: 28px;
-  --text-display--line-height: 1.4;
-  --text-title: 24px;
-  --text-title--line-height: 1.35;
-  --text-heading: 22px;
-  --text-heading--line-height: 1.45;
-  --text-subtitle: 18px;
-  --text-subtitle--line-height: 1.55;
-  --text-body: 17px;
-  --text-body--line-height: 1.95;
-  --text-preview: 16px;
-  --text-preview--line-height: 1.85;
-  --text-ui: 15px;
-  --text-ui--line-height: 1.6;
-
-  --radius-ippo: 10px;
-}
-
 body {
   background: var(--color-background-body);
   color: var(--color-text-primary);
