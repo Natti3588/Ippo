@@ -3,7 +3,6 @@ import { BIZ_UDPGothic, Literata } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Footprints } from "@/components/Footprints";
 import { Toast } from "@/components/Toast";
 
 // 日本語のUI用。教育や行政で使われているユニバーサルデザイン書体。
@@ -34,7 +33,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ja" className={`${ui.variable} ${read.variable} h-full antialiased`}>
       <body className="relative min-h-full flex flex-col font-sans">
         <Header />
-        <Footprints />
         {children}
         <Footer />
         <Toast />
