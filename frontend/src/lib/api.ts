@@ -38,8 +38,8 @@ export type UploadTicket = Schemas["UploadTicket"];
 export type StudySummary = Schemas["StudySummary"];
 // 並び順はスキーマに名前がないので、一覧の API のクエリから取り出す
 export type SortOrder = NonNullable<
-  paths["/topics/{slug}/posts"]["get"]["parameters"]["query"]
->["sort"];
+  NonNullable<paths["/topics/{slug}/posts"]["get"]["parameters"]["query"]>["sort"]
+>;
 
 export const api = {
   // --- 認証 ---
