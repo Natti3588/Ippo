@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import useSWR from "swr";
+import { AlertDialog } from "@astryxdesign/core/AlertDialog";
 import { Card } from "@astryxdesign/core/Card";
 import { api, type PostSummary, type SortOrder } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
@@ -11,7 +12,6 @@ import { showToast } from "@/lib/toast";
 import { TopicNav } from "@/components/TopicNav";
 import { PostItem } from "@/components/PostItem";
 import { Pagination } from "@/components/Pagination";
-import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { LoginRequiredDialog } from "@/components/LoginRequiredDialog";
 import { PageColumns } from "@/components/PageColumns";
 import { StudyCard } from "@/components/StudyCard";
@@ -155,18 +155,17 @@ export function PostBoard({ slug }: { slug?: string }) {
         {data && <Pagination basePath={basePath} sort={sort} page={page} hasNext={data.hasNext} />}
       </div>
 
-      <ConfirmDialog
-        open={confirming !== null}
+      <AlertDialog
+        isOpen={confirming !== null}
+        // 削除の通信中は閉じない。閉じても削除は止まらず、結果が見えなくなるだけ
+        onOpenChange={(isOpen) => !isOpen && !removing && setConfirming(null)}
         title="投稿を削除しますか？"
-        confirmLabel="削除する"
-        busyLabel="削除中…"
-        busy={removing}
-        onConfirm={remove}
-        onCancel={() => setConfirming(null)}
-      >
-        <p className="wrap-anywhere">「{confirming?.title}」を削除します。</p>
-        <p>削除すると、元に戻せません。</p>
-      </ConfirmDialog>
+        description={`「${confirming?.title ?? ""}」を削除します。削除すると、元に戻せません。`}
+        actionLabel="削除する"
+        actionVariant="destructive"
+        isActionLoading={removing}
+        onAction={remove}
+      />
 
       <LoginRequiredDialog
         open={askingLogin}
