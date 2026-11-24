@@ -1,22 +1,10 @@
-import type { paths } from "./api-types";
+import type { components, paths } from "./api-types";
 import { toApiError } from "./problem";
 
-/**
- * API のベースパス。
- *
- * 絶対 URL は書かない。開発では Next.js の rewrites、本番ではロードバランサが
- * バックエンドへ振り分ける。環境変数にしないのは、設定を間違えた環境が
- * よそのオリジンを叩いてしまうのを避けたいから。
- */
+// 絶対 URL にしない。開発では Next.js の rewrites、本番ではロードバランサがバックエンドへ振り分ける
 const BASE = "/api";
 
-/**
- * API を1回呼ぶ。すべての呼び出しがここを通る。
- *
- * 肝は credentials: "include" を1か所にまとめたこと。
- * 付け忘れても型は通るので、動かして初めて 401 で気づくことになる。
- * 画面ごとに書いていたら、1か所忘れただけで「なぜかログアウトする」が起きる。
- */
+// すべての呼び出しがここを通る。credentials を 1 か所で付けるので、画面ごとの付け忘れが起きない
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
@@ -31,7 +19,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw await toApiError(res);
   }
 
-  // 204 は本文を持たない。json() を呼ぶと落ちる。
+  // 204 は本文がないので json() を呼べない
   if (res.status === 204) {
     return undefined as T;
   }
@@ -39,21 +27,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
-/** 契約の型を短く書くための別名。 */
-type Json<P extends keyof paths, M extends keyof paths[P]> = paths[P][M] extends {
-  responses: { 200: { content: { "application/json": infer R } } };
-}
-  ? R
-  : paths[P][M] extends { responses: { 201: { content: { "application/json": infer R } } } }
-    ? R
-    : never;
+type Schemas = components["schemas"];
 
-export type Topic = Json<"/topics", "get">[number];
-export type PostPage = Json<"/topics/{slug}/posts", "get">;
-export type PostSummary = PostPage["items"][number];
-export type Post = Json<"/posts/{postId}", "get">;
-export type CurrentUser = Json<"/me", "get">;
-export type UploadTicket = Json<"/uploads", "post">;
+export type Topic = Schemas["Topic"];
+export type PostPage = Schemas["PostPage"];
+export type PostSummary = Schemas["PostSummary"];
+export type Post = Schemas["Post"];
+export type CurrentUser = Schemas["CurrentUser"];
+export type UploadTicket = Schemas["UploadTicket"];
+// 並び順はスキーマに名前がないので、一覧の API のクエリから取り出す
 export type SortOrder = NonNullable<
   paths["/topics/{slug}/posts"]["get"]["parameters"]["query"]
 >["sort"];
@@ -75,13 +57,7 @@ export const api = {
 
   logout: () => request<void>("/auth/logout", { method: "POST" }),
 
-  /**
-   * ログイン中の利用者を返す。未ログインなら null。
-   *
-   * Cookie は HttpOnly なので JavaScript からは読めない。
-   * つまり「ログインしているか」は、ここを呼ばないと分からない。
-   * 401 を例外にしないのは、未ログインが異常ではないから。
-   */
+  // ログイン中の利用者を返す。未ログインは異常ではないので、401 は例外にせず null を返す
   me: async (): Promise<CurrentUser | null> => {
     try {
       return await request<CurrentUser>("/me");
@@ -108,7 +84,7 @@ export const api = {
       `/topics/${encodeURIComponent(slug)}/posts?sort=${sort}&page=${page}`,
     ),
 
-  /** すべてのトピックの投稿。並び順とページはトピック別の一覧と同じ */
+  // すべてのトピックの投稿
   allPosts: (sort: SortOrder = "popular", page = 1) =>
     request<PostPage>(`/posts?sort=${sort}&page=${page}`),
 
@@ -137,6 +113,6 @@ export const api = {
 
   // --- 画像 ---
 
-  /** 画像を1枚送るための許可証をもらう。送る先は S3 で、ここでは送らない。 */
+  // 画像を 1 枚送るための許可をもらう。画像そのものは S3 へ直接送る
   createUpload: () => request<UploadTicket>("/uploads", { method: "POST" }),
 };
