@@ -20,16 +20,11 @@ export function Field({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* htmlFor と id を結んでおくと、ラベルを押しただけで入力欄に入る */}
-      <label htmlFor={id} className="text-ui font-bold text-ink">
+      <label htmlFor={id} className="text-sm font-bold text-primary">
         {label}
       </label>
 
-      {/*
-        value も onChange も持たせない。
-        name / onChange / onBlur / ref は registration の中に入っている。
-        値を持つのは DOM のほうなので、1文字打っても React は動かない。
-      */}
+      {/* 値は DOM が持つ。1 文字打っても React は描き直さない */}
       <input
         id={id}
         type={type}
@@ -40,17 +35,17 @@ export function Field({
         // 「この欄のエラーはこれ」を読み上げに伝える
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         {...registration}
-        className={`w-full rounded-ippo border bg-surface p-3 text-preview text-ink ${
-          error ? "border-2 border-danger" : "border-border-strong"
+        className={`w-full rounded-md border bg-surface p-3 text-base text-primary ${
+          error ? "border-2 border-error" : "border-strong"
         }`}
       />
 
       {error ? (
-        <p id={errorId} className="text-ui text-danger">
+        <p id={errorId} className="text-sm text-error">
           {error}
         </p>
       ) : hint ? (
-        <p id={hintId} className="text-ui text-ink-soft">
+        <p id={hintId} className="text-sm text-secondary">
           {hint}
         </p>
       ) : null}

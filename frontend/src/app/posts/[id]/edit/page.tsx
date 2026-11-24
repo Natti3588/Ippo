@@ -19,23 +19,19 @@ export default function EditPostPage() {
   // 詳細の画面と同じキー。詳細から来たときは、取り直さずにすぐ出せる。
   const { data: post, error } = useSWR(["post", id], () => api.post(id));
 
-  // フォームに渡す投稿。開けると決まったら、そのあとは変えない。
-  // SWR はタブに戻るたびに投稿とログインを取り直す。その1回が通信の失敗で落ちても、
-  // フォームを外して書きかけを消さないため。保存のときの失敗は、フォームの上部に出る。
+  // 開けると決まったら変えない。取り直しが失敗しても、書きかけを消さないため
   const [opened, setOpened] = useState<Post | null>(null);
   if (opened === null && post !== undefined && user && post.isMine) {
     setOpened(post);
   }
 
-  // 自分の投稿でなければ、詳細へ戻す。ボタンは出していないが、URL を直接開けるため。
-  // 本当の確かめはサーバー（403）。ここは画面の案内だけで、開いたあとは見ない。
+  // 自分の投稿でなければ詳細へ戻す。本当の確かめはサーバー（403）がする
   const notMine = opened === null && (user === null || (post !== undefined && !post.isMine));
   useEffect(() => {
     if (notMine) router.replace(`/posts/${id}`);
   }, [notMine, id, router]);
 
-  // 初期値は読み込めてから決まるので、フォームは中の部品に分ける。
-  // 分けないと、useForm の defaultValues が空のまま固まる。
+  // 初期値は読み込めてから決まるので、フォームを中の部品に分ける
   if (opened) return <EditForm post={opened} />;
 
   if (error) {
@@ -45,14 +41,14 @@ export default function EditPostPage() {
         ? "投稿が見つかりません"
         : error.detail;
     return (
-      <main className="mx-auto w-full max-w-[680px] px-4 py-10 md:px-5">
-        <p role="alert" className="text-preview text-danger">
+      <main className="mx-auto w-full max-w-3xl px-4 py-10 md:px-5">
+        <p role="alert" className="text-base text-error">
           {message}
         </p>
         <p className="mt-5">
           <Link
             href={BOARD_HREF}
-            className="text-ui text-accent underline underline-offset-4 hover:text-ink transition-colors"
+            className="text-sm text-accent underline underline-offset-4 hover:text-primary transition-colors"
           >
             掲示板にもどる
           </Link>
@@ -87,8 +83,7 @@ function EditForm({ post }: { post: Post }) {
     setFailure(null);
     try {
       const updated = await api.updatePost(post.id, values.title, values.body);
-      // 返ってきた Post で詳細のキャッシュを置き換える。
-      // 取り直す通信を省き、戻った瞬間に新しい内容を出す。
+      // 返ってきた投稿で詳細のキャッシュを置き換え、戻った瞬間に新しい内容を出す
       await mutate(["post", post.id], updated, { revalidate: false });
       showToast("投稿を更新しました");
       // replace で戻る。push だと、ブラウザの「戻る」で編集のページに戻ってしまう。
@@ -117,11 +112,11 @@ function EditForm({ post }: { post: Post }) {
   }, [isDirty, isSubmitting]);
 
   return (
-    <main className="mx-auto w-full max-w-[680px] px-4 pb-14 md:px-5">
+    <main className="mx-auto w-full max-w-3xl px-4 pb-14 md:px-5">
       <nav className="py-4">
         <Link
           href={detailHref}
-          className="inline-flex min-h-11 items-center gap-2 text-ui text-ink-soft hover:text-ink transition-colors"
+          className="inline-flex min-h-11 items-center gap-2 text-sm text-secondary hover:text-primary transition-colors"
         >
           <svg
             width="16"
@@ -140,11 +135,11 @@ function EditForm({ post }: { post: Post }) {
         </Link>
       </nav>
 
-      <h1 className="mb-7 text-heading font-bold text-ink">投稿を編集する</h1>
+      <h1 className="mb-7 text-2xl font-bold text-primary">投稿を編集する</h1>
 
       {failure && (
-        <div role="alert" className="mb-6 border-l-4 border-danger bg-surface p-3.5">
-          <p className="text-ui text-danger">{failure}</p>
+        <div role="alert" className="mb-6 border-l-4 border-error bg-surface p-3.5">
+          <p className="text-sm text-error">{failure}</p>
         </div>
       )}
 
@@ -161,13 +156,13 @@ function EditForm({ post }: { post: Post }) {
             <button
               type="submit"
               disabled={isSubmitting || uploading}
-              className="inline-flex min-h-12 items-center rounded-ippo bg-accent px-6 py-3 text-preview font-bold text-surface disabled:opacity-60 enabled:hover:bg-accent-strong enabled:active:bg-accent-deep transition-colors"
+              className="inline-flex min-h-12 items-center rounded-md bg-accent px-6 py-3 text-base font-bold text-on-accent disabled:opacity-60 enabled:hover:opacity-90 transition-colors"
             >
               {isSubmitting ? "保存中…" : "保存する"}
             </button>
             <Link
               href={detailHref}
-              className="inline-flex min-h-11 items-center text-ui text-ink-soft underline underline-offset-4 hover:text-ink transition-colors"
+              className="inline-flex min-h-11 items-center text-sm text-secondary underline underline-offset-4 hover:text-primary transition-colors"
             >
               やめる
             </Link>
