@@ -35,6 +35,7 @@ export type PostSummary = Schemas["PostSummary"];
 export type Post = Schemas["Post"];
 export type CurrentUser = Schemas["CurrentUser"];
 export type UploadTicket = Schemas["UploadTicket"];
+export type StudySummary = Schemas["StudySummary"];
 // 並び順はスキーマに名前がないので、一覧の API のクエリから取り出す
 export type SortOrder = NonNullable<
   paths["/topics/{slug}/posts"]["get"]["parameters"]["query"]
@@ -110,6 +111,13 @@ export const api = {
 
   unlike: (postId: string) =>
     request<void>(`/posts/${encodeURIComponent(postId)}/like`, { method: "DELETE" }),
+
+  // --- 学習記録 ---
+
+  study: () => request<StudySummary>("/me/study"),
+
+  // 今日の分がもう付いていても成功し、同じ値が返る
+  recordStudy: () => request<StudySummary>("/me/study/today", { method: "PUT" }),
 
   // --- 画像 ---
 
