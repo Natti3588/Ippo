@@ -24,7 +24,10 @@ body {
   }
 }
 
-:focus-visible {
-  outline: 3px solid var(--color-accent);
-  outline-offset: 2px;
+/* Astryx の部品と同じ焦点の枠を、ふつうのリンクと入力欄にも付ける */
+@layer base {
+  :focus-visible {
+    outline: var(--focus-outline-width) var(--focus-outline-style) var(--focus-outline-color);
+    outline-offset: var(--focus-outline-offset);
+  }
 }
