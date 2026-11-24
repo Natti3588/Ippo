@@ -115,3 +115,11 @@ func toAPIUploadTicket(t domain.UploadTicket) api.UploadTicket {
 		Url:    t.URL,
 	}
 }
+
+func toAPIStudySummary(s domain.StudySummary) api.StudySummary {
+	return api.StudySummary{
+		StudiedToday:  s.StudiedToday,
+		CurrentStreak: s.CurrentStreak,
+		LongestStreak: s.LongestStreak,
+	}
+}

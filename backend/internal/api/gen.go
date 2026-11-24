@@ -165,6 +165,18 @@ type SignUpRequest struct {
 // SortOrder ソート順
 type SortOrder string
 
+// StudySummary 学習の記録の状態
+type StudySummary struct {
+	// CurrentStreak 連続学習日数。 今日まだ学習記録がなくても、昨日が学習日なら数は残る
+	CurrentStreak int32 `json:"currentStreak"`
+
+	// LongestStreak 最長連続学習日数
+	LongestStreak int32 `json:"longestStreak"`
+
+	// StudiedToday 今日の学習記録があるかどうか
+	StudiedToday bool `json:"studiedToday"`
+}
+
 // Topic 投稿を分類するカテゴリ
 type Topic struct {
 	// Name 表示名
@@ -257,6 +269,12 @@ type ServerInterface interface {
 	// MeUpdate ユーザーの表示名を変更する
 	// (PATCH /me)
 	MeUpdate(w http.ResponseWriter, r *http.Request)
+
+	// (GET /me/study)
+	StudyGet(w http.ResponseWriter, r *http.Request)
+
+	// (PUT /me/study/today)
+	StudyRecordToday(w http.ResponseWriter, r *http.Request)
 
 	// (GET /posts)
 	PostsList(w http.ResponseWriter, r *http.Request, params PostsListParams)
@@ -359,6 +377,34 @@ func (siw *ServerInterfaceWrapper) MeUpdate(w http.ResponseWriter, r *http.Reque
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.MeUpdate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StudyGet operation middleware
+func (siw *ServerInterfaceWrapper) StudyGet(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StudyGet(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StudyRecordToday operation middleware
+func (siw *ServerInterfaceWrapper) StudyRecordToday(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StudyRecordToday(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -778,6 +824,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/auth/signup", wrapper.AuthSignup)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/me", wrapper.MeGet)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/me", wrapper.MeUpdate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/me/study", wrapper.StudyGet)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/me/study/today", wrapper.StudyRecordToday)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts", wrapper.PostsList)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsRemove)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/posts/{postId}", wrapper.PostsGet)
