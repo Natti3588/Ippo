@@ -16,7 +16,8 @@ export function LoginRequiredDialog({
   onClose,
 }: {
   open: boolean;
-  title: string;
+  // 語の途中で折り返さないよう、塊ごとに <span className="inline-block"> で包んで渡せる
+  title: ReactNode;
   children: ReactNode;
   // ログインのあとに戻る先
   next: string;

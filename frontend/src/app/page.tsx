@@ -78,7 +78,7 @@ export default function HomePage() {
             <h2 className="text-xl font-bold">使い方</h2>
             <ol className="grid gap-5 md:grid-cols-3">
               {STEPS.map((step, i) => (
-                <li key={step.title} className="flex gap-3 md:flex-col">
+                <li key={step.title} className="flex gap-3 md:flex-col md:items-center md:text-center">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
                     {step.icon}
                   </span>

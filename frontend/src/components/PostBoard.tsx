@@ -143,6 +143,7 @@ export function PostBoard({ slug }: { slug?: string }) {
                 <PostItem
                   key={post.id}
                   post={post}
+                  from={here}
                   showTopic={!slug}
                   onToggleLike={() => onLike(post)}
                   onDelete={() => setConfirming(post)}
@@ -169,7 +170,12 @@ export function PostBoard({ slug }: { slug?: string }) {
 
       <LoginRequiredDialog
         open={askingLogin}
-        title="いいねするにはログインが必要です"
+        title={
+          <>
+            <span className="inline-block">「いいね」には</span>
+            <span className="inline-block">ログインが必要です</span>
+          </>
+        }
         next={here}
         onClose={() => setAskingLogin(false)}
       >

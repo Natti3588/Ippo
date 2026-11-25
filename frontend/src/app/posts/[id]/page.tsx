@@ -1,24 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import useSWR from "swr";
 import { AlertDialog } from "@astryxdesign/core/AlertDialog";
 import { Button } from "@astryxdesign/core/Button";
 import { Card } from "@astryxdesign/core/Card";
-import { api } from "@/lib/api";
+import { api, type Post } from "@/lib/api";
 import { ApiError } from "@/lib/problem";
 import { formatDateTime } from "@/lib/format";
+import { safeNextPath } from "@/lib/next-path";
 import { BOARD_HREF } from "@/lib/topics";
 import { showToast } from "@/lib/toast";
 import { Markdown } from "@/components/Markdown";
 import { PageColumns } from "@/components/PageColumns";
 import { StudyCard } from "@/components/StudyCard";
 
+// 来た一覧へ戻す。分からないとき（URL を直接開いたなど）は投稿のトピックへ
+function backLink(from: string, topic: Post["topic"]) {
+  const topicPath = `/topics/${topic.slug}`;
+  // "/posts/…"（詳細ページ）まで当たらないよう、「すべて」の一覧だけを見る
+  if (from === "/posts" || from.startsWith("/posts?")) {
+    return { href: from, label: "すべての投稿" };
+  }
+  if (from === topicPath || from.startsWith(`${topicPath}?`)) {
+    return { href: from, label: topic.name };
+  }
+  return { href: topicPath, label: topic.name };
+}
+
 export default function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  // 誰でも書き換えられる値なので、サイトの中の道だけを通す
+  const from = safeNextPath(useSearchParams().get("from"));
   const { data: post, error } = useSWR(["post", id], () => api.post(id));
 
   const [confirming, setConfirming] = useState(false);
@@ -34,7 +50,7 @@ export default function PostDetailPage() {
       await api.deletePost(post.id);
       showToast("投稿を削除しました");
       // replace で移る。push だと「戻る」で消えた投稿の画面に戻ってしまう
-      router.replace(`/topics/${post.topic.slug}`);
+      router.replace(backLink(from, post.topic).href);
     } catch (err) {
       setFailure(err instanceof ApiError ? err.detail : "削除に失敗しました");
       setRemoving(false);
@@ -65,11 +81,13 @@ export default function PostDetailPage() {
 
   if (!post) return null;
 
+  const back = backLink(from, post.topic);
+
   return (
     <PageColumns aside={<StudyCard />}>
       <div className="flex flex-col gap-4">
-        <Link href={`/topics/${post.topic.slug}`} className="text-secondary hover:text-primary">
-          ‹ {post.topic.name} にもどる
+        <Link href={back.href} className="text-secondary hover:text-primary">
+          ‹ {back.label} にもどる
         </Link>
 
         {failure && (
