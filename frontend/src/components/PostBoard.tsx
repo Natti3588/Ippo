@@ -143,6 +143,7 @@ export function PostBoard({ slug }: { slug?: string }) {
                 <PostItem
                   key={post.id}
                   post={post}
+                  from={here}
                   showTopic={!slug}
                   onToggleLike={() => onLike(post)}
                   onDelete={() => setConfirming(post)}

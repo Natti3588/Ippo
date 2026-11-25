@@ -7,17 +7,20 @@ import { Markdown } from "@/components/Markdown";
 
 export function PostItem({
   post,
+  from,
   showTopic = false,
   onToggleLike,
   onDelete,
 }: {
   post: PostSummary;
+  from: string;
   // 「すべて」の一覧のときだけ true。どのトピックの投稿かを出す
   showTopic?: boolean;
   // 未ログインでも押せる。ログインを促すかは呼ぶ側が決める
   onToggleLike: () => void;
   onDelete: () => void;
 }) {
+  const detailHref = `/posts/${post.id}?from=${encodeURIComponent(from)}`;
   return (
     <article className="flex flex-col gap-2 border-t border-border py-5 first:border-t-0 first:pt-0 last:pb-0">
       {(showTopic || post.isMine) && (
@@ -33,7 +36,7 @@ export function PostItem({
       )}
 
       <Link
-        href={`/posts/${post.id}`}
+        href={`${detailHref}`}
         className="text-lg font-bold text-primary wrap-anywhere hover:underline"
       >
         {post.title}
@@ -46,7 +49,7 @@ export function PostItem({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-secondary">
         {/* truncated はサーバーが決める。プレビューの長さからは推測しない */}
         {post.truncated && (
-          <Link href={`/posts/${post.id}`} className="font-bold text-primary underline underline-offset-4">
+          <Link href={`${detailHref}`} className="font-bold text-primary underline underline-offset-4">
             続きを読む
           </Link>
         )}
